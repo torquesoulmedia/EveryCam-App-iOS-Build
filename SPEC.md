@@ -209,8 +209,12 @@ Unverändert aus TrickCam übernommen:
 
 ## 5. Ordner- und Dateistruktur
 
+**Kein `Sammlungen`-Wrapper mehr (Nutzerentscheidung, Update 2026-07-27):** `PathBuilder.standard` zeigt direkt auf
+`Documents/`, das in der Dateien-App bereits als Ordner „EveryCam" erscheint (App-Anzeigename, siehe `CLAUDE.md`
+§7). Ein zusätzlicher generischer Unterordner darin wäre redundant — Sammlungen liegen direkt in `EveryCam/`.
+
 ```
-Sammlungen/
+EveryCam/                              (= Documents/, App-Anzeigename in der Dateien-App)
   <YYYY-MM-DD>_<Sammlungsname>/
     collection.json
     Unsorted/

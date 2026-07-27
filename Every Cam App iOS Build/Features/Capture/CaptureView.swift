@@ -196,6 +196,11 @@ struct CaptureView: View {
         .onPreferenceChange(ControlsAreaTopYKey.self) { controlsAreaTopY = $0 }
         .task {
             await viewModel.onAppear()
+            // Meldet an RootView, dass der Aufnahme-Bildschirm etwas
+            // Sinnvolles anzuzeigen hat — unabhängig vom Ergebnis (auch eine
+            // Berechtigungs-Fehlermeldung zählt), damit der Ladebildschirm
+            // nie auf eine leere Übergangsfläche weicht (Nutzerwunsch, 2026-07-27).
+            appState.isCaptureScreenReady = viewModel.cameraStatus != .configuring
         }
         .task(id: appState.activeCollectionId) {
             let stillExists = await viewModel.activateCollection(appState.activeCollectionId)

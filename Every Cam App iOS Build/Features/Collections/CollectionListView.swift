@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CollectionListView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.locale) private var locale
 
     let collectionStore: MediaCollectionStore
     let settingsStore: SettingsStore
@@ -145,7 +146,9 @@ struct CollectionListView: View {
             .accessibilityLabel("Zur Kamera wechseln")
         }
         // Sortier-Menü (SPEC.md §10) — die Liste bleibt dabei immer eindeutig
-        // sortiert, kein freies Umsortieren.
+        // sortiert, kein freies Umsortieren. Zweite Picker-Sektion für das
+        // Anzeigeformat (Nutzerwunsch) — eigene Achse neben der Sortierung,
+        // sitzt aber im selben Menü, weil beide dieselbe Übersicht betreffen.
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Picker("Sortierung", selection: $viewModel.sortOrder) {
@@ -153,10 +156,15 @@ struct CollectionListView: View {
                         Label(order.displayLabel, systemImage: order.systemImage).tag(order)
                     }
                 }
+                Picker("Anzeige", selection: $viewModel.displayFormat) {
+                    ForEach(CollectionDisplayFormat.allCases) { format in
+                        Text(format.displayLabel(locale: locale)).tag(format)
+                    }
+                }
             } label: {
                 Image(systemName: "arrow.up.arrow.down.circle")
             }
-            .accessibilityLabel("Sortierung ändern")
+            .accessibilityLabel("Sortierung und Anzeige ändern")
         }
         if !viewModel.isSelectionMode {
             ToolbarItem(placement: .primaryAction) {
@@ -283,7 +291,7 @@ struct CollectionListView: View {
                 Image(systemName: "video.fill")
                     .foregroundStyle(isRecordingTarget ? Theme.textPrimary : Theme.textSecondary)
             }
-            Text("\(Self.displayDate(collection.date)) – \(collection.name)")
+            Text(viewModel.displayFormat.text(date: Self.displayDate(collection.date), name: collection.name))
                 .font(Typography.body)
                 .fontWeight(isToday ? .semibold : .regular)
                 .foregroundStyle(isToday ? Theme.textPrimary : Theme.textSecondary)

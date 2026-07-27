@@ -8,6 +8,9 @@ final class CollectionListViewModel {
 
     var collections: [MediaCollection] = []
     var sortOrder: CollectionSortOrder = .dateDescending
+    // Eigene Achse neben sortOrder (Nutzerwunsch) — betrifft nur, wie eine
+    // Zeile beschriftet ist, nicht die Reihenfolge der Liste.
+    var displayFormat: CollectionDisplayFormat = .dateAndName
     var isShowingNewCollectionSheet = false
 
     // Mehrfachauswahl analog zur Galerie (aus TrickCam übernommen) — eigener

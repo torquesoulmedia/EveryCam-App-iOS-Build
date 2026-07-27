@@ -9,19 +9,27 @@ struct RootView: View {
     @State private var collectionStore = MediaCollectionStore(fileStore: FileStore(pathBuilder: .standard), pathBuilder: .standard)
     @State private var settingsStore = SettingsStore()
     @State private var isShowingLaunchScreen = true
+    @State private var isSplashVideoFinished = false
 
     var body: some View {
         ZStack {
             mainContent
 
             if isShowingLaunchScreen {
-                LaunchScreenView(onFinished: {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        isShowingLaunchScreen = false
-                    }
+                LaunchScreenView(onVideoFinished: {
+                    isSplashVideoFinished = true
+                    dismissLaunchScreenIfReady()
                 })
                 .transition(.opacity)
             }
+        }
+        // Blendet den Splash erst aus, wenn **beide** Bedingungen erfüllt
+        // sind — Video zu Ende UND Aufnahme-Bildschirm bereit (Nutzerwunsch,
+        // 2026-07-27). Reine Zeit-Steuerung reichte nicht: CameraService
+        // braucht je nach Gerät/Berechtigungsdialog länger als das Video,
+        // wodurch kurz eine leere Fläche sichtbar wurde.
+        .onChange(of: appState.isCaptureScreenReady) { _, _ in
+            dismissLaunchScreenIfReady()
         }
         // App-weit fest hell (SPEC.md §3/§6, Phase 5) — kein Folgen des
         // Systemmodus, keine Ausnahme mehr für den Loading-Screen (der
@@ -41,6 +49,13 @@ struct RootView: View {
             // der Ordner erst nach dem ersten Besuch dieser Seite und taucht
             // entsprechend spät in der Dateien-App auf (SPEC.md §3).
             _ = try? await collectionStore.listCollections()
+        }
+    }
+
+    private func dismissLaunchScreenIfReady() {
+        guard isSplashVideoFinished, appState.isCaptureScreenReady, isShowingLaunchScreen else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isShowingLaunchScreen = false
         }
     }
 

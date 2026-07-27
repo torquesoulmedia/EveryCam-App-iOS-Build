@@ -26,6 +26,15 @@ final class AppState {
     // (SPEC.md §13, kritischer Pfad), nicht auf der zuletzt gezeigten Seite.
     var activeTab: AppTab = .capture
 
+    // Von CaptureView gesetzt, sobald CaptureViewModel.cameraStatus die
+    // `.configuring`-Phase verlassen hat — egal mit welchem Ergebnis (Nutzerwunsch,
+    // 2026-07-27: der Ladebildschirm darf erst weichen, wenn der Aufnahme-
+    // Bildschirm tatsächlich etwas anzuzeigen hat, auch wenn das nur eine
+    // Berechtigungs-Fehlermeldung ist — nie eine leere Übergangsfläche). RootView
+    // hält den Splash so lange sichtbar, bis dieser Wert zusätzlich zum Ende des
+    // Splash-Videos true wird.
+    var isCaptureScreenReady = false
+
     // Persistiert über UserDefaults (wie SettingsStore, CLAUDE.md §3) statt nur
     // im Arbeitsspeicher — sonst ging die aktive Sammlung bei jedem App-Neustart
     // oder jeder Unterbrechung verloren und ließ sich nur durch Anlegen einer

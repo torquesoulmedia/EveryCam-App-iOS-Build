@@ -72,6 +72,20 @@ struct ClipThumbnail: View {
                         .padding(6)
                 }
 
+                // Foto/Video-Kennzeichen (Nutzerwunsch): einziger visueller
+                // Hinweis im gemischten Raster, ob eine Kachel ein Foto oder
+                // ein Video ist — unten rechts, kollidiert dadurch weder mit
+                // dem Format-Label (unten links) noch mit dem Auswahl-Häkchen
+                // (oben rechts).
+                Image(systemName: item.kind == .video ? "video.fill" : "photo.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(4)
+                    .background(Theme.backgroundPrimary.opacity(0.8))
+                    .clipShape(Circle())
+                    .padding(6)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+
                 if isSelectionMode {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(Theme.textPrimary)

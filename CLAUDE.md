@@ -170,6 +170,38 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
 3. **Geräte-Verifikation für Foto und Video ausständig** — Kamera-/Speicher-/Unterbrechungs-Verhalten lässt
    sich im Simulator nicht sinnvoll prüfen (keine Kamera), das ist ausschließlich am physischen Gerät möglich.
 
+**Weitere Updates nach Phase 7 (Nutzerwünsche, 2026-07-27):**
+- **App-Name/Dateien-App-Ordner:** `CFBundleDisplayName` von "Every Cam App iOS Build" auf "EveryCam" geändert
+  (`project.pbxproj`, beide Targets) — das ist zugleich der Ordnername, der dank `UIFileSharingEnabled` +
+  `LSSupportsOpeningDocumentsInPlace` in der Dateien-App unter „Auf diesem iPhone" erscheint. Kamera-/Mikrofon-
+  Berechtigungstexte ebenso umbenannt. Stale `CFBundleIconFile`-Verweis auf "TrickCam ICON v1 Final" aus
+  `Every-Cam-App-iOS-Build-Info.plist` entfernt (wirkungslos neben dem modernen Icon-Composer-Mechanismus,
+  aber verwirrender TrickCam-Rest).
+- **Kein `Sammlungen`-Wrapper mehr** — siehe `SPEC.md` §5. `PathBuilder.standard.collectionsRootURL` zeigt jetzt
+  direkt auf `Documents/`.
+- **Splash-Video zurück, aber jetzt bereitschafts-gesteuert statt zeitgesteuert:** Phase 5 hatte den Video-Splash
+  durch einen statischen Screen ersetzt — der Nutzer hat inzwischen ein echtes EveryCam-Markenvideo geliefert
+  (`Resources/Splash/EveryCam_Splash_4K_9x19.mp4`, `LaunchScreenView`/neu angelegtes `SplashVideoPlayerView`).
+  Der Splash blendet dabei **nicht** mehr nach einer festen Zeit aus, sondern erst, wenn **beide** zutreffen:
+  Video zu Ende UND `AppState.isCaptureScreenReady == true` (von `CaptureView` gesetzt, sobald
+  `CameraViewModel.cameraStatus` die `.configuring`-Phase verlassen hat, siehe `RootView.dismissLaunchScreenIfReady()`).
+  Grund: eine reine Zeitsteuerung ließ zwischen Splash-Ende und fertig konfigurierter Kamera kurz eine leere
+  Fläche sichtbar werden, weil `CameraService.requestAccessAndConfigure()` je nach Gerät/Berechtigungsdialog
+  länger dauern kann als das Video.
+- **Foto/Video-Kennzeichen auf Thumbnails** (`ClipThumbnail.swift`) — kleines Icon-Badge unten rechts
+  (`video.fill`/`photo.fill`), da Fotos und Videos im selben Galerie-Raster gemischt erscheinen und sonst nicht
+  unterscheidbar wären.
+- **Neue Anzeige-Achse in der Sammlungen-Übersicht** (`CollectionDisplayFormat.swift`) — unabhängig von
+  `CollectionSortOrder`: „Datum – Name" (Standard), „Name – Datum", „Nur Name". Sitzt als zweite Picker-Sektion
+  im selben Sortier-Menü. Dabei nebenbei eine vorbestehende Lokalisierungslücke behoben: `CollectionSortOrder
+  .displayLabel` und `Sortierung`/`Sortierung ändern` gaben reine `String`s über `Text`/`Label` aus, was die
+  Katalog-Lokalisierung umgeht (CLAUDE.md §5.1) — die neuen Strings laufen korrekt über
+  `LocalizedStringResolver`, die Katalog-Einträge für die alten Strings wurden nachträglich ergänzt.
+- **Eigenständige Datenschutzerklärung** unter `https://github.com/torquesoulmedia/EveryCam-App-Privacy`
+  (separates Repo, nicht Teil dieses Xcode-Projekts) — einzelne `index.html`, DE/EN/ES/PT, selbes Farbschema wie
+  die App, für eine App-Store-Connect-Datenschutz-URL. Ergänzt Ziffer 7 der Nutzungsbedingungen, die bislang nur
+  auf „eine gesonderte Datenschutzerklärung" verwies, ohne dass diese existierte.
+
 ---
 
 ## 8. Harte Verbote

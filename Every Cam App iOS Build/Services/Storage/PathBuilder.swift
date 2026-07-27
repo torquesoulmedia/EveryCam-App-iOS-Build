@@ -13,10 +13,15 @@ nonisolated struct PathBuilder: Sendable {
     // UIFileSharingEnabled + LSSupportsOpeningDocumentsInPlace). Da PathBuilder
     // bereits die einzige Quelle der gesamten Ordnerstruktur ist, genügt diese
     // eine Zeile — keine separate Spiegel-/Kopierlogik nötig.
+    //
+    // Kein zusätzlicher "Sammlungen"-Unterordner mehr (Nutzerentscheidung,
+    // Phase 7/Update, 2026-07-27): Documents entspricht in der Dateien-App
+    // bereits dem Ordner "EveryCam" (App-Anzeigename, siehe Info.plist).
+    // Ein zusätzlicher generischer Wrapper darin wäre redundant — Sammlungen
+    // liegen deshalb direkt in EveryCam/, z. B. EveryCam/2026-07-27_Urlaub/Oma/.
     static let standard = PathBuilder(
         collectionsRootURL: FileManager.default
             .urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Sammlungen", isDirectory: true)
     )
 
     // Aspekt-neutral benannt (aus TrickCam übernommen, SPEC.md §7.4-Herkunft)

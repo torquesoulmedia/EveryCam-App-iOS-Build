@@ -1,34 +1,37 @@
 import SwiftUI
 
 // Kurzer Marken-Auftritt beim Kaltstart, unabhängig vom Kamera-Status
-// (CLAUDE.md §7, Phase 5). Ersetzt den TrickCam-Videosplash (zwei
-// system-abhängige 4K-Varianten) durch eine einfache, fest helle Fläche
-// mit Wortmarke — konsistent mit der neuen, durchgängig hellen Sand-/
-// Champagner-Palette (SPEC.md §6). Die frühere, eigens dokumentierte
-// Ausnahme "dieser eine Bildschirm folgt dem Systemmodus" entfällt damit
-// vollständig, siehe RootView.
+// (CLAUDE.md §7, Phase 5/Update). Spielt das EveryCam-Splash-Video einmal,
+// stumm, in der fest hellen Palette (SPEC.md §6).
+//
+// Entscheidet selbst NICHT, wann sie verschwindet (Nutzerwunsch, 2026-07-27):
+// meldet nur per `onVideoFinished`, dass das Video durchgelaufen ist. RootView
+// kombiniert dieses Signal mit `AppState.isCaptureScreenReady` und blendet erst
+// aus, wenn **beide** zutreffen — sonst gäbe es zwischen Splash-Ende und
+// fertig konfigurierter Kamera eine kurze leere Übergangsfläche, während
+// `CameraService` noch Berechtigungen prüft/die Session aufbaut. Bis dahin
+// bleibt hier einfach der letzte Videoframe stehen.
 struct LaunchScreenView: View {
-    let onFinished: () -> Void
+    let onVideoFinished: () -> Void
 
-    private let displayDuration: Duration = .milliseconds(900)
+    private var videoURL: URL? {
+        Bundle.main.url(forResource: "EveryCam_Splash_4K_9x19", withExtension: "mp4")
+    }
 
     var body: some View {
-        Theme.backgroundPrimary
-            .ignoresSafeArea()
-            .overlay {
-                Text("EveryCam")
-                    .font(.system(size: 34, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.textPrimary)
+        ZStack {
+            Theme.backgroundPrimary.ignoresSafeArea()
+
+            if let videoURL {
+                SplashVideoPlayerView(url: videoURL, onFinished: onVideoFinished)
+                    .ignoresSafeArea()
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("EveryCam wird gestartet")
-            .task {
-                try? await Task.sleep(for: displayDuration)
-                onFinished()
-            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("EveryCam wird gestartet")
     }
 }
 
 #Preview {
-    LaunchScreenView(onFinished: {})
+    LaunchScreenView(onVideoFinished: {})
 }
