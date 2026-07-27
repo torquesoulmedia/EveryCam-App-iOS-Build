@@ -1,0 +1,29 @@
+# Xcode — user-specific state, never shared
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# Xcode — shared workspace/project noise that's still local-machine-specific
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+# Build products
+build/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Swift Package Manager (no dependencies today, CLAUDE.md §3 — but Xcode
+# still creates a local SPM cache/workspace state that must never be shared)
+.build/
+.swiftpm/
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# macOS
+.DS_Store
