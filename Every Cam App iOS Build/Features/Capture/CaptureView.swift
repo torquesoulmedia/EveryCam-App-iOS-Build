@@ -183,7 +183,6 @@ struct CaptureView: View {
                     isCropGuideVisible: viewModel.isCropGuideVisible,
                     isCompositionGridVisible: viewModel.isCompositionGridVisible,
                     onRecordTap: { Task { await viewModel.toggleRecording(activeCollectionId: appState.activeCollectionId) } },
-                    onSelectMode: { viewModel.setRecordingMode($0) },
                     onSelectCaptureKind: { viewModel.setCaptureKind($0) },
                     onNewCollection: { isShowingNewCollectionSheet = true },
                     onManageTags: { isShowingTagManagement = true },

@@ -1,11 +1,12 @@
 import SwiftUI
 
-// Aufnahmeknopf mittig (spec.md §7.1/§7.2, Update — Zahnrad/Raster-Icons und
-// Single/Dual/Session haben die Zeilen getauscht: die Icon-Zeile hängt jetzt
-// direkt unter dem Aufnahmeknopf, Single/Dual/Session bildet die unterste
-// Zeile). Zahnrad, Crop-Hilfsraster (nur Dual) und Komposition-Raster (beide
-// Modi) hängen links direkt unter Single/Dual, Plus/Athlet rechts direkt
-// unter dem Session-Button — je ein eigenes VStack (Update, Nutzerwunsch),
+// Aufnahmeknopf mittig (SPEC.md §7.1/§7.2, aus TrickCam übernommen —
+// Zahnrad/Raster-Icons und Foto-Video/Sammlungen haben die Zeilen getauscht:
+// die Icon-Zeile hängt jetzt direkt unter dem Aufnahmeknopf, Foto-Video/
+// Sammlungen bildet die unterste Zeile). Zahnrad, Crop-Hilfsraster (nur
+// Dual, seit Phase 4 aus der UI nicht mehr erreichbar) und Komposition-
+// Raster (beide Modi) hängen links direkt unter dem Foto-/Video-Umschalter,
+// Plus/Tag rechts direkt unter dem Sammlungen-Button — je ein eigenes VStack,
 // dadurch übernehmen sie automatisch dessen horizontale Mitte. Der
 // Aufnahmeknopf bleibt per ZStack(alignment: .top) exakt mittig über der
 // vollen Zeilenbreite und auf Höhe der oberen Zeile zentriert. Ausgelagert
@@ -15,6 +16,11 @@ struct CaptureControlsRow: View {
     let isRecording: Bool
     let canRecord: Bool
     let isCameraReady: Bool
+    // Bleibt Teil der Zeile, obwohl der Umschalter dafür seit Phase 4 aus der
+    // UI entfernt ist (SPEC.md §7.2) — steuert weiterhin, ob CropGuideToggle
+    // erscheint. Code/Tests für Dual bleiben vollständig erhalten, nur der
+    // Einstiegspunkt in der UI fehlt (CLAUDE.md §7, Phase 4: "jederzeit
+    // reaktivierbar").
     let recordingMode: RecordingMode
     let captureKind: CaptureKind
     let isCapturingPhoto: Bool
@@ -22,7 +28,6 @@ struct CaptureControlsRow: View {
     let isCropGuideVisible: Bool
     let isCompositionGridVisible: Bool
     let onRecordTap: () -> Void
-    let onSelectMode: (RecordingMode) -> Void
     let onSelectCaptureKind: (CaptureKind) -> Void
     let onNewCollection: () -> Void
     let onManageTags: () -> Void
@@ -32,12 +37,12 @@ struct CaptureControlsRow: View {
     let onToggleCompositionGrid: () -> Void
 
     // Alle runden Icon-Buttons dieser Zeile insgesamt rund 3,5% größer als
-    // ursprünglich (Update, Nutzerwunsch: erst 9% größer für bessere
-    // Tipp-Fläche, dann wieder 5% kleiner — 1,09 × 0,95) — Single/Dual,
-    // Session und der Aufnahmeknopf bleiben unverändert.
+    // ursprünglich (aus TrickCam übernommen: erst 9% größer für bessere
+    // Tipp-Fläche, dann wieder 5% kleiner — 1,09 × 0,95) — Foto/Video,
+    // Sammlungen und der Aufnahmeknopf bleiben unverändert.
     private let iconSize: CGFloat = Layout.minTapTarget * 1.09 * 0.95
 
-    // Enger als Layout.spacingS (Update, Nutzerwunsch, Bugfix): Der
+    // Enger als Layout.spacingS (aus TrickCam übernommen, Bugfix): Der
     // sichtbare Aufnahmeknopf-Kreis (72pt, RecordButton.outerDiameter) ist
     // optisch größer als sein eigener 44pt-Layout-Rahmen und ragt deshalb
     // beidseitig darüber hinaus. Eine vorherige Fassung reservierte dafür
@@ -58,16 +63,6 @@ struct CaptureControlsRow: View {
 
             if isCameraReady {
                 VStack(spacing: Layout.spacingM) {
-                    // Foto-/Video-Umschalter (SPEC.md §7.1, neu) — zentriert
-                    // über der Icon-Zeile, unabhängig vom Single/Dual-
-                    // Umschalter darunter (der in Phase 4 aus der UI
-                    // verschwindet).
-                    CaptureKindToggle(
-                        kind: captureKind,
-                        isEnabled: !isRecording && !isCapturingPhoto,
-                        onSelect: onSelectCaptureKind
-                    )
-
                     HStack {
                         HStack(spacing: iconSpacing) {
                             Button(action: onOpenSettings) {
@@ -79,16 +74,17 @@ struct CaptureControlsRow: View {
 
                             // Nur im Dual-Video-Modus — zeigt den konkreten
                             // Crop-Ausschnitt, den es außerhalb von Dual gar
-                            // nicht gibt (spec.md §7.4) und der für Fotos
-                            // nie existiert (SPEC.md §4.2).
+                            // nicht gibt (spec.md §7.4) und der für Fotos nie
+                            // existiert (SPEC.md §4.2). Seit Phase 4 ohne
+                            // sichtbaren Umschalter faktisch immer false —
+                            // bleibt bewusst stehen, siehe recordingMode oben.
                             if recordingMode == .dual && captureKind == .video {
                                 CropGuideToggle(isActive: isCropGuideVisible, size: iconSize, onToggle: onToggleCropGuide)
                             }
 
-                            // In beiden Modi verfügbar (Update,
-                            // Nutzerwunsch, spec.md §7.7a) — allgemeine
-                            // Bildkomposition, unabhängig vom
-                            // Crop-Ausschnitt.
+                            // In beiden Modi verfügbar (aus TrickCam
+                            // übernommen) — allgemeine Bildkomposition,
+                            // unabhängig vom Crop-Ausschnitt.
                             CompositionGridToggle(isActive: isCompositionGridVisible, size: iconSize, onToggle: onToggleCompositionGrid)
                         }
 
@@ -114,27 +110,32 @@ struct CaptureControlsRow: View {
                     }
 
                     HStack {
-                        // Deaktiviert im Foto-Modus statt ausgeblendet — hat
-                        // dort keine Wirkung, da Fotos immer mode: .single
-                        // sind (SPEC.md §4.2). Verschwindet ganz erst mit
-                        // Phase 4.
-                        ModeToggle(mode: recordingMode, isEnabled: !isRecording && captureKind == .video, onSelect: onSelectMode)
+                        // Foto-/Video-Umschalter (SPEC.md §7.1) sitzt jetzt an
+                        // exakt der Stelle, an der bis Phase 4 der Single/
+                        // Dual-Umschalter stand (CLAUDE.md §7) — Single/Dual
+                        // selbst ist aus der UI entfernt, Code/Tests bleiben
+                        // vollständig erhalten (ModeToggle.swift, RecordingMode,
+                        // CropService) und sind jederzeit reaktivierbar.
+                        CaptureKindToggle(
+                            kind: captureKind,
+                            isEnabled: !isRecording && !isCapturingPhoto,
+                            onSelect: onSelectCaptureKind
+                        )
 
                         Spacer()
 
-                        // Auf gleicher Höhe wie Single/Dual, spiegelbildlich
-                        // rechts (aus TrickCam übernommen) — Direktzugriff auf
-                        // die Sammlungen-Übersicht zusätzlich zur Wisch-Geste.
-                        // Im Kapsel-Stil von Single/Dual ausgeschrieben statt
-                        // als reines Icon.
+                        // Auf gleicher Höhe, spiegelbildlich rechts (aus
+                        // TrickCam übernommen) — Direktzugriff auf die
+                        // Sammlungen-Übersicht zusätzlich zur Wisch-Geste. Im
+                        // Kapsel-Stil ausgeschrieben statt als reines Icon.
                         CollectionAccessButton(action: onOpenCollections)
                     }
-                    // 9pt höher als die Icon-Zeile es vorgeben würde (Update,
-                    // Nutzerwunsch) — etwas mehr Abstand zum unteren Rand.
+                    // 9pt höher als die Icon-Zeile es vorgeben würde (aus
+                    // TrickCam übernommen) — etwas mehr Abstand zum unteren Rand.
                     .offset(y: -9)
                 }
-                // Asymmetrisch statt beidseitig gleicher Abstand (Update,
-                // Nutzerwunsch): Single/Dual etwas näher am linken Rand.
+                // Asymmetrisch statt beidseitig gleicher Abstand (aus
+                // TrickCam übernommen): linke Gruppe etwas näher am linken Rand.
                 .padding(.leading, Layout.spacingS)
                 .padding(.trailing, Layout.spacingM)
             }
@@ -162,9 +163,9 @@ private struct ContrastIconButtonStyle: ButtonStyle {
         Theme.backgroundPrimary.ignoresSafeArea()
         CaptureControlsRow(
             isRecording: false, canRecord: true, isCameraReady: true,
-            recordingMode: .dual, captureKind: .video, isCapturingPhoto: false, hasActiveCollection: true,
+            recordingMode: .single, captureKind: .video, isCapturingPhoto: false, hasActiveCollection: true,
             isCropGuideVisible: true, isCompositionGridVisible: false,
-            onRecordTap: {}, onSelectMode: { _ in }, onSelectCaptureKind: { _ in }, onNewCollection: {}, onManageTags: {},
+            onRecordTap: {}, onSelectCaptureKind: { _ in }, onNewCollection: {}, onManageTags: {},
             onOpenSettings: {}, onOpenCollections: {},
             onToggleCropGuide: {}, onToggleCompositionGrid: {}
         )
