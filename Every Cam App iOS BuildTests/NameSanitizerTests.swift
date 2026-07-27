@@ -40,4 +40,24 @@ struct NameSanitizerTests {
         let result = NameSanitizer.sanitizeForFilesystem(longName)
         #expect(result.count == 80)
     }
+
+    @Test func collidesDetectsSameNameWithTrailingWhitespace() {
+        #expect(NameSanitizer.collides("Oma", "Oma "))
+    }
+
+    @Test func collidesDetectsSameNameDifferingOnlyByDisallowedCharacters() {
+        #expect(NameSanitizer.collides("Oma?", "Oma%"))
+    }
+
+    @Test func collidesDetectsSameNameDifferingOnlyByEmoji() {
+        #expect(NameSanitizer.collides("Oma 😀", "Oma 😢"))
+    }
+
+    @Test func collidesIsCaseInsensitive() {
+        #expect(NameSanitizer.collides("Oma", "OMA"))
+    }
+
+    @Test func collidesIsFalseForGenuinelyDifferentNames() {
+        #expect(!NameSanitizer.collides("Oma", "Opa"))
+    }
 }

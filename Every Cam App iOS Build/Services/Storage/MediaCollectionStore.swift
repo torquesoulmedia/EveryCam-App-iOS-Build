@@ -17,6 +17,15 @@ actor MediaCollectionStore {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { throw EveryCamError.collectionNameEmpty }
 
+        // Verteidigung gegen die UI hinaus (CLAUDE.md §5.2): zwei der
+        // übergebenen Tags dürfen nicht auf denselben Ordnernamen abbilden,
+        // selbst wenn ihre Rohnamen unterschiedlich sind (SPEC.md §14.1).
+        for (index, tag) in tags.enumerated() {
+            if tags[..<index].contains(where: { NameSanitizer.collides($0.name, tag.name) }) {
+                throw EveryCamError.tagNameTaken
+            }
+        }
+
         let date = Self.currentDateString()
         let sanitizedName = NameSanitizer.sanitizeForFilesystem(trimmedName)
         let collectionFolder = try await fileStore.createCollectionFolder(date: date, sanitizedName: sanitizedName)
@@ -85,7 +94,7 @@ actor MediaCollectionStore {
             throw EveryCamError.collectionNotFound
         }
         var collection = try await read(from: folder)
-        guard !collection.tags.contains(where: { $0.name.caseInsensitiveCompare(tag.name) == .orderedSame }) else {
+        guard !collection.tags.contains(where: { NameSanitizer.collides($0.name, tag.name) }) else {
             throw EveryCamError.tagNameTaken
         }
         try await fileStore.ensureTagFolder(

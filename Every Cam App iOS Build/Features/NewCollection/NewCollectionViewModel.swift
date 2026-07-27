@@ -57,8 +57,12 @@ final class NewCollectionViewModel {
         let trimmedName = collectionName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return false }
         let eligible = tags.filter(hasName)
-        let names = eligible.map { $0.name.lowercased() }
-        return Set(names).count == names.count
+        for (index, draft) in eligible.enumerated() {
+            if eligible[..<index].contains(where: { NameSanitizer.collides($0.name, draft.name) }) {
+                return false
+            }
+        }
+        return true
     }
 
     @discardableResult
@@ -111,7 +115,7 @@ final class NewCollectionViewModel {
     func nameErrorMessage(forDraftId id: UUID) -> String? {
         guard let draft = tags.first(where: { $0.id == id }), hasName(draft) else { return nil }
         let collisionCount = tags.filter {
-            hasName($0) && $0.name.caseInsensitiveCompare(draft.name) == .orderedSame
+            hasName($0) && NameSanitizer.collides($0.name, draft.name)
         }.count
         return collisionCount > 1 ? LocalizedStringResolver.string("Name bereits vergeben", locale: settingsStore.effectiveLocale) : nil
     }

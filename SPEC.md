@@ -473,6 +473,12 @@ Ersetzt TrickCams Kürzel-Kollision, gleiches Grundprinzip:
    „Hinzufügen" bleibt deaktiviert, bis die Eingabe eindeutig ist.
 3. **Kein Vorschlagsmechanismus wie bei Kürzeln** (kein „MM2", „MM3") — da Tag-Namen frei und beliebig lang
    sein können, tippt der Nutzer im Kollisionsfall selbst einen anderen Namen.
+4. **Ergänzt (Phase 7, 2026-07-27):** Die Kollisionsprüfung vergleicht die **sanitisierten** Ordnernamen
+   (`NameSanitizer.collides`), nicht nur die Rohnamen — zwei Rohnamen, die sich nur durch Leerraum am Ende,
+   entfernte Sonderzeichen oder Emoji unterscheiden (z. B. „Oma" und „Oma "), würden sonst auf denselben
+   Ordner abbilden, ohne dass die Kollisionsprüfung das bemerkt. Geprüft an allen drei Stellen, die Tags
+   entgegennehmen: `NewCollectionViewModel`, `TagManagementViewModel`, `MediaCollectionStore` (`addTag` und
+   `createCollection`).
 
 ### 14.2 Sammlung ohne Tags
 
@@ -535,7 +541,7 @@ explizit bestätigt wurden. Vor der jeweiligen Umsetzungsphase kurz gegenprüfen
 | 1 | Eine Sammlung ohne jeden Tag ist erlaubt (§8.2, §14.2) — Aufnahmen warten dann unbegrenzt in `Unsorted/`. | Konsistent mit TrickCams bestehender Regel, dass eine Session auch ohne Athleten anlegbar war. Alternative wäre, mindestens einen Tag vor „Bestätigen" zu verlangen. |
 | 2 | Tag-Abschnitte in der Galerie ([§11](#11-bildschirm-3--sammlung-galerie)) erscheinen in **Anlage-Reihenfolge** der Tags. | TrickCam hatte eine erzwungene Reihenfolge (Bail immer zuletzt), die mit dem Wegfall der Rollen keine Grundlage mehr hat. Alternativen: alphabetisch, oder nach Anzahl Aufnahmen. |
 | 3 | **Entschieden (2026-07-27):** EveryCam wird fest hell dargestellt, warme Sand-/Champagner-Palette, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. Konkrete Hex-Werte siehe [§6.1](#61-token-architektur). Das App-Icon ist vorerst ein einfacher, palettenfarbener Platzhalter (`TrickCam ICON v1 Final.icon`-Bundle bleibt technisch bestehen, nur das Bildmotiv wurde ersetzt) — eine eigene Icon-Gestaltung inkl. Umbenennung des Bundles ist ein späterer, dedizierter Durchgang. | Nutzerentscheidung, löst TrickCams festen Dunkelmodus ab; echtes Icon-Artwork erfordert eigene Gestaltung, nicht Teil der fachlichen Kernumsetzung von Phase 5. |
-| 4 | Tag-Buttons im Zuordnungs-Panel bei sehr vielen Tags: konkretes UX-Muster (Scroll/Suche/Sortierung) offen ([§9.2](#92-elemente)). | Erfordert Ausprobieren am echten Gerät, keine reine Spezifikationsfrage. |
+| 4 | **Entschieden (Phase 7, 2026-07-27):** Tag-Buttons im Zuordnungs-Panel scrollen ab einer Kappungshöhe (`AssignmentPanel.maxContentHeight`, ~3–4 Zeilen) intern, statt das Panel weiter wachsen zu lassen — kein Such-/Sortier-UI in v1. Verhindert, dass eine große Tag-Zahl den Aufnahmeknopf vom Bildschirm drückt. Visuelle Feinabstimmung der genauen Kappungshöhe steht noch aus (echtes Gerät). | Einfachste robuste Baseline; Suche/Sortierung wären für v1 Überengineering. |
 | 5 | Rechtstexte (Impressum/Terms/Handbuch) sind inhaltlich noch 1:1 TrickCam-Text und müssen für EveryCam neu geschrieben werden ([§12](#12-bildschirm-4--globale-settings)). | Bewusst als eigene, spätere Phase behandelt, nicht Teil der fachlichen Kernumsetzung. |
 
 ---

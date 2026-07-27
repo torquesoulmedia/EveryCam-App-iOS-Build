@@ -387,6 +387,31 @@ struct MediaCollectionStoreTests {
         }
     }
 
+    // SPEC.md §14.1, Phase 7: "Oma" und "Oma " sind unterschiedliche
+    // Rohnamen, sanitisieren aber auf denselben Ordnernamen — der
+    // Store muss das trotzdem als Kollision behandeln.
+    @Test func addTagCollidingOnlyAfterSanitizationThrows() async throws {
+        let (store, _, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let existing = Tag(id: UUID(), name: "Oma")
+        let collection = try await store.createCollection(name: "Contest Bowl", tags: [existing])
+
+        await #expect(throws: EveryCamError.self) {
+            try await store.addTag(Tag(id: UUID(), name: "Oma "), toCollectionId: collection.id)
+        }
+    }
+
+    @Test func createCollectionWithInitialTagsCollidingOnlyAfterSanitizationThrows() async throws {
+        let (store, _, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let tags = [Tag(id: UUID(), name: "Oma?"), Tag(id: UUID(), name: "Oma%")]
+        await #expect(throws: EveryCamError.self) {
+            try await store.createCollection(name: "Contest Bowl", tags: tags)
+        }
+    }
+
     @Test func removeTagWithoutCapturesSucceeds() async throws {
         let (store, _, cleanupRoot) = makeStore()
         defer { try? FileManager.default.removeItem(at: cleanupRoot) }

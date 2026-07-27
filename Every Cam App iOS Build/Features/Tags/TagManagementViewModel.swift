@@ -44,7 +44,7 @@ final class TagManagementViewModel {
         let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         let collides = (collection?.tags ?? []).contains {
-            $0.name.caseInsensitiveCompare(trimmed) == .orderedSame
+            NameSanitizer.collides($0.name, trimmed)
         }
         return collides ? LocalizedStringResolver.string("Name bereits vergeben", locale: settingsStore.effectiveLocale) : nil
     }

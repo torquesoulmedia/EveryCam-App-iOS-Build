@@ -90,4 +90,21 @@ struct NewCollectionViewModelTests {
         #expect(viewModel.nameErrorMessage(forDraftId: viewModel.tags[0].id) == "Name bereits vergeben")
         #expect(!viewModel.canConfirm)
     }
+
+    // SPEC.md §14.1, Phase 7: unterschiedliche Rohnamen, die auf denselben
+    // sanitisierten Ordnernamen abbilden, müssen ebenfalls als Kollision
+    // erkannt werden — nicht nur exakte (case-insensitive) Rohnamen-Treffer.
+    @Test func nameCollisionDetectsSanitizedFormMatch() {
+        let settingsStore = SettingsStore()
+        settingsStore.appLanguage = .german
+        let viewModel = NewCollectionViewModel(settingsStore: settingsStore)
+        viewModel.collectionName = "Test"
+        viewModel.addTag()
+        viewModel.nameChanged(forDraftId: viewModel.tags[0].id, to: "Oma")
+        viewModel.addTag()
+        viewModel.nameChanged(forDraftId: viewModel.tags[1].id, to: "Oma ")
+
+        #expect(viewModel.nameErrorMessage(forDraftId: viewModel.tags[0].id) == "Name bereits vergeben")
+        #expect(!viewModel.canConfirm)
+    }
 }

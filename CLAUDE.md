@@ -159,6 +159,17 @@ Handbuch verlinkte Instagram-Account (`instagram.com/trickcam.app`) ist ersatzlo
 Platzhalter umgebogen — es existiert noch kein EveryCam-Profil. Bei Einrichtung eines neuen Profils an allen drei
 Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `HandbuchContent.swift`).
 
+**Phase 7, Code-Teil abgeschlossen (2026-07-27):** Drei konkrete Edge Cases behoben/entschieden:
+1. **Viele-Tags-UI** (`AssignmentPanel.swift`) — Tag-Buttons scrollen ab ~3–4 Zeilen intern (`maxContentHeight`)
+   statt das Panel beliebig wachsen zu lassen, siehe `SPEC.md` §16 Annahme #4.
+2. **Tag-Namenskollision erweitert** (`NameSanitizer.collides`, Nutzerentscheidung 2026-07-27) — Kollisions-
+   prüfung vergleicht jetzt sanitisierte statt nur roher Namen, siehe `SPEC.md` §14.1 Punkt 4. Alle vier
+   Prüfstellen (zwei ViewModels, `addTag`, `createCollection`) sowie Handbuch/Icon-Legende, Terms-Farben und
+   Robustheits-Garantien (keine Limits, Interrupt-/Background-Handler) auf Vollständigkeit gegenprüft — keine
+   weiteren Lücken im Code gefunden.
+3. **Geräte-Verifikation für Foto und Video ausständig** — Kamera-/Speicher-/Unterbrechungs-Verhalten lässt
+   sich im Simulator nicht sinnvoll prüfen (keine Kamera), das ist ausschließlich am physischen Gerät möglich.
+
 ---
 
 ## 8. Harte Verbote

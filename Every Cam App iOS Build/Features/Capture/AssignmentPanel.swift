@@ -14,6 +14,15 @@ struct AssignmentPanel: View {
     let tags: [Tag]
     let onAssign: (Tag) -> Void
 
+    // Viele-Tags-UI (SPEC.md §16 Annahme #4, Phase 7): das Panel sitzt ohne
+    // eigene Höhenbegrenzung direkt über dem Aufnahmeknopf — ohne Kappung
+    // würde eine große Tag-Zahl das Panel beliebig wachsen lassen und Knopf
+    // sowie Hinweise darunter vom Bildschirm drücken. Ab dieser Höhe (grob
+    // 3-4 Zeilen Tag-Buttons, je nach Zeilenumbruch) scrollt der Inhalt intern
+    // statt das Panel weiter zu vergrößern — bewusst kein Such-/Sortier-UI,
+    // das wäre für v1 Überengineering.
+    private let maxContentHeight: CGFloat = 190
+
     var body: some View {
         VStack(spacing: Layout.spacingM) {
             if tags.isEmpty {
@@ -29,14 +38,18 @@ struct AssignmentPanel: View {
                 // nur ein bis zwei Tags. TagButtonsFlowLayout misst jeden Button
                 // vorab und meldet nur die tatsächlich benötigte Breite/Höhe,
                 // wodurch der Hintergrund in beide Richtungen mit der Tag-Zahl
-                // mitwächst bzw. -schrumpft.
-                TagButtonsFlowLayout(spacing: Layout.spacingS) {
-                    ForEach(tags) { tag in
-                        Button(tag.name) { onAssign(tag) }
-                            .buttonStyle(AssignmentButtonStyle(color: Theme.actionTag))
-                            .accessibilityLabel(tag.name)
+                // mitwächst bzw. -schrumpft — bis zur Kappung durch die
+                // umgebende ScrollView oben.
+                ScrollView(.vertical) {
+                    TagButtonsFlowLayout(spacing: Layout.spacingS) {
+                        ForEach(tags) { tag in
+                            Button(tag.name) { onAssign(tag) }
+                                .buttonStyle(AssignmentButtonStyle(color: Theme.actionTag))
+                                .accessibilityLabel(tag.name)
+                        }
                     }
                 }
+                .frame(maxHeight: maxContentHeight)
             }
         }
         .padding(Layout.spacingM)
@@ -97,7 +110,7 @@ private struct AssignmentButtonStyle: ButtonStyle {
     }
 }
 
-#Preview {
+#Preview("Wenige Tags") {
     ZStack {
         Theme.backgroundPrimary.ignoresSafeArea()
         VStack {
@@ -110,6 +123,24 @@ private struct AssignmentButtonStyle: ButtonStyle {
                 onAssign: { _ in }
             )
             Spacer()
+        }
+    }
+}
+
+// Viele-Tags-UI (SPEC.md §16 Annahme #4) — zeigt, dass das Panel ab der
+// Höhenkappung intern scrollt statt den Aufnahmeknopf darunter zu verdrängen.
+#Preview("Viele Tags") {
+    ZStack {
+        Theme.backgroundPrimary.ignoresSafeArea()
+        VStack {
+            AssignmentPanel(
+                tags: (1...25).map { Tag(id: UUID(), name: "Tag \($0)") },
+                onAssign: { _ in }
+            )
+            Spacer()
+            Text("Aufnahmeknopf bliebe hier sichtbar")
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.bottom, Layout.spacingL)
         }
     }
 }

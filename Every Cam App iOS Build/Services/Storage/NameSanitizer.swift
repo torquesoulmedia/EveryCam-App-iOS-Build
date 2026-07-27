@@ -37,4 +37,14 @@ nonisolated enum NameSanitizer {
 
         return truncated.isEmpty ? fallbackName : truncated
     }
+
+    /// Zwei Namen "kollidieren", wenn sie auf denselben Dateisystem-Ordner
+    /// abbilden würden — auch wenn sich die Rohnamen unterscheiden (SPEC.md
+    /// §14.1, Phase 7: z. B. "Oma" und "Oma " mit Leerzeichen am Ende landen
+    /// beide im Ordner "Oma"). Ein reiner case-insensitiver Rohnamen-Vergleich
+    /// übersieht das, da die Bereinigung Leerraum/Sonderzeichen/Emoji entfernt,
+    /// bevor der Name als Ordnername verwendet wird.
+    static func collides(_ first: String, _ second: String) -> Bool {
+        sanitizeForFilesystem(first).caseInsensitiveCompare(sanitizeForFilesystem(second)) == .orderedSame
+    }
 }
