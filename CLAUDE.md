@@ -102,16 +102,35 @@ Identisch zu TrickCam (siehe dortige `CLAUDE.md` §5) mit einer Vereinfachung:
 gemeinsamer Akzent für alle Tag-Buttons, keine individuelle Tag-Einfärbung) sowie die **Grundrichtung**
 (Nutzerentscheidung, 2026-07-27): EveryCam wird **fest hell** dargestellt — warme Sand-/Champagner-Palette,
 schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. Das löst TrickCams festen Dunkelmodus ab, siehe
-`SPEC.md` §3. Konkrete Hex-/Token-Werte bleiben offen und sind Teil einer eigenen Design-Phase (siehe §7,
-Phase 5). Bis dahin:
+`SPEC.md` §3.
 
-- Keine Hex-Farbwerte im Code — auch Platzhalterwerte laufen über den Asset-Katalog, nie hart codiert.
-- Die alte Regel „`action.bail` exklusiv Rot, `action.make` exklusiv Grün" aus TrickCam **gilt hier nicht
-  mehr** — es gibt keine Erfolg/Fehler-Rollen mehr, die eine feste Farbsemantik rechtfertigen würden. Keine
-  neue Signalfarben-Regel improvisieren, ohne sie zuerst mit dem Nutzer abzustimmen.
-- `.preferredColorScheme(.dark)` (aktuell app-weit auf `RootView` sowie in diversen Preview-Providern gesetzt,
-  1:1 aus TrickCam übernommen) wird erst in Phase 5 durch `.light` ersetzt — vorher nicht anfassen, das ist
-  Teil der Design-Phase, nicht der laufenden Migrationsphasen 1–4.
+**Konkrete Werte entschieden (Phase 5, 2026-07-27, vom Assistenten im Rahmen der Nutzerfreigabe „ich wähle
+passende Werte" ausgesucht):**
+
+| Token | Hex |
+|---|---|
+| `background.primary` | `#F4E9D8` |
+| `surface.panel` | `#EDDCC0` |
+| `border.subtle` | `#D8C3A0` |
+| `text.primary` | `#241B12` |
+| `text.secondary` | `#6B5B47` |
+| `action.tag` | `#C99B5B` |
+| `action.record` | `#B5502F` |
+| `action.border` | `#241B12` (= `text.primary`) |
+| `focus.indicator` | `#FFCC00` (unverändert, natives Kamera-Gelb) |
+
+- Keine Hex-Farbwerte im Code — alle Farben laufen über den Asset-Katalog (`Assets.xcassets/Colors/*.colorset`), nie hart codiert.
+- Die alte Regel „`action.bail` exklusiv Rot, `action.make` exklusiv Grün" aus TrickCam gilt hier nicht mehr
+  — es gibt keine Erfolg/Fehler-Rollen mehr, die eine feste Farbsemantik rechtfertigen würden.
+- `.preferredColorScheme(.light)` gilt jetzt app-weit einmalig auf `RootView` (ersetzt das frühere
+  `.dark`/`nil`-Umschalten). Die frühere TrickCam-Ausnahme „Loading-Screen folgt dem Systemmodus" ist mit dem
+  neuen, immer hellen Splash (`LaunchScreenView`, statisch statt Video) entfallen — es gibt keine Stelle in der
+  App mehr, die vom Systemmodus abhängt.
+- **App-Icon (Zwischenlösung):** `TrickCam ICON v1 Final.icon` ist weiterhin das aktive Icon-Composer-Bundle
+  (`ASSETCATALOG_COMPILER_APPICON_NAME`), aber `Assets/app-icon-1024.png` darin wurde durch ein einfaches,
+  palettenfarbenes Platzhalter-Motiv (konzentrische Ringe: `text.primary`/`action.tag`/`background.primary`)
+  ersetzt — kein TrickCam-Artwork mehr in der laufenden App. Eine echte Icon-Gestaltung (inkl. Umbenennung des
+  Icon-Composer-Bundles) ist bewusst auf einen eigenen, späteren Durchgang verschoben, siehe `SPEC.md` §16.
 
 ---
 

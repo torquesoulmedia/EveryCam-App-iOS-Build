@@ -317,5 +317,5 @@ struct CollectionListView: View {
         )
     }
     .environment(AppState())
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

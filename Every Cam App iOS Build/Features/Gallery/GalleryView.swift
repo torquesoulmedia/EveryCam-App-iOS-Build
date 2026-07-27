@@ -204,5 +204,5 @@ struct GalleryView: View {
             settingsStore: SettingsStore()
         )
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

@@ -148,5 +148,5 @@ private struct QuickAddTagButtonStyle: ButtonStyle {
         onCollectionCreated: { _ in }
     )
     .environment(AppState())
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

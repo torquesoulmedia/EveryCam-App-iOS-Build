@@ -238,23 +238,28 @@ Sammlungen/
 
 ## 6. Style Guide
 
-> **Status: Grundrichtung entschieden (Nutzer, 2026-07-27), konkrete Hex-/Token-Werte offen.** Die alte Regel
-> „`action.bail` ausschließlich Rot, `action.make` ausschließlich Grün" verliert mit dem Wegfall der
-> Bail/Make-Rollen ihre Grundlage — es gibt keine feste Erfolg/Fehler-Semantik mehr, die eine Farbzuordnung
-> rechtfertigen würde. Neu entschieden: EveryCam wird **fest hell** dargestellt (löst TrickCams festen
-> Dunkelmodus ab, siehe [§3](#3-technische-rahmenbedingungen)) — warme **Sand-/Champagner-Palette**, warm und
-> freundlich, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. Offen bleiben die konkreten
-> Hex-/Token-Werte selbst — das ist weiterhin ein eigener Design-Auftrag für Phase 5, siehe
-> [§16](#16-noch-offen--annahmen) und `CLAUDE.md` §7.
+> **Status: Werte entschieden (Phase 5, 2026-07-27).** Die alte Regel „`action.bail` ausschließlich Rot,
+> `action.make` ausschließlich Grün" verliert mit dem Wegfall der Bail/Make-Rollen ihre Grundlage — es gibt
+> keine feste Erfolg/Fehler-Semantik mehr, die eine Farbzuordnung rechtfertigen würde. EveryCam wird **fest
+> hell** dargestellt (löst TrickCams festen Dunkelmodus ab, siehe [§3](#3-technische-rahmenbedingungen)) —
+> warme **Sand-/Champagner-Palette**, warm und freundlich, schwarze/nahezu schwarze Schrift auf dem helleren
+> Untergrund. Konkrete Hex-Werte siehe [§6.1](#61-token-architektur). App-Icon bleibt vorerst ein einfacher
+> Platzhalter in derselben Palette — echte Icon-Gestaltung ist ein eigener, späterer Durchgang, siehe
+> [§16](#16-noch-offen--annahmen).
 
-### 6.1 Token-Architektur (Richtung steht, Werte folgen)
+### 6.1 Token-Architektur
 
-| Token | Verwendung | Status |
+| Token | Verwendung | Hex |
 |---|---|---|
-| `background.primary` / `surface.panel` / `border.subtle` / `text.primary` / `text.secondary` | Grundgerüst für Flächen, Panels, Text — Rollen unverändert aus TrickCam übernommen, jetzt in warmen, hellen Sand-/Champagner-Tönen (`background.primary`/`surface.panel`) mit schwarzer/nahezu schwarzer Schrift (`text.primary`/`text.secondary`) statt TrickCams dunklen Grautönen | Richtung entschieden, konkrete Hex-Werte offen (Phase 5) |
-| `action.record` | Dediziert für den Start-/Stopp- bzw. Auslöse-Knopf, unabhängig vom gewählten Foto-/Video-Modus | Bleibt als eigenes, dediziertes Token bestehen |
-| `action.tag` (Arbeitsname) | **Neu.** Ein gemeinsamer Akzent für alle Tag-Buttons im Zuordnungs-Panel — bewusst **ein** Token statt vieler individueller Farben pro Tag, da Tags gleichwertig sind und keine gute/schlechte Konnotation tragen sollen | Wert offen, Design-Phase |
-| `focus.indicator` | Fokus-Rechteck bei Tap-to-Focus/AE-AF-Sperre, unverändert aus TrickCam übernommen (natives Kamera-Gelb) | Bleibt |
+| `background.primary` | Haupthintergrund | `#F4E9D8` |
+| `surface.panel` | Panels/Karten, etwas dunkler als der Haupthintergrund | `#EDDCC0` |
+| `border.subtle` | Dezente Trennlinien/Rahmen | `#D8C3A0` |
+| `text.primary` | Primärtext, nahezu schwarz | `#241B12` |
+| `text.secondary` | Sekundärtext, warmes Braungrau | `#6B5B47` |
+| `action.record` | Dediziert für den Start-/Stopp- bzw. Auslöse-Knopf, unabhängig vom gewählten Foto-/Video-Modus | `#B5502F` |
+| `action.tag` | Gemeinsamer Akzent für alle Tag-Buttons im Zuordnungs-Panel — bewusst **ein** Token statt vieler individueller Farben pro Tag, da Tags gleichwertig sind und keine gute/schlechte Konnotation tragen sollen | `#C99B5B` |
+| `action.border` | Rahmen um Zuordnungs-Panel-Buttons | `#241B12` (= `text.primary`) |
+| `focus.indicator` | Fokus-Rechteck bei Tap-to-Focus/AE-AF-Sperre, unverändert aus TrickCam übernommen (natives Kamera-Gelb) | `#FFCC00` |
 
 ### 6.2 Verbindliche Grundregeln (unabhängig von der konkreten Palette)
 
@@ -528,7 +533,7 @@ explizit bestätigt wurden. Vor der jeweiligen Umsetzungsphase kurz gegenprüfen
 |---|---|---|
 | 1 | Eine Sammlung ohne jeden Tag ist erlaubt (§8.2, §14.2) — Aufnahmen warten dann unbegrenzt in `Unsorted/`. | Konsistent mit TrickCams bestehender Regel, dass eine Session auch ohne Athleten anlegbar war. Alternative wäre, mindestens einen Tag vor „Bestätigen" zu verlangen. |
 | 2 | Tag-Abschnitte in der Galerie ([§11](#11-bildschirm-3--sammlung-galerie)) erscheinen in **Anlage-Reihenfolge** der Tags. | TrickCam hatte eine erzwungene Reihenfolge (Bail immer zuletzt), die mit dem Wegfall der Rollen keine Grundlage mehr hat. Alternativen: alphabetisch, oder nach Anzahl Aufnahmen. |
-| 3 | **Teilweise entschieden (2026-07-27):** EveryCam wird fest hell dargestellt, warme Sand-/Champagner-Palette, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. App-Icon und die konkreten Hex-/Token-Werte selbst bleiben offen — dieses Dokument legt weiterhin nur Richtung + Token-**Architektur** fest ([§6](#6-style-guide)), keine Werte. | Nutzerentscheidung, löst TrickCams festen Dunkelmodus ab; exakte Werte sind eigener Design-Auftrag, nicht Teil dieser fachlichen Spezifikation. |
+| 3 | **Entschieden (2026-07-27):** EveryCam wird fest hell dargestellt, warme Sand-/Champagner-Palette, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. Konkrete Hex-Werte siehe [§6.1](#61-token-architektur). Das App-Icon ist vorerst ein einfacher, palettenfarbener Platzhalter (`TrickCam ICON v1 Final.icon`-Bundle bleibt technisch bestehen, nur das Bildmotiv wurde ersetzt) — eine eigene Icon-Gestaltung inkl. Umbenennung des Bundles ist ein späterer, dedizierter Durchgang. | Nutzerentscheidung, löst TrickCams festen Dunkelmodus ab; echtes Icon-Artwork erfordert eigene Gestaltung, nicht Teil der fachlichen Kernumsetzung von Phase 5. |
 | 4 | Tag-Buttons im Zuordnungs-Panel bei sehr vielen Tags: konkretes UX-Muster (Scroll/Suche/Sortierung) offen ([§9.2](#92-elemente)). | Erfordert Ausprobieren am echten Gerät, keine reine Spezifikationsfrage. |
 | 5 | Rechtstexte (Impressum/Terms/Handbuch) sind inhaltlich noch 1:1 TrickCam-Text und müssen für EveryCam neu geschrieben werden ([§12](#12-bildschirm-4--globale-settings)). | Bewusst als eigene, spätere Phase behandelt, nicht Teil der fachlichen Kernumsetzung. |
 

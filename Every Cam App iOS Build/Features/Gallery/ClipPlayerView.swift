@@ -37,6 +37,6 @@ struct ClipPlayerView: View {
                     }
                 }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
     }
 }

@@ -119,5 +119,5 @@ struct ImpressumView: View {
     NavigationStack {
         ImpressumView()
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

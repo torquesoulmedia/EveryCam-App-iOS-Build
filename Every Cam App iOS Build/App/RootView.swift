@@ -12,17 +12,7 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            // `.dark` erst, sobald der Loading-Screen weg ist (Update,
-            // Nutzerwunsch/Bugfix) — solange beide gleichzeitig im Baum
-            // stehen, darf **keine** Seite `.dark` deklarieren, sonst
-            // gewinnt diese Vorgabe für die fensterweite Statusleiste
-            // unabhängig davon, welche Seite gerade sichtbar ist (die
-            // Statusleiste hängt am Fenster, nicht an einer einzelnen
-            // View). Erst wenn LaunchScreenView komplett aus dem Baum
-            // entfernt ist, gibt es nur noch eine einzige, eindeutige
-            // Vorgabe — siehe LaunchScreenView für die Gegenseite.
             mainContent
-                .preferredColorScheme(isShowingLaunchScreen ? nil : .dark)
 
             if isShowingLaunchScreen {
                 LaunchScreenView(onFinished: {
@@ -33,6 +23,11 @@ struct RootView: View {
                 .transition(.opacity)
             }
         }
+        // App-weit fest hell (SPEC.md §3/§6, Phase 5) — kein Folgen des
+        // Systemmodus, keine Ausnahme mehr für den Loading-Screen (der
+        // TrickCam-Sonderfall mit systemabhängiger Video-Variante ist mit
+        // dem neuen, immer hellen Splash entfallen, siehe LaunchScreenView).
+        .preferredColorScheme(.light)
         .environment(appState)
         // Erzwingt bei Bedarf eine App-Sprache unabhängig von der
         // iOS-Systemsprache (Nutzerwunsch, Settings-Bildschirm "Sprache").

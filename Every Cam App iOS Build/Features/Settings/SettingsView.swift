@@ -172,5 +172,5 @@ struct SettingsView: View {
     NavigationStack {
         SettingsView(settingsStore: SettingsStore())
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

@@ -104,5 +104,5 @@ struct TermsView: View {
     NavigationStack {
         TermsView()
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

@@ -51,7 +51,7 @@ struct PhotoPreviewView: View {
                 image = UIImage(contentsOfFile: imageURL.path)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
     }
 
     private var magnificationGesture: some Gesture {

@@ -155,5 +155,5 @@ struct TagManagementSheet: View {
         collectionStore: MediaCollectionStore(fileStore: FileStore(pathBuilder: .standard), pathBuilder: .standard),
         settingsStore: SettingsStore()
     )
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }

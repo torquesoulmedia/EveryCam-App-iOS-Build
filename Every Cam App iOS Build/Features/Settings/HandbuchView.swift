@@ -91,5 +91,5 @@ struct HandbuchView: View {
     NavigationStack {
         HandbuchView()
     }
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(.light)
 }
