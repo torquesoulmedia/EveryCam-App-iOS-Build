@@ -1,34 +1,35 @@
 import SwiftUI
 
-// Ebene 3 (spec.md §11): Abschnitte Unsorted/Bail/Make je Athlet, je mit
-// eigenem Thumbnail-Raster. Lädt die Session live über den SessionStore statt
-// eine übergebene Momentaufnahme zu zeigen — Verschieben/Löschen ändern den
-// Inhalt laufend.
+// Ebene 3 (SPEC.md §11): Abschnitte Unsorted/Tag je Tag, je mit eigenem
+// Thumbnail-Raster. Lädt die Sammlung live über den MediaCollectionStore
+// statt eine übergebene Momentaufnahme zu zeigen — Verschieben/Löschen ändern
+// den Inhalt laufend.
 struct GalleryView: View {
     @Environment(AppState.self) private var appState
 
-    let sessionId: UUID
-    let sessionStore: SessionStore
+    let collectionId: UUID
+    let collectionStore: MediaCollectionStore
     let settingsStore: SettingsStore
     @State private var viewModel: GalleryViewModel
 
     @State private var playingItem: GalleryThumbnailItem?
     @State private var shareURLs: [URL]?
-    @State private var isShowingAthleteManagement = false
+    @State private var isShowingTagManagement = false
 
-    init(sessionId: UUID, sessionStore: SessionStore, settingsStore: SettingsStore) {
-        self.sessionId = sessionId
-        self.sessionStore = sessionStore
+    init(collectionId: UUID, collectionStore: MediaCollectionStore, settingsStore: SettingsStore) {
+        self.collectionId = collectionId
+        self.collectionStore = collectionStore
         self.settingsStore = settingsStore
-        _viewModel = State(initialValue: GalleryViewModel(sessionId: sessionId, sessionStore: sessionStore, settingsStore: settingsStore))
+        _viewModel = State(initialValue: GalleryViewModel(sessionId: collectionId, sessionStore: collectionStore, settingsStore: settingsStore))
     }
 
-    // Text-basierter Overload statt String(localized:) (Bugfix): der reine
-    // String-Overload von .navigationTitle rendert immer verbatim, unabhängig
-    // von .environment(\.locale, ...) — das literale "Galerie" braucht Text(),
-    // damit die erzwungene App-Sprache (SettingsView "Sprache") hier greift.
-    // Als eigene Property statt inline (Bugfix): der Typchecker kam mit dem
-    // Ausdruck direkt im Modifier-Aufruf nicht in angemessener Zeit zurecht.
+    // Text-basierter Overload statt String(localized:) (aus TrickCam
+    // übernommen, Bugfix): der reine String-Overload von .navigationTitle
+    // rendert immer verbatim, unabhängig von .environment(\.locale, ...) —
+    // das literale "Galerie" braucht Text(), damit die erzwungene
+    // App-Sprache (SettingsView "Sprache") hier greift. Als eigene Property
+    // statt inline (Bugfix): der Typchecker kam mit dem Ausdruck direkt im
+    // Modifier-Aufruf nicht in angemessener Zeit zurecht.
     private var navigationTitleText: Text {
         if let name = viewModel.session?.name {
             return Text(name)
@@ -44,7 +45,12 @@ struct GalleryView: View {
             .task { await viewModel.load() }
             .sheet(item: $playingItem) { item in
                 if let url = viewModel.videoURL(for: item) {
-                    ClipPlayerView(videoURL: url, onShare: { shareURLs = [url] })
+                    switch item.kind {
+                    case .video:
+                        ClipPlayerView(videoURL: url, onShare: { shareURLs = [url] })
+                    case .photo:
+                        PhotoPreviewView(imageURL: url, onShare: { shareURLs = [url] })
+                    }
                 }
             }
             .sheet(isPresented: Binding(
@@ -54,7 +60,7 @@ struct GalleryView: View {
                 if let shareURLs { ShareSheet(items: shareURLs) }
             }
             .confirmationDialog(
-                "Clip löschen?",
+                "Aufnahme löschen?",
                 isPresented: Binding(get: { viewModel.pendingDeleteClipId != nil }, set: { if !$0 { viewModel.pendingDeleteClipId = nil } }),
                 presenting: viewModel.pendingDeleteClipId
             ) { clipId in
@@ -63,7 +69,7 @@ struct GalleryView: View {
                 }
             }
             .confirmationDialog(
-                "Clips löschen?",
+                "Aufnahmen löschen?",
                 isPresented: Binding(
                     get: { viewModel.isShowingBulkDeleteConfirmation },
                     set: { viewModel.isShowingBulkDeleteConfirmation = $0 }
@@ -73,17 +79,17 @@ struct GalleryView: View {
                     Task { await viewModel.deleteSelectedItems() }
                 }
             } message: {
-                Text("\(viewModel.selectedClipIds.count) Clips werden endgültig gelöscht.")
+                Text("\(viewModel.selectedClipIds.count) Aufnahmen werden endgültig gelöscht.")
             }
             .alert("Fehler", isPresented: Binding(get: { viewModel.isShowingError }, set: { viewModel.isShowingError = $0 })) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
-            .sheet(isPresented: $isShowingAthleteManagement, onDismiss: {
+            .sheet(isPresented: $isShowingTagManagement, onDismiss: {
                 Task { await viewModel.load() }
             }) {
-                AthleteManagementSheet(sessionId: sessionId, sessionStore: sessionStore, settingsStore: settingsStore)
+                TagManagementSheet(collectionId: collectionId, collectionStore: collectionStore, settingsStore: settingsStore)
             }
     }
 
@@ -93,7 +99,7 @@ struct GalleryView: View {
             Theme.backgroundPrimary.ignoresSafeArea()
 
             if viewModel.sections.isEmpty {
-                Text("Noch keine Clips in dieser Session")
+                Text("Noch keine Aufnahmen in dieser Sammlung")
                     .font(Typography.body)
                     .foregroundStyle(Theme.textSecondary)
             } else {
@@ -105,7 +111,7 @@ struct GalleryView: View {
                     loadThumbnail: { item in await viewModel.thumbnailURL(for: item) },
                     onSelectItem: { item in handleTap(item) },
                     onMove: { item, destination in Task { await viewModel.move(item: item, to: destination) } },
-                    onDelete: { item in viewModel.pendingDeleteClipId = item.clipId }
+                    onDelete: { item in viewModel.pendingDeleteClipId = item.captureId }
                 )
             }
         }
@@ -127,11 +133,11 @@ struct GalleryView: View {
                     .disabled(viewModel.selectedItemIds.isEmpty)
             } else {
                 Button {
-                    isShowingAthleteManagement = true
+                    isShowingTagManagement = true
                 } label: {
                     Image(systemName: "plus")
                 }
-                .accessibilityLabel("Athlet hinzufügen")
+                .accessibilityLabel("Tag hinzufügen")
             }
         }
         ToolbarItem(placement: .secondaryAction) {
@@ -139,30 +145,29 @@ struct GalleryView: View {
                 viewModel.toggleSelectionMode()
             }
         }
-        // Ergänzt die Aktivieren-Wischgeste in der Sessions-Übersicht um
-        // denselben Weg direkt aus der Galerie heraus (Bugfix, Nutzerwunsch)
-        // — praktisch, wenn man beim Sichten der Clips merkt, dass hier
-        // weitergefilmt werden soll.
-        if !viewModel.isSelectionMode && appState.activeSessionId != sessionId {
+        // Ergänzt die Aktivieren-Wischgeste in der Sammlungen-Übersicht um
+        // denselben Weg direkt aus der Galerie heraus (aus TrickCam
+        // übernommen) — praktisch, wenn man beim Sichten der Aufnahmen merkt,
+        // dass hier weitergefilmt werden soll.
+        if !viewModel.isSelectionMode && appState.activeCollectionId != collectionId {
             ToolbarItem(placement: .secondaryAction) {
-                Button("Als aktive Session festlegen") {
-                    appState.activeSessionId = sessionId
+                Button("Als aktive Sammlung festlegen") {
+                    appState.activeCollectionId = collectionId
                 }
             }
         }
         // Verschieben und Löschen sitzen beide im selben Überlaufmenü ("...")
-        // wie Fertig/Auswählen (Nutzerwunsch) — mehrere .secondaryAction-
-        // Einträge fasst iOS automatisch zu einem Menü zusammen, statt als
-        // eigene Bottom-Bar-Buttons. Keine der beiden Aktionen lebt mehr in
-        // der Bottom-Bar.
+        // wie Fertig/Auswählen (aus TrickCam übernommen) — mehrere
+        // .secondaryAction-Einträge fasst iOS automatisch zu einem Menü
+        // zusammen, statt als eigene Bottom-Bar-Buttons.
         if viewModel.isSelectionMode {
             ToolbarItem(placement: .secondaryAction) {
                 // Als Untermenü wie Löschen: ohne Auswahl grau/deaktiviert,
-                // erst mit markierten Clips aktiv (Nutzerwunsch).
+                // erst mit markierten Captures aktiv (aus TrickCam übernommen).
                 Menu {
-                    ForEach(viewModel.bulkMoveDestinations) { destination in
-                        Button("Nach \(destination.label) verschieben") {
-                            Task { await viewModel.bulkMove(to: destination) }
+                    ForEach(viewModel.bulkMoveDestinations) { tag in
+                        Button("Nach \(tag.name) verschieben") {
+                            Task { await viewModel.bulkMove(to: tag) }
                         }
                     }
                 } label: {
@@ -172,8 +177,8 @@ struct GalleryView: View {
             }
             ToolbarItem(placement: .secondaryAction) {
                 // Ohne Auswahl: kein .destructive-Role, damit der Eintrag grau
-                // statt rot erscheint, solange er wirkungslos wäre
-                // (Nutzerwunsch). Erst mit Auswahl wieder rot wie gehabt.
+                // statt rot erscheint, solange er wirkungslos wäre (aus
+                // TrickCam übernommen). Erst mit Auswahl wieder rot wie gehabt.
                 if viewModel.selectedItemIds.isEmpty {
                     Button("Löschen") {
                         viewModel.confirmBulkDelete()
@@ -194,8 +199,8 @@ struct GalleryView: View {
 #Preview {
     NavigationStack {
         GalleryView(
-            sessionId: UUID(),
-            sessionStore: SessionStore(fileStore: FileStore(pathBuilder: .standard), pathBuilder: .standard),
+            collectionId: UUID(),
+            collectionStore: MediaCollectionStore(fileStore: FileStore(pathBuilder: .standard), pathBuilder: .standard),
             settingsStore: SettingsStore()
         )
     }

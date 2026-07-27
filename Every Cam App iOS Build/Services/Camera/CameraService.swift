@@ -36,6 +36,11 @@ final class CameraService: NSObject {
     nonisolated(unsafe) let session = AVCaptureSession()
     nonisolated(unsafe) private let movieOutput = AVCaptureMovieFileOutput()
 
+    // Fotoaufnahme (SPEC.md §7.1, neu) — unabhängig vom Video-Aufnahmeweg,
+    // bleibt unverändert an der Session, egal ob movieOutput oder der
+    // ProRes-Datenpfad gerade aktiv ist.
+    nonisolated(unsafe) private let photoOutput = AVCapturePhotoOutput()
+
     // Zweiter Aufnahmeweg ausschließlich für ProRes (spec.md §12): iOS bietet
     // ProRes über AVCaptureMovieFileOutput gar nicht an, nur über Data-Outputs
     // plus eigenen AVAssetWriter. Beide Wege existieren parallel, aber immer
@@ -71,14 +76,14 @@ final class CameraService: NSObject {
 
     // Beim Aufnahmestart fixierte Ausrichtung (spec.md §15.2), vom ViewModel
     // nach dem Stopp für den session.json-Eintrag ausgelesen.
-    private(set) var capturedOrientation: ClipOrientation = .portrait
+    private(set) var capturedOrientation: CaptureOrientation = .portrait
 
     // Live, nicht erst beim Aufnahmestart fixiert (Update, spec.md §7.4) — läuft
     // über dieselbe KVO-Beobachtung wie die Vorschau-Rotation mit. Der Dual-Modus
     // nutzt das, um das Crop-Hilfsraster schon beim Rahmen (vor dem Start) auf
     // die aktuelle Gerätehaltung abzustimmen (Hochkant → 16:9-Ausschnitt-Vorschau,
     // Querformat → 9:16-Ausschnitt-Vorschau).
-    private(set) var liveOrientation: ClipOrientation = .portrait
+    private(set) var liveOrientation: CaptureOrientation = .portrait
 
     private(set) var isTorchOn = false
     private(set) var activeLensId: String?
@@ -220,6 +225,12 @@ final class CameraService: NSObject {
             // Keine Längen-/Größenbegrenzung der Aufnahme (spec.md §15.4).
             self.movieOutput.maxRecordedDuration = .invalid
             self.movieOutput.maxRecordedFileSize = 0
+
+            // Unabhängig vom Video-Aufnahmeweg — beide Outputs können
+            // gleichzeitig an derselben Session hängen (SPEC.md §7.1).
+            if self.session.canAddOutput(self.photoOutput) {
+                self.session.addOutput(self.photoOutput)
+            }
 
             self.session.commitConfiguration()
             self.session.startRunning()
@@ -591,11 +602,60 @@ final class CameraService: NSObject {
             if successfullyFinished {
                 continuation.resume(returning: url)
             } else {
-                continuation.resume(throwing: TrickCamError.fileOperationFailed(underlying: error))
+                continuation.resume(throwing: EveryCamError.fileOperationFailed(underlying: error))
             }
         } else {
             continuation.resume(returning: url)
         }
+    }
+
+    // MARK: - Foto-Aufnahme (SPEC.md §7.1, neu)
+
+    // nonisolated(unsafe), analog zu activeVideoInput: geschrieben auf dem
+    // Main Actor kurz vor dem Dispatch, gelesen im nonisolated
+    // Delegate-Callback (dessen Queue AVFoundation selbst bestimmt) — genau
+    // ein Foto ist jeweils "in flight", dieselbe Ein-Continuation-Disziplin
+    // wie recordingContinuation unten sichert das ab.
+    @ObservationIgnored
+    nonisolated(unsafe) private var pendingPhotoURL: URL?
+    private var photoCaptureContinuation: CheckedContinuation<Void, Error>?
+
+    /// Ein einzelner Tap löst sofort aus — kein Start/Stopp-Zustand (SPEC.md
+    /// §7.1). Schreibt die Bilddaten direkt in `url`, im gewünschten Format
+    /// (HEIC/JPEG, SPEC.md §12). Wie beim Video wird die Ausrichtung beim
+    /// Auslösen fixiert (spec.md §15.2) — für Fotos gibt es aber keinen
+    /// späteren "Stopp"-Zeitpunkt, der sie noch ändern könnte.
+    func capturePhoto(to url: URL, format: PhotoFormat) async throws {
+        let angle = rotationCoordinator?.videoRotationAngleForHorizonLevelCapture ?? 90
+        capturedOrientation = Int(angle) % 180 == 0 ? .landscape : .portrait
+        pendingPhotoURL = url
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            self.photoCaptureContinuation = continuation
+            dispatchCapturePhoto(angle: angle, format: format)
+        }
+    }
+
+    nonisolated private func dispatchCapturePhoto(angle: CGFloat, format: PhotoFormat) {
+        sessionQueue.async {
+            if let connection = self.photoOutput.connection(with: .video), connection.isVideoRotationAngleSupported(angle) {
+                connection.videoRotationAngle = angle
+            }
+            let settings: AVCapturePhotoSettings
+            if format == .heic, self.photoOutput.availablePhotoCodecTypes.contains(.hevc) {
+                settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc])
+            } else {
+                // Kein availablePhotoCodecTypes-Check nötig: JPEG ist auf jedem
+                // Gerät garantiert, das Standardformat ohne format-Parameter.
+                settings = AVCapturePhotoSettings()
+            }
+            self.photoOutput.capturePhoto(with: settings, delegate: self)
+        }
+    }
+
+    private func finishPhotoCapture(_ result: Result<Void, Error>) {
+        guard let continuation = photoCaptureContinuation else { return }
+        photoCaptureContinuation = nil
+        continuation.resume(with: result)
     }
 
     // MARK: - Unterbrechung (Anruf, App-Wechsel, spec.md §15.6)
@@ -908,6 +968,39 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate, AVCapture
             proResRecorder.appendVideo(sampleBuffer)
         } else if output === audioDataOutput {
             proResRecorder.appendAudio(sampleBuffer)
+        }
+    }
+}
+
+// MARK: - AVCapturePhotoCaptureDelegate (SPEC.md §7.1, neu)
+
+extension CameraService: AVCapturePhotoCaptureDelegate {
+    nonisolated func photoOutput(
+        _ output: AVCapturePhotoOutput,
+        didFinishProcessingPhoto photo: AVCapturePhoto,
+        error: Error?
+    ) {
+        // Schreibt die Datei hier, noch auf der AVFoundation-Callback-Queue,
+        // nicht erst nach dem Hop auf den Main Actor (CLAUDE.md §5.3 — Datei-
+        // I/O nie auf dem Main Actor).
+        let result = Self.writePhotoData(photo, error: error, to: pendingPhotoURL)
+        Task { @MainActor in
+            self.finishPhotoCapture(result)
+        }
+    }
+
+    nonisolated private static func writePhotoData(_ photo: AVCapturePhoto, error: Error?, to url: URL?) -> Result<Void, Error> {
+        if let error {
+            return .failure(EveryCamError.recordingFailed(underlying: error))
+        }
+        guard let url, let data = photo.fileDataRepresentation() else {
+            return .failure(EveryCamError.recordingFailed(underlying: nil))
+        }
+        do {
+            try data.write(to: url, options: .atomic)
+            return .success(())
+        } catch {
+            return .failure(EveryCamError.fileOperationFailed(underlying: error))
         }
     }
 }

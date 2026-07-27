@@ -23,6 +23,25 @@ struct SettingsStoreTests {
         #expect(store.frameRate == .fps30)
         #expect(store.videoCodec == .hevc)
         #expect(store.audioCodec == .aac)
+        #expect(store.photoFormat == .heic)
+    }
+
+    @Test func photoFormatChangePersistsAcrossInstances() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(userDefaults: defaults)
+        store.photoFormat = .jpeg
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        #expect(reloaded.photoFormat == .jpeg)
+    }
+
+    @Test func photoFormatMapsToExtension() {
+        #expect(PhotoFormat.heic.fileExtension == "heic")
+        #expect(PhotoFormat.jpeg.fileExtension == "jpg")
+        #expect(PhotoFormat.heic.displayLabel == "HEIC")
+        #expect(PhotoFormat.jpeg.displayLabel == "JPEG")
     }
 
     @Test func videoCodecChangePersistsAcrossInstances() {

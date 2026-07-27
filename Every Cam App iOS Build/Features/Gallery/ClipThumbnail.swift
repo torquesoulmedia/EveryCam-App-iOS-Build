@@ -13,10 +13,10 @@ struct ClipThumbnail: View {
     let item: GalleryThumbnailItem
     let isSelectionMode: Bool
     let isSelected: Bool
-    let moveDestinations: [MoveDestination]
+    let moveDestinations: [Tag]
     let loadThumbnail: () async -> URL?
     let onTap: () -> Void
-    let onMove: (MoveDestination) -> Void
+    let onMove: (Tag) -> Void
     let onDelete: () -> Void
 
     @State private var image: UIImage?
@@ -90,8 +90,8 @@ struct ClipThumbnail: View {
         .clipped()
         .contentShape(RoundedRectangle(cornerRadius: Layout.cornerRadius))
         .contextMenu {
-            ForEach(moveDestinations) { destination in
-                Button("Verschieben nach \(destination.label)") { onMove(destination) }
+            ForEach(moveDestinations) { tag in
+                Button("Verschieben nach \(tag.name)") { onMove(tag) }
             }
             Button("Löschen", role: .destructive, action: onDelete)
         }
@@ -104,7 +104,7 @@ struct ClipThumbnail: View {
     }
 
     private var accessibilityLabel: String {
-        let base = item.formatLabel.map { LocalizedStringResolver.string("Clip, \($0)", locale: locale) } ?? LocalizedStringResolver.string("Clip", locale: locale)
+        let base = item.formatLabel.map { LocalizedStringResolver.string("Aufnahme, \($0)", locale: locale) } ?? LocalizedStringResolver.string("Aufnahme", locale: locale)
         guard isSelectionMode else { return base }
         let state = isSelected ? LocalizedStringResolver.string("ausgewählt", locale: locale) : LocalizedStringResolver.string("nicht ausgewählt", locale: locale)
         // Reine Verkettung zweier bereits übersetzter Bausteine statt eines
@@ -121,12 +121,12 @@ struct ClipThumbnail: View {
         Theme.backgroundPrimary.ignoresSafeArea()
         HStack {
             ClipThumbnail(
-                item: GalleryThumbnailItem(clipId: UUID(), variant: .single, relativeVideoPath: "x.mov", formatLabel: "9:16"),
+                item: GalleryThumbnailItem(captureId: UUID(), kind: .video, variant: .single, relativeVideoPath: "x.mov", formatLabel: "9:16"),
                 isSelectionMode: false, isSelected: false, moveDestinations: [],
                 loadThumbnail: { nil }, onTap: {}, onMove: { _ in }, onDelete: {}
             )
             ClipThumbnail(
-                item: GalleryThumbnailItem(clipId: UUID(), variant: .dualCrop, relativeVideoPath: "x.mov", formatLabel: "16:9"),
+                item: GalleryThumbnailItem(captureId: UUID(), kind: .video, variant: .dualCrop, relativeVideoPath: "x.mov", formatLabel: "16:9"),
                 isSelectionMode: true, isSelected: true, moveDestinations: [],
                 loadThumbnail: { nil }, onTap: {}, onMove: { _ in }, onDelete: {}
             )

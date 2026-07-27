@@ -62,7 +62,7 @@ nonisolated struct CropService: Sendable {
         let asset = AVURLAsset(url: sourceURL)
 
         guard let videoTrack = try await asset.loadTracks(withMediaType: .video).first else {
-            throw TrickCamError.cropFailed(underlying: nil)
+            throw EveryCamError.cropFailed(underlying: nil)
         }
 
         let naturalSize = try await videoTrack.load(.naturalSize)
@@ -88,7 +88,7 @@ nonisolated struct CropService: Sendable {
         )
 
         guard let export = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality) else {
-            throw TrickCamError.cropFailed(underlying: nil)
+            throw EveryCamError.cropFailed(underlying: nil)
         }
         export.videoComposition = composition
         // Audiospur wird von der VideoComposition nicht berührt und ganz normal
@@ -151,7 +151,7 @@ nonisolated struct CropService: Sendable {
                     if session.status == .completed {
                         continuation.resume()
                     } else {
-                        continuation.resume(throwing: TrickCamError.cropFailed(underlying: session.error))
+                        continuation.resume(throwing: EveryCamError.cropFailed(underlying: session.error))
                     }
                 }
             }

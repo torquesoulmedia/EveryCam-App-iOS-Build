@@ -1,16 +1,15 @@
 import SwiftUI
 
-// Ersetzt ein LazyVGrid mit .adaptive-Spalten (Nutzerwunsch: Hintergrund des
-// Zuordnungs-Panels muss sich der Athletenzahl anpassen). .adaptive füllt
+// Ersetzt ein LazyVGrid mit .adaptive-Spalten (Hintergrund des
+// Zuordnungs-Panels muss sich der Tag-Zahl anpassen). .adaptive füllt
 // grundsätzlich die komplette angebotene Breite mit so vielen Spalten wie
-// passen — bei wenigen Athleten blieb das Panel dadurch unnötig breit, nur
-// die Höhe wuchs mit. Dieser eigene, nicht-lazy Umbruch misst jeden Button
-// vorab, bricht nach spätestens `maxPerRow` Buttons um (statt nach
-// verfügbarer Breite) und zentriert jede Zeile — dadurch schrumpft/wächst
-// der Hintergrund in AssignmentPanel (VStack + .background) in beide
-// Richtungen exakt mit der Athletenzahl, alle Buttons bleiben sichtbar
-// (Nutzerwunsch, Update).
-struct MakeButtonsFlowLayout: SwiftUI.Layout {
+// passen — bei wenigen Tags blieb das Panel dadurch unnötig breit, nur die
+// Höhe wuchs mit. Dieser eigene, nicht-lazy Umbruch misst jeden Button vorab,
+// bricht nach spätestens `maxPerRow` Buttons um (statt nach verfügbarer
+// Breite) und zentriert jede Zeile — dadurch schrumpft/wächst der Hintergrund
+// in AssignmentPanel (VStack + .background) in beide Richtungen exakt mit der
+// Tag-Zahl, alle Buttons bleiben sichtbar.
+struct TagButtonsFlowLayout: SwiftUI.Layout {
     var spacing: CGFloat = Layout.spacingS
     var maxPerRow: Int = 4
 
@@ -33,9 +32,8 @@ struct MakeButtonsFlowLayout: SwiftUI.Layout {
             let rowWidth = sizes.map(\.width).reduce(0, +) + CGFloat(max(0, sizes.count - 1)) * spacing
             let rowHeight = sizes.map(\.height).max() ?? 0
 
-            // Jede Zeile zentriert unter der breitesten Zeile bzw. dem
-            // Bail-Button darüber (Nutzerwunsch: "Felder... immer zentriert
-            // anzeigen").
+            // Jede Zeile zentriert unter der breitesten Zeile ("Felder...
+            // immer zentriert anzeigen", aus TrickCam übernommen).
             var x = bounds.minX + (bounds.width - rowWidth) / 2
             for (offset, subview) in row.enumerated() {
                 let size = sizes[offset]

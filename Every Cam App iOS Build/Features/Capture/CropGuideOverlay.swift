@@ -16,7 +16,7 @@ import SwiftUI
 // horizontale Linien oben/unten (16:9-Ausschnitt). Querformat: vertikale
 // Linien links/rechts (9:16-Ausschnitt).
 struct CropGuideOverlay: View {
-    let orientation: ClipOrientation
+    let orientation: CaptureOrientation
     private let lineWidth: CGFloat = 2
 
     var body: some View {

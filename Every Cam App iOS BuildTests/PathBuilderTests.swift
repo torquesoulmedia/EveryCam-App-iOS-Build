@@ -5,135 +5,105 @@ import Foundation
 struct PathBuilderTests {
 
     private var pathBuilder: PathBuilder {
-        PathBuilder(sessionsRootURL: URL(fileURLWithPath: "/tmp/TrickCamPathBuilderTests/Sessions"))
+        PathBuilder(collectionsRootURL: URL(fileURLWithPath: "/tmp/EveryCamPathBuilderTests/Sammlungen"))
     }
 
-    @Test func sessionFolderNameWithoutSuffix() {
-        let name = pathBuilder.sessionFolderName(date: "2026-07-14", sanitizedName: "Contest Bowl", suffix: 1)
+    @Test func collectionFolderNameWithoutSuffix() {
+        let name = pathBuilder.collectionFolderName(date: "2026-07-14", sanitizedName: "Contest Bowl", suffix: 1)
         #expect(name == "2026-07-14_Contest Bowl")
     }
 
-    @Test func sessionFolderNameWithSuffix() {
-        let name = pathBuilder.sessionFolderName(date: "2026-07-14", sanitizedName: "Contest Bowl", suffix: 2)
+    @Test func collectionFolderNameWithSuffix() {
+        let name = pathBuilder.collectionFolderName(date: "2026-07-14", sanitizedName: "Contest Bowl", suffix: 2)
         #expect(name == "2026-07-14_Contest Bowl (2)")
     }
 
-    @Test func bailFolderSitsDirectlyUnderSessionFolder() {
-        let session = pathBuilder.sessionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
-        let bail = pathBuilder.bailFolderURL(sessionFolder: session)
-        #expect(bail.lastPathComponent == "Bail")
-        #expect(bail.deletingLastPathComponent() == session)
+    @Test func tagFolderSitsDirectlyUnderCollectionFolder() {
+        let collection = pathBuilder.collectionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
+        let tag = pathBuilder.tagFolderURL(collectionFolder: collection, sanitizedTagName: "Oma")
+        #expect(tag.lastPathComponent == "Oma")
+        #expect(tag.deletingLastPathComponent() == collection)
     }
 
-    @Test func makeFolderNestsUnderAthleteShortcode() {
-        let session = pathBuilder.sessionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
-        let make = pathBuilder.makeFolderURL(sessionFolder: session, athleteShortcode: "MM")
-        #expect(make.path.hasSuffix("Make/MM"))
-    }
-
-    @Test func dualBailFolderUsesUnderscorePrefix() {
-        let session = pathBuilder.sessionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
-        let dualBail = pathBuilder.dualBailFolderURL(sessionFolder: session, variant: .nine16)
-        #expect(dualBail.path.hasSuffix("Dual/_Bail/9-16"))
-    }
-
-    @Test func dualAthleteFolderSeparatesVariants() {
-        let session = pathBuilder.sessionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
-        let original = pathBuilder.dualFolderURL(sessionFolder: session, athleteShortcode: "JS", variant: .nine16)
-        let cropped = pathBuilder.dualFolderURL(sessionFolder: session, athleteShortcode: "JS", variant: .sixteen9)
+    @Test func dualTagFolderSeparatesVariants() {
+        let collection = pathBuilder.collectionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
+        let original = pathBuilder.dualFolderURL(collectionFolder: collection, sanitizedTagName: "JS", variant: .nine16)
+        let cropped = pathBuilder.dualFolderURL(collectionFolder: collection, sanitizedTagName: "JS", variant: .sixteen9)
         #expect(original.path.hasSuffix("Dual/JS/9-16"))
         #expect(cropped.path.hasSuffix("Dual/JS/16-9"))
     }
 
-    @Test func cropClipFileNameHasCropSuffix() {
-        let clipId = UUID()
-        let folder = URL(fileURLWithPath: "/tmp/TrickCamPathBuilderTests/Dual/JS/16-9")
-        let url = pathBuilder.cropClipFileURL(in: folder, clipId: clipId, fileExtension: "mov")
-        #expect(url.lastPathComponent == "\(clipId.uuidString)_crop.mov")
+    @Test func cropCaptureFileNameHasCropSuffix() {
+        let captureId = UUID()
+        let folder = URL(fileURLWithPath: "/tmp/EveryCamPathBuilderTests/Dual/JS/16-9")
+        let url = pathBuilder.cropCaptureFileURL(in: folder, captureId: captureId, fileExtension: "mov")
+        #expect(url.lastPathComponent == "\(captureId.uuidString)_crop.mov")
     }
 
     @Test func thumbnailLivesInHiddenThumbsFolder() {
-        let session = pathBuilder.sessionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
-        let clipId = UUID()
-        let url = pathBuilder.thumbnailURL(sessionFolder: session, clipId: clipId)
-        #expect(url.path.hasSuffix(".thumbs/\(clipId.uuidString).jpg"))
+        let collection = pathBuilder.collectionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
+        let captureId = UUID()
+        let url = pathBuilder.thumbnailURL(collectionFolder: collection, captureId: captureId)
+        #expect(url.path.hasSuffix(".thumbs/\(captureId.uuidString).jpg"))
     }
 
     @Test func cropThumbnailHasCropSuffix() {
-        let session = pathBuilder.sessionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
-        let clipId = UUID()
-        let url = pathBuilder.cropThumbnailURL(sessionFolder: session, clipId: clipId)
-        #expect(url.path.hasSuffix(".thumbs/\(clipId.uuidString)_crop.jpg"))
+        let collection = pathBuilder.collectionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
+        let captureId = UUID()
+        let url = pathBuilder.cropThumbnailURL(collectionFolder: collection, captureId: captureId)
+        #expect(url.path.hasSuffix(".thumbs/\(captureId.uuidString)_crop.jpg"))
     }
 
-    @Test func sessionJSONLivesDirectlyInSessionFolder() {
-        let session = pathBuilder.sessionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
-        let json = pathBuilder.sessionJSONURL(sessionFolder: session)
-        #expect(json.lastPathComponent == "session.json")
-        #expect(json.deletingLastPathComponent() == session)
+    @Test func collectionJSONLivesDirectlyInCollectionFolder() {
+        let collection = pathBuilder.collectionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
+        let json = pathBuilder.collectionJSONURL(collectionFolder: collection)
+        #expect(json.lastPathComponent == "collection.json")
+        #expect(json.deletingLastPathComponent() == collection)
     }
 
-    @Test func unsortedClipRelativePathIsSessionRelative() {
-        let clipId = UUID()
-        let path = pathBuilder.unsortedClipRelativePath(clipId: clipId, fileExtension: "mov")
-        #expect(path == "Unsorted/\(clipId.uuidString).mov")
+    @Test func unsortedCaptureRelativePathIsCollectionRelative() {
+        let captureId = UUID()
+        let path = pathBuilder.unsortedCaptureRelativePath(captureId: captureId, fileExtension: "mov")
+        #expect(path == "Unsorted/\(captureId.uuidString).mov")
     }
 
-    @Test func bailClipRelativePathFormat() {
-        let clipId = UUID()
-        let path = pathBuilder.bailClipRelativePath(clipId: clipId, fileExtension: "mov")
-        #expect(path == "Bail/\(clipId.uuidString).mov")
+    @Test func tagCaptureRelativePathFormat() {
+        let captureId = UUID()
+        let path = pathBuilder.tagCaptureRelativePath(sanitizedTagName: "Oma", captureId: captureId, fileExtension: "mov")
+        #expect(path == "Oma/\(captureId.uuidString).mov")
     }
 
-    @Test func makeClipRelativePathFormat() {
-        let clipId = UUID()
-        let path = pathBuilder.makeClipRelativePath(athleteShortcode: "MM", clipId: clipId, fileExtension: "mov")
-        #expect(path == "Make/MM/\(clipId.uuidString).mov")
-    }
-
-    // MARK: - Dual-Pfade (spec.md §5 / §7.4)
+    // MARK: - Dual-Pfade (SPEC.md §5/§7.4-Herkunft aus TrickCam)
 
     @Test func unsortedCropRelativePathHasCropSuffix() {
-        let clipId = UUID()
-        let path = pathBuilder.unsortedCropRelativePath(clipId: clipId, fileExtension: "mov")
-        #expect(path == "Unsorted/\(clipId.uuidString)_crop.mov")
+        let captureId = UUID()
+        let path = pathBuilder.unsortedCropRelativePath(captureId: captureId, fileExtension: "mov")
+        #expect(path == "Unsorted/\(captureId.uuidString)_crop.mov")
     }
 
     @Test func dualOriginalRelativePathFormat() {
-        let clipId = UUID()
-        let path = pathBuilder.dualOriginalRelativePath(athleteShortcode: "JS", clipId: clipId, fileExtension: "mov", variant: .nine16)
-        #expect(path == "Dual/JS/9-16/\(clipId.uuidString).mov")
+        let captureId = UUID()
+        let path = pathBuilder.dualOriginalRelativePath(sanitizedTagName: "JS", captureId: captureId, fileExtension: "mov", variant: .nine16)
+        #expect(path == "Dual/JS/9-16/\(captureId.uuidString).mov")
     }
 
     @Test func dualCropRelativePathFormat() {
-        let clipId = UUID()
-        let path = pathBuilder.dualCropRelativePath(athleteShortcode: "JS", clipId: clipId, fileExtension: "mov", variant: .sixteen9)
-        #expect(path == "Dual/JS/16-9/\(clipId.uuidString)_crop.mov")
+        let captureId = UUID()
+        let path = pathBuilder.dualCropRelativePath(sanitizedTagName: "JS", captureId: captureId, fileExtension: "mov", variant: .sixteen9)
+        #expect(path == "Dual/JS/16-9/\(captureId.uuidString)_crop.mov")
     }
 
-    @Test func dualBailOriginalRelativePathUsesUnderscorePrefix() {
-        let clipId = UUID()
-        let path = pathBuilder.dualBailOriginalRelativePath(clipId: clipId, fileExtension: "mov", variant: .nine16)
-        #expect(path == "Dual/_Bail/9-16/\(clipId.uuidString).mov")
-    }
-
-    @Test func dualBailCropRelativePathUsesUnderscorePrefix() {
-        let clipId = UUID()
-        let path = pathBuilder.dualBailCropRelativePath(clipId: clipId, fileExtension: "mov", variant: .sixteen9)
-        #expect(path == "Dual/_Bail/16-9/\(clipId.uuidString)_crop.mov")
-    }
-
-    // Querformat-Aufnahme (Update, spec.md §7.4, Option 2): Original ist 16:9,
-    // Crop ist 9:16 — genau umgekehrte Variantenzuordnung.
+    // Querformat-Aufnahme (aus TrickCam übernommen, SPEC.md §7.4-Herkunft):
+    // Original ist 16:9, Crop ist 9:16 — genau umgekehrte Variantenzuordnung.
     @Test func dualOriginalRelativePathFormatForLandscapeCapture() {
-        let clipId = UUID()
-        let path = pathBuilder.dualOriginalRelativePath(athleteShortcode: "JS", clipId: clipId, fileExtension: "mov", variant: .sixteen9)
-        #expect(path == "Dual/JS/16-9/\(clipId.uuidString).mov")
+        let captureId = UUID()
+        let path = pathBuilder.dualOriginalRelativePath(sanitizedTagName: "JS", captureId: captureId, fileExtension: "mov", variant: .sixteen9)
+        #expect(path == "Dual/JS/16-9/\(captureId.uuidString).mov")
     }
 
     @Test func dualCropRelativePathFormatForLandscapeCapture() {
-        let clipId = UUID()
-        let path = pathBuilder.dualCropRelativePath(athleteShortcode: "JS", clipId: clipId, fileExtension: "mov", variant: .nine16)
-        #expect(path == "Dual/JS/9-16/\(clipId.uuidString)_crop.mov")
+        let captureId = UUID()
+        let path = pathBuilder.dualCropRelativePath(sanitizedTagName: "JS", captureId: captureId, fileExtension: "mov", variant: .nine16)
+        #expect(path == "Dual/JS/9-16/\(captureId.uuidString)_crop.mov")
     }
 }

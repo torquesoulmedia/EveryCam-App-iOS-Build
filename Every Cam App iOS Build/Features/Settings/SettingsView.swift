@@ -59,6 +59,11 @@ struct SettingsView: View {
             }
             .listRowBackground(Theme.surfacePanel)
 
+            Section("Foto") {
+                labeledSegmentedPicker("Foto-Format", selection: $settingsStore.photoFormat, options: PhotoFormat.allCases) { $0.displayLabel }
+            }
+            .listRowBackground(Theme.surfacePanel)
+
             Section("Audio") {
                 labeledSegmentedPicker("Audio-Codec", selection: $settingsStore.audioCodec, options: AudioCodec.allCases) { $0.displayLabel }
 

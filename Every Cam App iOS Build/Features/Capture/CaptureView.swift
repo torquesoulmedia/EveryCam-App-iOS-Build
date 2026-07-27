@@ -1,10 +1,11 @@
 import SwiftUI
 
-// Misst die obere Kante des unteren Bedienbereichs (Nutzerwunsch, Bugfix) —
-// darunter (Single/Dual, Aufnahmeknopf, Plus/Athlet, Objektivauswahl) darf
-// kein Tap-to-Focus/keine AE/AF-Sperre mehr ausgelöst werden, sonst
-// kollidierte ein Tap auf diese Buttons mit der Fokus-Erkennung der
-// darunterliegenden Kamera-Vorschau und konnte sogar den Start-/Stopp-Tap stören.
+// Misst die obere Kante des unteren Bedienbereichs (Bugfix, aus TrickCam
+// übernommen) — darunter (Single/Dual, Aufnahmeknopf, Plus/Tags,
+// Objektivauswahl) darf kein Tap-to-Focus/keine AE/AF-Sperre mehr ausgelöst
+// werden, sonst kollidierte ein Tap auf diese Buttons mit der
+// Fokus-Erkennung der darunterliegenden Kamera-Vorschau und konnte sogar den
+// Start-/Stopp-Tap stören.
 private struct ControlsAreaTopYKey: PreferenceKey {
     static let defaultValue: CGFloat = .infinity
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
@@ -12,35 +13,35 @@ private struct ControlsAreaTopYKey: PreferenceKey {
     }
 }
 
-// Ebene 1 (spec.md §7) — Phase 4+5+6: Vollbild-Vorschau, Aufnahmeknopf,
-// Zuordnungs-Panel, Blitz, Pinch-Zoom/Tap-to-Focus (auf der Preview-Ebene
-// selbst) und Objektivauswahl. Single/Dual (Phase 7) kommt als Nächstes dazu.
+// Ebene 1 (SPEC.md §7) — Vollbild-Vorschau, Aufnahmeknopf, Zuordnungs-Panel,
+// Blitz, Pinch-Zoom/Tap-to-Focus (auf der Preview-Ebene selbst) und
+// Objektivauswahl.
 struct CaptureView: View {
     @Environment(AppState.self) private var appState
 
-    let sessionStore: SessionStore
+    let collectionStore: MediaCollectionStore
     let settingsStore: SettingsStore
     @State private var viewModel: CaptureViewModel
     @State private var focusIndicatorPoint: CGPoint?
     @State private var focusIndicatorTask: Task<Void, Never>?
-    // AE/AF-Sperre (Update, Nutzerwunsch) — im Unterschied zu
+    // AE/AF-Sperre (aus TrickCam übernommen) — im Unterschied zu
     // focusIndicatorPoint dauerhaft, kein Auto-Ausblenden.
     @State private var lockedPoint: CGPoint?
-    @State private var isShowingNewSessionSheet = false
-    @State private var isShowingAthleteManagement = false
+    @State private var isShowingNewCollectionSheet = false
+    @State private var isShowingTagManagement = false
     @State private var isShowingSettings = false
     // Siehe ControlsAreaTopYKey — Default .infinity, solange noch nicht
     // gemessen, schränkt also anfangs nichts ein.
     @State private var controlsAreaTopY: CGFloat = .infinity
 
-    init(sessionStore: SessionStore, settingsStore: SettingsStore) {
-        self.sessionStore = sessionStore
+    init(collectionStore: MediaCollectionStore, settingsStore: SettingsStore) {
+        self.collectionStore = collectionStore
         self.settingsStore = settingsStore
-        _viewModel = State(initialValue: CaptureViewModel(sessionStore: sessionStore, settingsStore: settingsStore))
+        _viewModel = State(initialValue: CaptureViewModel(collectionStore: collectionStore, settingsStore: settingsStore))
     }
 
     private var canRecord: Bool {
-        viewModel.cameraStatus == .ready && appState.activeSessionId != nil
+        viewModel.cameraStatus == .ready && appState.activeCollectionId != nil && !viewModel.isCapturingPhoto
     }
 
     var body: some View {
@@ -62,26 +63,26 @@ struct CaptureView: View {
                         .transition(.opacity)
                 }
 
-                // Tippen und Halten (Update, Nutzerwunsch, analog zur nativen
-                // Kamera-App) — bleibt sichtbar, bis anderswo erneut getippt
-                // wird (siehe showFocusIndicator, das lockedPoint mit löscht).
+                // Tippen und Halten (analog zur nativen Kamera-App, aus
+                // TrickCam übernommen) — bleibt sichtbar, bis anderswo erneut
+                // getippt wird (siehe showFocusIndicator, das lockedPoint mit löscht).
                 if let lockedPoint {
                     AELockIndicator()
                         .position(lockedPoint)
                         .transition(.opacity)
                 }
 
-                if viewModel.recordingMode == .dual && viewModel.isCropGuideVisible {
+                if viewModel.recordingMode == .dual && viewModel.captureKind == .video && viewModel.isCropGuideVisible {
                     // Live-Ausrichtung statt der erst beim Start fixierten
-                    // (Update, spec.md §7.4) — reagiert schon beim Rahmen auf
-                    // Drehen des Geräts.
+                    // (SPEC.md §7.4-Herkunft aus TrickCam) — reagiert schon
+                    // beim Rahmen auf Drehen des Geräts.
                     CropGuideOverlay(orientation: viewModel.cameraService.liveOrientation)
                         .ignoresSafeArea()
                 }
 
                 if viewModel.isCompositionGridVisible {
-                    // Unabhängig vom Aufnahmemodus (Update, Nutzerwunsch,
-                    // spec.md §7.7a) — anders als CropGuideOverlay oben.
+                    // Unabhängig vom Aufnahmemodus — anders als
+                    // CropGuideOverlay oben.
                     CompositionGridOverlay()
                         .ignoresSafeArea()
                 }
@@ -103,11 +104,10 @@ struct CaptureView: View {
                         onToggleTorch: { viewModel.cameraService.toggleTorch() }
                     )
                     // Mittig oben, in einer Flucht mit Blitz und
-                    // Auflösungs-Anzeige (Nutzerwunsch) statt als Teil des
-                    // Panels darunter. 9pt tiefer als die Zeile selbst
-                    // (Update, Nutzerwunsch).
+                    // Auflösungs-Anzeige statt als Teil des Panels darunter.
+                    // 9pt tiefer als die Zeile selbst (aus TrickCam übernommen).
                     .overlay(alignment: .top) {
-                        if appState.activeSessionId != nil {
+                        if appState.activeCollectionId != nil {
                             AssignmentToggleButton(
                                 isExpanded: viewModel.isAssignmentPanelExpanded,
                                 unsortedCount: viewModel.unsortedCount,
@@ -118,11 +118,10 @@ struct CaptureView: View {
                     }
                 }
 
-                if appState.activeSessionId != nil && viewModel.isAssignmentPanelExpanded {
+                if appState.activeCollectionId != nil && viewModel.isAssignmentPanelExpanded {
                     AssignmentPanel(
-                        athletes: viewModel.activeSession?.athletes ?? [],
-                        onBail: { Task { await viewModel.assignBail() } },
-                        onMake: { athlete in Task { await viewModel.assignMake(to: athlete) } }
+                        tags: viewModel.activeCollection?.tags ?? [],
+                        onAssign: { tag in Task { await viewModel.assign(to: tag) } }
                     )
                     .padding(.top, Layout.spacingS)
                 }
@@ -140,15 +139,15 @@ struct CaptureView: View {
                     )
 
                 CaptureHints(
-                    hasActiveSession: appState.activeSessionId != nil,
+                    hasActiveCollection: appState.activeCollectionId != nil,
                     isProcessingCrop: viewModel.isProcessingCrop,
                     isLowOnStorage: viewModel.lowStorageHint
                 )
 
-                // Direkt über dem Start-/Stopp-Knopf statt oben mittig
-                // (Nutzerwunsch, Update) — dort kollidierte die Anzeige
-                // potenziell mit dem Zuordnungs-Pfeil; das Panel selbst
-                // verschwindet ohnehin automatisch bei Aufnahmestart.
+                // Direkt über dem Start-/Stopp-Knopf statt oben mittig — dort
+                // kollidierte die Anzeige potenziell mit dem
+                // Zuordnungs-Pfeil; das Panel selbst verschwindet ohnehin
+                // automatisch bei Aufnahmestart.
                 if viewModel.isRecording, let startDate = viewModel.recordingStartDate {
                     RecordingTimerBadge(startDate: startDate)
                         .padding(.bottom, Layout.spacingS)
@@ -156,8 +155,8 @@ struct CaptureView: View {
                         .animation(Layout.panelAnimation, value: viewModel.isRecording)
                 }
 
-                // Objektivauswahl jetzt oberhalb des Aufnahmeknopfs statt
-                // darunter (Update, Nutzerwunsch — siehe CaptureControlsRow).
+                // Objektivauswahl oberhalb des Aufnahmeknopfs statt darunter
+                // (aus TrickCam übernommen — siehe CaptureControlsRow).
                 if viewModel.cameraStatus == .ready {
                     CaptureBottomAccessoryRow(
                         lenses: viewModel.cameraService.availableLenses,
@@ -168,8 +167,8 @@ struct CaptureView: View {
                         onSelectLens: { lens in viewModel.selectLens(lens) },
                         onToggleZoomLock: { viewModel.toggleZoomLock() }
                     )
-                    // Mehr Luft zum Aufnahmeknopf darunter (Update,
-                    // Nutzerwunsch: Elemente berührten sich zuvor).
+                    // Mehr Luft zum Aufnahmeknopf darunter (aus TrickCam
+                    // übernommen).
                     .padding(.bottom, Layout.spacingM)
                 }
 
@@ -178,15 +177,18 @@ struct CaptureView: View {
                     canRecord: canRecord,
                     isCameraReady: viewModel.cameraStatus == .ready,
                     recordingMode: viewModel.recordingMode,
-                    hasActiveSession: appState.activeSessionId != nil,
+                    captureKind: viewModel.captureKind,
+                    isCapturingPhoto: viewModel.isCapturingPhoto,
+                    hasActiveCollection: appState.activeCollectionId != nil,
                     isCropGuideVisible: viewModel.isCropGuideVisible,
                     isCompositionGridVisible: viewModel.isCompositionGridVisible,
-                    onRecordTap: { Task { await viewModel.toggleRecording(activeSessionId: appState.activeSessionId) } },
+                    onRecordTap: { Task { await viewModel.toggleRecording(activeCollectionId: appState.activeCollectionId) } },
                     onSelectMode: { viewModel.setRecordingMode($0) },
-                    onNewSession: { isShowingNewSessionSheet = true },
-                    onManageAthletes: { isShowingAthleteManagement = true },
+                    onSelectCaptureKind: { viewModel.setCaptureKind($0) },
+                    onNewCollection: { isShowingNewCollectionSheet = true },
+                    onManageTags: { isShowingTagManagement = true },
                     onOpenSettings: { isShowingSettings = true },
-                    onOpenSessions: { appState.activeTab = .sessions },
+                    onOpenCollections: { appState.activeTab = .collections },
                     onToggleCropGuide: { viewModel.toggleCropGuide() },
                     onToggleCompositionGrid: { viewModel.toggleCompositionGrid() }
                 )
@@ -196,10 +198,10 @@ struct CaptureView: View {
         .task {
             await viewModel.onAppear()
         }
-        .task(id: appState.activeSessionId) {
-            let stillExists = await viewModel.activateSession(appState.activeSessionId)
+        .task(id: appState.activeCollectionId) {
+            let stillExists = await viewModel.activateCollection(appState.activeCollectionId)
             if !stillExists {
-                appState.activeSessionId = nil
+                appState.activeCollectionId = nil
             }
         }
         .task(id: settingsStore.resolution) {
@@ -216,7 +218,7 @@ struct CaptureView: View {
         }
         .task(id: settingsStore.videoCodec) {
             // ProRes braucht eine andere Aufnahme-Pipeline als H.264/HEVC
-            // (spec.md §12) — die Session wird hier passend umkonfiguriert.
+            // (SPEC.md §3) — die Session wird hier passend umkonfiguriert.
             guard viewModel.cameraStatus == .ready else { return }
             viewModel.cameraService.updateVideoCodec(settingsStore.videoCodec)
         }
@@ -228,12 +230,12 @@ struct CaptureView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .sheet(isPresented: $isShowingNewSessionSheet) {
-            NewSessionSheet(sessionStore: sessionStore, settingsStore: settingsStore, onSessionCreated: { _ in })
+        .sheet(isPresented: $isShowingNewCollectionSheet) {
+            NewCollectionSheet(collectionStore: collectionStore, settingsStore: settingsStore, onCollectionCreated: { _ in })
         }
-        // Direktzugriff auf die Settings vom Aufnahme-Bildschirm aus (Update,
-        // Nutzerwunsch) — bislang nur über die Sessions-Übersicht erreichbar
-        // (spec.md §12). Identische Darstellung wie dort (nativer
+        // Direktzugriff auf die Settings vom Aufnahme-Bildschirm aus (aus
+        // TrickCam übernommen) — bislang nur über die Sammlungen-Übersicht
+        // erreichbar (SPEC.md §12). Identische Darstellung wie dort (nativer
         // Wisch-nach-unten-Greifer statt eigenem Pfeil-Hinweis).
         .sheet(isPresented: $isShowingSettings) {
             NavigationStack {
@@ -241,11 +243,11 @@ struct CaptureView: View {
             }
             .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $isShowingAthleteManagement, onDismiss: {
-            Task { await viewModel.activateSession(appState.activeSessionId) }
+        .sheet(isPresented: $isShowingTagManagement, onDismiss: {
+            Task { await viewModel.activateCollection(appState.activeCollectionId) }
         }) {
-            if let sessionId = appState.activeSessionId {
-                AthleteManagementSheet(sessionId: sessionId, sessionStore: sessionStore, settingsStore: settingsStore)
+            if let collectionId = appState.activeCollectionId {
+                TagManagementSheet(collectionId: collectionId, collectionStore: collectionStore, settingsStore: settingsStore)
             }
         }
     }
@@ -269,7 +271,7 @@ struct CaptureView: View {
     private func showFocusIndicator(at point: CGPoint) {
         // Ein normaler Tap beendet eine laufende AE/AF-Sperre — CameraService
         // hebt sie hardwareseitig bereits in focus(at:) auf, hier nur die
-        // SwiftUI-Anzeige mit löschen (Update, Nutzerwunsch).
+        // SwiftUI-Anzeige mit löschen (aus TrickCam übernommen).
         lockedPoint = nil
         focusIndicatorTask?.cancel()
         withAnimation(.easeOut(duration: 0.15)) {
@@ -284,7 +286,7 @@ struct CaptureView: View {
         }
     }
 
-    // LocalizedStringKey statt String (Bugfix, wie SettingsView.labeledSegmentedPicker):
+    // LocalizedStringKey statt String (wie SettingsView.labeledSegmentedPicker):
     // ein reiner String-Parameter würde die Lokalisierbarkeit verlieren, auch
     // wenn jeder Aufrufer hier nur Literale übergibt.
     private func message(_ text: LocalizedStringKey) -> some View {

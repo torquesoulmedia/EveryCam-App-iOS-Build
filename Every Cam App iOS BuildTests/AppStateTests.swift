@@ -6,7 +6,7 @@ import Foundation
 struct AppStateTests {
 
     private func makeDefaults() -> (defaults: UserDefaults, suiteName: String) {
-        let suiteName = "TrickCamAppStateTests-\(UUID().uuidString)"
+        let suiteName = "EveryCamAppStateTests-\(UUID().uuidString)"
         return (UserDefaults(suiteName: suiteName)!, suiteName)
     }
 
@@ -15,21 +15,21 @@ struct AppStateTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         let appState = AppState(userDefaults: defaults)
-        #expect(appState.activeSessionId == nil)
+        #expect(appState.activeCollectionId == nil)
     }
 
     // Bugfix: eine bereits angelegte Session wurde bisher unerreichbar, sobald
-    // die App neu gestartet wurde — activeSessionId lebte nur im Speicher.
-    @Test func activeSessionIdPersistsAcrossInstances() {
+    // die App neu gestartet wurde — activeCollectionId lebte nur im Speicher.
+    @Test func activeCollectionIdPersistsAcrossInstances() {
         let (defaults, suiteName) = makeDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         let sessionId = UUID()
         let appState = AppState(userDefaults: defaults)
-        appState.activeSessionId = sessionId
+        appState.activeCollectionId = sessionId
 
         let restored = AppState(userDefaults: defaults)
-        #expect(restored.activeSessionId == sessionId)
+        #expect(restored.activeCollectionId == sessionId)
     }
 
     @Test func settingToNilClearsPersistedValue() {
@@ -37,10 +37,10 @@ struct AppStateTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
 
         let appState = AppState(userDefaults: defaults)
-        appState.activeSessionId = UUID()
-        appState.activeSessionId = nil
+        appState.activeCollectionId = UUID()
+        appState.activeCollectionId = nil
 
         let restored = AppState(userDefaults: defaults)
-        #expect(restored.activeSessionId == nil)
+        #expect(restored.activeCollectionId == nil)
     }
 }

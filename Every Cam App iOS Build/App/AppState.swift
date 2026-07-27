@@ -1,55 +1,53 @@
 import Foundation
 import Observation
 
-// Die beiden Wisch-Seiten der Drei-Ebenen-Navigation (spec.md, Gesamt-
+// Die beiden Wisch-Seiten der Drei-Ebenen-Navigation (SPEC.md, Gesamt-
 // Workflow) — als Tag für RootViews TabView(selection:), damit sowohl die
-// bestehende Wisch-Geste als auch die neuen Direktzugriffs-Buttons (CAM-Button
-// in der Sessions-Übersicht, Sessions-Button auf dem Aufnahme-Bildschirm,
-// Update Nutzerwunsch) dieselbe Seite auswählen können.
+// bestehende Wisch-Geste als auch die Direktzugriffs-Buttons (CAM-Button in
+// der Sammlungen-Übersicht, Sammlungen-Button auf dem Aufnahme-Bildschirm)
+// dieselbe Seite auswählen können.
 enum AppTab {
     case capture
-    case sessions
+    case collections
 }
 
 // Globaler UI-Zustand, App-weit über .environment(appState) verfügbar.
-// Wächst ab Phase 3 (aktive Session wird hier referenziert).
 @MainActor
 @Observable
 final class AppState {
     private enum Keys {
-        static let activeSessionId = "appState.activeSessionId"
+        static let activeCollectionId = "appState.activeCollectionId"
     }
 
     private let userDefaults: UserDefaults
 
-    // Bewusst nicht persistiert (im Unterschied zu activeSessionId) — die App
-    // soll nach jedem Start wieder direkt in der Kamera-Vorschau landen
-    // (spec.md §7, kritischer Pfad), nicht auf der zuletzt gezeigten Seite.
+    // Bewusst nicht persistiert (im Unterschied zu activeCollectionId) — die
+    // App soll nach jedem Start wieder direkt in der Kamera-Vorschau landen
+    // (SPEC.md §13, kritischer Pfad), nicht auf der zuletzt gezeigten Seite.
     var activeTab: AppTab = .capture
 
     // Persistiert über UserDefaults (wie SettingsStore, CLAUDE.md §3) statt nur
-    // im Arbeitsspeicher — sonst ging die aktive Session bei jedem App-Neustart
+    // im Arbeitsspeicher — sonst ging die aktive Sammlung bei jedem App-Neustart
     // oder jeder Unterbrechung verloren und ließ sich nur durch Anlegen einer
-    // komplett neuen Session wiederherstellen; eine bereits angelegte Session
-    // ließ sich danach nicht mehr weiter befüllen (Bugfix, Nutzerwunsch: "auch
-    // nach Schließen und Wiederöffnen der App"). Bleibt damit für den ganzen
+    // komplett neuen Sammlung wiederherstellen; eine bereits angelegte Sammlung
+    // ließ sich danach nicht mehr weiter befüllen. Bleibt damit für den ganzen
     // Kalendertag erreichbar, unabhängig von Neustarts.
-    var activeSessionId: UUID? {
+    var activeCollectionId: UUID? {
         didSet {
-            if let activeSessionId {
-                userDefaults.set(activeSessionId.uuidString, forKey: Keys.activeSessionId)
+            if let activeCollectionId {
+                userDefaults.set(activeCollectionId.uuidString, forKey: Keys.activeCollectionId)
             } else {
-                userDefaults.removeObject(forKey: Keys.activeSessionId)
+                userDefaults.removeObject(forKey: Keys.activeCollectionId)
             }
         }
     }
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
-        if let raw = userDefaults.string(forKey: Keys.activeSessionId) {
-            activeSessionId = UUID(uuidString: raw)
+        if let raw = userDefaults.string(forKey: Keys.activeCollectionId) {
+            activeCollectionId = UUID(uuidString: raw)
         } else {
-            activeSessionId = nil
+            activeCollectionId = nil
         }
     }
 }

@@ -133,7 +133,7 @@ struct HandbuchIconLegend: View {
             meaningES: "Botón de inicio/parada de grabación en reposo (círculo)",
             meaningPT: "Botão de iniciar/parar gravação em repouso (círculo)"
         ) {
-            RecordButton(isRecording: false, isEnabled: true, action: {}).scaleEffect(0.75)
+            RecordButton(captureKind: .video, isRecording: false, isEnabled: true, action: {}).scaleEffect(0.75)
         },
         Item(
             meaningDE: "Start-/Stopp-Aufnahmeknopf während der Aufnahme (Quadrat)",
@@ -141,7 +141,7 @@ struct HandbuchIconLegend: View {
             meaningES: "Botón de inicio/parada de grabación durante la grabación (cuadrado)",
             meaningPT: "Botão de iniciar/parar gravação durante a gravação (quadrado)"
         ) {
-            RecordButton(isRecording: true, isEnabled: true, action: {}).scaleEffect(0.75)
+            RecordButton(captureKind: .video, isRecording: true, isEnabled: true, action: {}).scaleEffect(0.75)
         },
         Item(
             meaningDE: "Ausklapp-Punkt für das Zuordnungs-Panel — linke Hälfte rot (Bail), rechte Hälfte grün (Make)",
@@ -162,7 +162,7 @@ struct HandbuchIconLegend: View {
                 .foregroundStyle(Theme.textPrimary)
                 .padding(.horizontal, Layout.spacingS)
                 .frame(height: 40)
-                .background(Theme.actionBail)
+                .background(Theme.actionTag)
                 .clipShape(RoundedRectangle(cornerRadius: Layout.cornerRadius))
         },
         Item(
@@ -176,7 +176,7 @@ struct HandbuchIconLegend: View {
                 .foregroundStyle(Theme.textPrimary)
                 .padding(.horizontal, Layout.spacingS)
                 .frame(height: 40)
-                .background(Theme.actionMake)
+                .background(Theme.actionTag)
                 .clipShape(RoundedRectangle(cornerRadius: Layout.cornerRadius))
         },
         Item(
@@ -194,7 +194,7 @@ struct HandbuchIconLegend: View {
             meaningPT: "Vai direto para o resumo de sessões (na tela de gravação)",
             isWide: true
         ) {
-            SessionAccessButton(action: {})
+            CollectionAccessButton(action: {})
         },
         Item(
             meaningDE: "Umschalter für den Aufnahmemodus",

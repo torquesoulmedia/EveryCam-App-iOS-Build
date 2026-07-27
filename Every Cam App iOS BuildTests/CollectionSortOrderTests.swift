@@ -2,10 +2,10 @@ import Testing
 import Foundation
 @testable import Every_Cam_App_iOS_Build
 
-struct SessionSortOrderTests {
+struct CollectionSortOrderTests {
 
-    private func makeSession(name: String, date: String) -> Session {
-        Session(id: UUID(), name: name, date: date, athletes: [], clips: [])
+    private func makeSession(name: String, date: String) -> MediaCollection {
+        MediaCollection(id: UUID(), name: name, date: date, tags: [], captures: [])
     }
 
     @Test func dateDescendingSortsNewestFirst() {
@@ -15,7 +15,7 @@ struct SessionSortOrderTests {
             makeSession(name: "C", date: "2026-07-10")
         ]
 
-        let sorted = SessionSortOrder.dateDescending.sorted(sessions)
+        let sorted = CollectionSortOrder.dateDescending.sorted(sessions)
 
         #expect(sorted.map(\.name) == ["B", "C", "A"])
     }
@@ -27,7 +27,7 @@ struct SessionSortOrderTests {
             makeSession(name: "C", date: "2026-07-10")
         ]
 
-        let sorted = SessionSortOrder.dateAscending.sorted(sessions)
+        let sorted = CollectionSortOrder.dateAscending.sorted(sessions)
 
         #expect(sorted.map(\.name) == ["A", "C", "B"])
     }
@@ -39,7 +39,7 @@ struct SessionSortOrderTests {
             makeSession(name: "Test Mutter", date: "2026-07-01")
         ]
 
-        let sorted = SessionSortOrder.nameAscending.sorted(sessions)
+        let sorted = CollectionSortOrder.nameAscending.sorted(sessions)
 
         #expect(sorted.map(\.name) == ["Chubbpattpat", "kornmarkt", "Test Mutter"])
     }

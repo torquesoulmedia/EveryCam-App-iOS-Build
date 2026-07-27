@@ -4,7 +4,7 @@ import SwiftUI
 // UIKit-Interop nur, weil AVFoundation es erzwingt (CLAUDE.md §3) — reine
 // Wiedergabe-Ebene ohne native Steuerelemente (im Unterschied zu AVKits
 // `VideoPlayer`). Spielt genau einmal, stumm, und meldet das Ende über
-// `onFinished` statt über einen separaten, vom Clip losgelösten Timer.
+// `onFinished` statt über einen separaten, von der Wiedergabe losgelösten Timer.
 struct SplashVideoPlayerView: UIViewRepresentable {
     let url: URL
     let onFinished: () -> Void

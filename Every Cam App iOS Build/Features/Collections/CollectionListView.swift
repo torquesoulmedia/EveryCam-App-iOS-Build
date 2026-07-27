@@ -1,66 +1,67 @@
 import SwiftUI
 
-struct SessionListView: View {
+struct CollectionListView: View {
     @Environment(AppState.self) private var appState
 
-    let sessionStore: SessionStore
+    let collectionStore: MediaCollectionStore
     let settingsStore: SettingsStore
-    @State private var viewModel: SessionListViewModel
+    @State private var viewModel: CollectionListViewModel
     @State private var isShowingSettings = false
 
-    init(sessionStore: SessionStore, settingsStore: SettingsStore) {
-        self.sessionStore = sessionStore
+    init(collectionStore: MediaCollectionStore, settingsStore: SettingsStore) {
+        self.collectionStore = collectionStore
         self.settingsStore = settingsStore
-        _viewModel = State(initialValue: SessionListViewModel(sessionStore: sessionStore, settingsStore: settingsStore))
+        _viewModel = State(initialValue: CollectionListViewModel(collectionStore: collectionStore, settingsStore: settingsStore))
     }
 
     var body: some View {
         content
             // Wisch nach rechts führt weiterhin zurück zur Aufnahme (Geste
             // selbst unverändert, Teil der TabView(.page) in RootView) — der
-            // eigene Strich-Hinweis entfällt hier aber (Update, Nutzerwunsch):
-            // der CAM-Button im Toolbar deckt den Direktzugriff bereits ab.
-            .navigationTitle("Sessions")
+            // eigene Strich-Hinweis entfällt hier aber (aus TrickCam
+            // übernommen): der CAM-Button im Toolbar deckt den Direktzugriff
+            // bereits ab.
+            .navigationTitle("Sammlungen")
             .toolbar { toolbarContent }
             // Ohne dieses Tint würden Zahnrad/Sortierung/Plus/CAM in der
             // System-Standardfarbe (Blau) erscheinen, da AccentColor im
             // Asset-Katalog bewusst leer ist — Verstoß gegen CLAUDE.md §6.2
-            // (nur Grautöne außerhalb Bail/Make/Aufnahme). Dieselbe Zeile wie
-            // in SettingsView (Bugfix, im Zuge des CAM-Buttons entdeckt).
+            // (nur Grautöne außerhalb Tag/Aufnahme). Dieselbe Zeile wie in
+            // SettingsView.
             .tint(Theme.textPrimary)
             .sheet(isPresented: $isShowingSettings) {
                 NavigationStack {
                     SettingsView(settingsStore: settingsStore)
                 }
-                // Nativer Greifer statt eigenem Pfeil-Hinweis (Nutzerwunsch,
-                // Update) — Settings schließt per Wisch nach unten, nicht
+                // Nativer Greifer statt eigenem Pfeil-Hinweis (aus TrickCam
+                // übernommen) — Settings schließt per Wisch nach unten, nicht
                 // horizontal wie die übrigen Bildschirme; das ist Apples
                 // eigene, korrekte Geste dafür.
                 .presentationDragIndicator(.visible)
             }
             .sheet(isPresented: Binding(
-                get: { viewModel.isShowingNewSessionSheet },
-                set: { viewModel.isShowingNewSessionSheet = $0 }
+                get: { viewModel.isShowingNewCollectionSheet },
+                set: { viewModel.isShowingNewCollectionSheet = $0 }
             )) {
-                NewSessionSheet(sessionStore: sessionStore, settingsStore: settingsStore, onSessionCreated: viewModel.sessionCreated)
+                NewCollectionSheet(collectionStore: collectionStore, settingsStore: settingsStore, onCollectionCreated: viewModel.collectionCreated)
             }
-            // Löschen läuft zweistufig (Nutzerwunsch): erst diese übliche
-            // Rückfrage, danach — statt direkt zu löschen — eine zweite,
-            // deutlich strengere Warnung (siehe .alert unten), bevor
+            // Löschen läuft zweistufig (aus TrickCam übernommen): erst diese
+            // übliche Rückfrage, danach — statt direkt zu löschen — eine
+            // zweite, deutlich strengere Warnung (siehe .alert unten), bevor
             // tatsächlich unwiderruflich gelöscht wird.
             .confirmationDialog(
-                "Session löschen?",
+                "Sammlung löschen?",
                 isPresented: Binding(
                     get: { viewModel.isShowingDeleteConfirmation },
                     set: { viewModel.isShowingDeleteConfirmation = $0 }
                 ),
-                presenting: viewModel.sessionPendingDeletion
-            ) { session in
+                presenting: viewModel.collectionPendingDeletion
+            ) { collection in
                 Button("Löschen", role: .destructive) {
                     viewModel.proceedToFinalDeleteConfirmation()
                 }
-            } message: { session in
-                Text("\(session.name) wird inklusive aller \(session.clips.count) Clips endgültig gelöscht.")
+            } message: { collection in
+                Text("\(collection.name) wird inklusive aller \(collection.captures.count) Aufnahmen endgültig gelöscht.")
             }
             .alert(
                 "Wirklich endgültig löschen?",
@@ -68,29 +69,29 @@ struct SessionListView: View {
                     get: { viewModel.isShowingFinalDeleteConfirmation },
                     set: { viewModel.isShowingFinalDeleteConfirmation = $0 }
                 ),
-                presenting: viewModel.sessionPendingDeletion
-            ) { session in
+                presenting: viewModel.collectionPendingDeletion
+            ) { collection in
                 Button("Endgültig löschen", role: .destructive) {
-                    Task { await viewModel.deleteConfirmedSession() }
+                    Task { await viewModel.deleteConfirmedCollection() }
                 }
                 Button("Abbrechen", role: .cancel) {
                     viewModel.cancelPendingDelete()
                 }
-            } message: { session in
-                Text("„\(session.name)“ und alle \(session.clips.count) Clips werden unwiderruflich gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.")
+            } message: { collection in
+                Text("„\(collection.name)“ und alle \(collection.captures.count) Aufnahmen werden unwiderruflich gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.")
             }
             .confirmationDialog(
-                "Sessions löschen?",
+                "Sammlungen löschen?",
                 isPresented: Binding(
                     get: { viewModel.isShowingBulkDeleteConfirmation },
                     set: { viewModel.isShowingBulkDeleteConfirmation = $0 }
                 )
             ) {
-                Button("Löschen (\(viewModel.selectedSessionIDs.count))", role: .destructive) {
+                Button("Löschen (\(viewModel.selectedCollectionIDs.count))", role: .destructive) {
                     viewModel.proceedToFinalBulkDeleteConfirmation()
                 }
             } message: {
-                Text("\(viewModel.selectedSessionIDs.count) Sessions werden inklusive aller Clips endgültig gelöscht.")
+                Text("\(viewModel.selectedCollectionIDs.count) Sammlungen werden inklusive aller Aufnahmen endgültig gelöscht.")
             }
             .alert(
                 "Wirklich endgültig löschen?",
@@ -99,14 +100,14 @@ struct SessionListView: View {
                     set: { viewModel.isShowingFinalBulkDeleteConfirmation = $0 }
                 )
             ) {
-                Button("Endgültig löschen (\(viewModel.selectedSessionIDs.count))", role: .destructive) {
-                    Task { await viewModel.deleteConfirmedBulkSessions() }
+                Button("Endgültig löschen (\(viewModel.selectedCollectionIDs.count))", role: .destructive) {
+                    Task { await viewModel.deleteConfirmedBulkCollections() }
                 }
                 Button("Abbrechen", role: .cancel) {
                     viewModel.cancelPendingBulkDelete()
                 }
             } message: {
-                Text("\(viewModel.selectedSessionIDs.count) Sessions werden unwiderruflich gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.")
+                Text("\(viewModel.selectedCollectionIDs.count) Sammlungen werden unwiderruflich gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.")
             }
             .alert("Fehler", isPresented: Binding(
                 get: { viewModel.isShowingError },
@@ -117,13 +118,13 @@ struct SessionListView: View {
                 Text(viewModel.errorMessage ?? "")
             }
             .task {
-                await viewModel.loadSessions()
+                await viewModel.loadCollections()
             }
     }
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        // Zahnrad bleibt dauerhaft sichtbar (spec.md §12), auch in der
+        // Zahnrad bleibt dauerhaft sichtbar (SPEC.md §12), auch in der
         // Mehrfachauswahl — .secondaryAction verschwindet auf iOS in einem
         // Überlaufmenü und wäre dort kein erkennbares Zahnrad-Symbol mehr.
         ToolbarItem(placement: .topBarLeading) {
@@ -134,21 +135,21 @@ struct SessionListView: View {
             }
             .accessibilityLabel("Einstellungen")
         }
-        // Direktzugriff zurück zum Aufnahme-Bildschirm (Update, Nutzerwunsch)
-        // — zusätzlich zur bestehenden Wisch-nach-rechts-Geste, analog zum
-        // neuen Sessions-Button auf dem Aufnahme-Bildschirm.
+        // Direktzugriff zurück zum Aufnahme-Bildschirm (aus TrickCam
+        // übernommen) — zusätzlich zur bestehenden Wisch-nach-rechts-Geste,
+        // analog zum Sammlungen-Button auf dem Aufnahme-Bildschirm.
         ToolbarItem(placement: .topBarLeading) {
             Button("CAM") {
                 appState.activeTab = .capture
             }
             .accessibilityLabel("Zur Kamera wechseln")
         }
-        // Sortier-Menü (spec.md §10.2) — die Liste bleibt dabei immer
-        // eindeutig sortiert, kein freies Umsortieren.
+        // Sortier-Menü (SPEC.md §10) — die Liste bleibt dabei immer eindeutig
+        // sortiert, kein freies Umsortieren.
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Picker("Sortierung", selection: $viewModel.sortOrder) {
-                    ForEach(SessionSortOrder.allCases) { order in
+                    ForEach(CollectionSortOrder.allCases) { order in
                         Label(order.displayLabel, systemImage: order.systemImage).tag(order)
                     }
                 }
@@ -160,17 +161,17 @@ struct SessionListView: View {
         if !viewModel.isSelectionMode {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    viewModel.isShowingNewSessionSheet = true
+                    viewModel.isShowingNewCollectionSheet = true
                 } label: {
                     Image(systemName: "plus")
                 }
-                .accessibilityLabel("Neue Session anlegen")
+                .accessibilityLabel("Neue Sammlung anlegen")
             }
         }
         // Auswählen/Fertig + Löschen sitzen wie in der Galerie im selben
-        // Überlaufmenü ("...") statt in einer Bottom-Bar (Nutzerwunsch,
-        // Update) — mehrere .secondaryAction-Einträge fasst iOS automatisch
-        // zu einem Menü zusammen.
+        // Überlaufmenü ("...") statt in einer Bottom-Bar (aus TrickCam
+        // übernommen) — mehrere .secondaryAction-Einträge fasst iOS
+        // automatisch zu einem Menü zusammen.
         ToolbarItem(placement: .secondaryAction) {
             Button(viewModel.isSelectionMode ? "Fertig" : "Auswählen") {
                 viewModel.toggleSelectionMode()
@@ -179,8 +180,9 @@ struct SessionListView: View {
         if viewModel.isSelectionMode {
             ToolbarItem(placement: .secondaryAction) {
                 // Ohne Auswahl grau/deaktiviert statt rot, analog zur Galerie
-                // (Nutzerwunsch) — erst mit markierten Sessions aktiv und rot.
-                if viewModel.selectedSessionIDs.isEmpty {
+                // (aus TrickCam übernommen) — erst mit markierten Sammlungen
+                // aktiv und rot.
+                if viewModel.selectedCollectionIDs.isEmpty {
                     Button("Löschen") {
                         viewModel.confirmBulkDelete()
                     }
@@ -189,7 +191,7 @@ struct SessionListView: View {
                     Button(role: .destructive) {
                         viewModel.confirmBulkDelete()
                     } label: {
-                        Text("Löschen (\(viewModel.selectedSessionIDs.count))")
+                        Text("Löschen (\(viewModel.selectedCollectionIDs.count))")
                     }
                 }
             }
@@ -198,21 +200,21 @@ struct SessionListView: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.sessions.isEmpty {
+        if viewModel.collections.isEmpty {
             ZStack {
                 Theme.backgroundPrimary.ignoresSafeArea()
-                Text("Noch keine Sessions")
+                Text("Noch keine Sammlungen")
                     .font(Typography.body)
                     .foregroundStyle(Theme.textSecondary)
             }
         } else {
             List {
-                ForEach(viewModel.sortedSessions) { session in
-                    rowContent(session)
+                ForEach(viewModel.sortedCollections) { collection in
+                    rowContent(collection)
                         .listRowBackground(Theme.surfacePanel)
                         .swipeActions {
                             Button("Löschen", role: .destructive) {
-                                viewModel.confirmDelete(session)
+                                viewModel.confirmDelete(collection)
                             }
                         }
                 }
@@ -222,79 +224,78 @@ struct SessionListView: View {
         }
     }
 
-    // Mehrfachauswahl mit Häkchen-Kreis, exakt wie in der Galerie
-    // (Nutzerwunsch) — bei inaktiver Auswahl navigiert ein Tap weiterhin
-    // normal per NavigationLink. Das Kamera-Icon zum Festlegen des
+    // Mehrfachauswahl mit Häkchen-Kreis, exakt wie in der Galerie (aus
+    // TrickCam übernommen) — bei inaktiver Auswahl navigiert ein Tap
+    // weiterhin normal per NavigationLink. Das Kamera-Icon zum Festlegen des
     // Aufnahmeziels bleibt in der Mehrfachauswahl bewusst unantippbar (reines
     // Icon statt Button) — verschachtelte Buttons im ohnehin schon als Button
     // fungierenden Auswahl-Tap wären keine zuverlässig eigenständigen Tap-Ziele.
     @ViewBuilder
-    private func rowContent(_ session: Session) -> some View {
+    private func rowContent(_ collection: MediaCollection) -> some View {
         if viewModel.isSelectionMode {
             Button {
-                viewModel.toggleSelection(session.id)
+                viewModel.toggleSelection(collection.id)
             } label: {
                 HStack {
-                    sessionRow(session, allowsActivation: false)
+                    collectionRow(collection, allowsActivation: false)
                     Spacer()
-                    Image(systemName: viewModel.selectedSessionIDs.contains(session.id) ? "checkmark.circle.fill" : "circle")
+                    Image(systemName: viewModel.selectedCollectionIDs.contains(collection.id) ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(Theme.textPrimary)
                 }
             }
         } else {
             NavigationLink {
-                GalleryView(sessionId: session.id, sessionStore: sessionStore, settingsStore: settingsStore)
+                GalleryView(collectionId: collection.id, collectionStore: collectionStore, settingsStore: settingsStore)
             } label: {
-                sessionRow(session, allowsActivation: true)
+                collectionRow(collection, allowsActivation: true)
             }
         }
     }
 
-    // Update (Nutzerwunsch): Kamera-Icon direkt in jeder Zeile statt nur einer
-    // reinen Anzeige — antippbar, um genau diese Session als Ziel neuer
-    // Clip-Aufnahmen festzulegen (grau = nicht aktiv, action.record-Rot =
-    // aktiv, Update 3. Revision). Ersetzt die zuvor eingebaute, weniger
-    // auffindbare Wisch-Geste, die dieselbe Aktion ausgelöst hat — beides
-    // parallel wäre nur redundant gewesen. .buttonStyle(.plain) sorgt dafür,
-    // dass der Tap auf das Icon ein eigenständiges Ziel bleibt und nicht
-    // zugleich den NavigationLink der gesamten Zeile auslöst.
-    private func sessionRow(_ session: Session, allowsActivation: Bool) -> some View {
-        let isToday = session.date == SessionStore.currentDateString()
-        let isRecordingTarget = session.id == appState.activeSessionId
+    // Kamera-Icon direkt in jeder Zeile statt nur einer reinen Anzeige (aus
+    // TrickCam übernommen) — antippbar, um genau diese Sammlung als Ziel
+    // neuer Aufnahmen festzulegen (grau = nicht aktiv, action.record-Rot =
+    // aktiv). .buttonStyle(.plain) sorgt dafür, dass der Tap auf das Icon ein
+    // eigenständiges Ziel bleibt und nicht zugleich den NavigationLink der
+    // gesamten Zeile auslöst.
+    private func collectionRow(_ collection: MediaCollection, allowsActivation: Bool) -> some View {
+        let isToday = collection.date == MediaCollectionStore.currentDateString()
+        let isRecordingTarget = collection.id == appState.activeCollectionId
         return HStack(spacing: Layout.spacingS) {
             Image(systemName: "folder")
                 .foregroundStyle(Theme.textSecondary)
             if allowsActivation {
                 Button {
-                    appState.activeSessionId = session.id
+                    appState.activeCollectionId = collection.id
                 } label: {
                     Image(systemName: "video.fill")
-                        // Dokumentierte Ausnahme von CLAUDE.md §6 (Nutzerwunsch,
-                        // spec.md §10.2) — action.record statt textPrimary im
-                        // aktivierten Zustand, da dieses Icon inhaltlich exakt
-                        // dasselbe ausdrückt wie der Aufnahmeknopf: "hier wird
-                        // aufgenommen".
+                        // Dokumentierte Ausnahme von CLAUDE.md §6 (aus
+                        // TrickCam übernommen, SPEC.md §10) — action.record
+                        // statt textPrimary im aktivierten Zustand, da dieses
+                        // Icon inhaltlich exakt dasselbe ausdrückt wie der
+                        // Aufnahmeknopf: "hier wird aufgenommen".
                         .foregroundStyle(isRecordingTarget ? Theme.actionRecord : Theme.textSecondary)
                         .frame(minWidth: Layout.minTapTarget, minHeight: Layout.minTapTarget)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(isRecordingTarget ? "Aktuelles Aufnahmeziel" : "Als Aufnahmeziel für neue Clips festlegen")
+                .accessibilityLabel(isRecordingTarget ? "Aktuelles Aufnahmeziel" : "Als Aufnahmeziel für neue Aufnahmen festlegen")
             } else {
                 Image(systemName: "video.fill")
                     .foregroundStyle(isRecordingTarget ? Theme.textPrimary : Theme.textSecondary)
             }
-            Text("\(Self.displayDate(session.date)) – \(session.name)")
+            Text("\(Self.displayDate(collection.date)) – \(collection.name)")
                 .font(Typography.body)
                 .fontWeight(isToday ? .semibold : .regular)
                 .foregroundStyle(isToday ? Theme.textPrimary : Theme.textSecondary)
         }
     }
 
-    // Session.date liegt als "yyyy-MM-dd" vor (spec.md §4.2). Bugfix (im Zuge
-    // der DE/EN/ES-Mehrsprachigkeit gefunden): das reine String-Reformat
-    // erzeugte immer "dd.MM.yyyy", unabhängig von der aktiven App-Sprache —
-    // jetzt über einen locale-bewussten DateFormatter, mit derselben
-    // aufgelösten Sprache wie der String-Katalog (siehe NewSessionViewModel.today).
+    // MediaCollection.date liegt als "yyyy-MM-dd" vor (SPEC.md §4.2). Bugfix
+    // (aus TrickCam übernommen, im Zuge der DE/EN/ES-Mehrsprachigkeit
+    // gefunden): das reine String-Reformat erzeugte immer "dd.MM.yyyy",
+    // unabhängig von der aktiven App-Sprache — jetzt über einen
+    // locale-bewussten DateFormatter, mit derselben aufgelösten Sprache wie
+    // der String-Katalog (siehe NewCollectionViewModel.today).
     private static func displayDate(_ isoDate: String) -> String {
         let isoFormatter = DateFormatter()
         isoFormatter.dateFormat = "yyyy-MM-dd"
@@ -310,8 +311,8 @@ struct SessionListView: View {
 
 #Preview {
     NavigationStack {
-        SessionListView(
-            sessionStore: SessionStore(fileStore: FileStore(pathBuilder: .standard), pathBuilder: .standard),
+        CollectionListView(
+            collectionStore: MediaCollectionStore(fileStore: FileStore(pathBuilder: .standard), pathBuilder: .standard),
             settingsStore: SettingsStore()
         )
     }

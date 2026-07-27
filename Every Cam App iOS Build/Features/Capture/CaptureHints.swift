@@ -3,14 +3,14 @@ import SwiftUI
 // Nicht-blockierende Hinweistexte über dem Aufnahmeknopf — nie Rot, nur
 // text.secondary (CLAUDE.md §6.2). Ausgelagert aus CaptureView (§5.4).
 struct CaptureHints: View {
-    let hasActiveSession: Bool
+    let hasActiveCollection: Bool
     let isProcessingCrop: Bool
     let isLowOnStorage: Bool
 
     var body: some View {
         VStack(spacing: Layout.spacingS) {
-            if !hasActiveSession {
-                Text("Zuerst Session anlegen")
+            if !hasActiveCollection {
+                Text("Zuerst Sammlung anlegen")
             }
             // Dezenter Hinweis während der 16:9-Crop exportiert wird (spec.md §7.4).
             if isProcessingCrop {
@@ -33,6 +33,6 @@ struct CaptureHints: View {
 #Preview {
     ZStack {
         Theme.backgroundPrimary.ignoresSafeArea()
-        CaptureHints(hasActiveSession: false, isProcessingCrop: true, isLowOnStorage: true)
+        CaptureHints(hasActiveCollection: false, isProcessingCrop: true, isLowOnStorage: true)
     }
 }

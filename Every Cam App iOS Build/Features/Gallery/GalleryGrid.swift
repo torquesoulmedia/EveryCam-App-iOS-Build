@@ -13,10 +13,10 @@ struct GalleryGrid: View {
     let sections: [GallerySection]
     let isSelectionMode: Bool
     let selectedItemIds: Set<String>
-    let moveDestinations: (GalleryThumbnailItem) -> [MoveDestination]
+    let moveDestinations: (GalleryThumbnailItem) -> [Tag]
     let loadThumbnail: (GalleryThumbnailItem) async -> URL?
     let onSelectItem: (GalleryThumbnailItem) -> Void
-    let onMove: (GalleryThumbnailItem, MoveDestination) -> Void
+    let onMove: (GalleryThumbnailItem, Tag) -> Void
     let onDelete: (GalleryThumbnailItem) -> Void
 
     var body: some View {

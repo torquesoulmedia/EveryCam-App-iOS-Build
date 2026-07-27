@@ -1,45 +1,48 @@
 import SwiftUI
 
-// Ebene 1b (spec.md §9) — sitzt oben auf der Kamera-Vorschau, öffnet
-// automatisch nach dem Stopp. Vorschaubild des Clips folgt erst mit dem
-// ThumbnailService aus Phase 8, hier bewusst noch nicht vorgezogen. Der
-// Ausklapp-Pfeil lebt separat in AssignmentToggleButton, oben in einer
-// Flucht mit Blitz/Auflösungs-Anzeige (Nutzerwunsch) — diese View zeigt nur
-// noch den Inhalt und wird vom Aufrufer per isExpanded ein-/ausgeblendet.
+// Ebene 1b (SPEC.md §9) — sitzt oben auf der Kamera-Vorschau, öffnet
+// automatisch nach dem Stopp. Vorschaubild der Capture folgt erst mit dem
+// ThumbnailService aus einer späteren Phase, hier bewusst noch nicht
+// vorgezogen. Der Ausklapp-Pfeil lebt separat in AssignmentToggleButton, oben
+// in einer Flucht mit Blitz/Auflösungs-Anzeige — diese View zeigt nur noch
+// den Inhalt und wird vom Aufrufer per isExpanded ein-/ausgeblendet.
+//
+// Anders als TrickCams Bail/Make-Panel gibt es hier keine feste erste Zeile
+// mehr — alle Tag-Buttons sind gleichwertig, in einem gemeinsamen,
+// umbrechenden Layout (SPEC.md §9.1).
 struct AssignmentPanel: View {
-    let athletes: [Athlete]
-    let onBail: () -> Void
-    let onMake: (Athlete) -> Void
+    let tags: [Tag]
+    let onAssign: (Tag) -> Void
 
     var body: some View {
         VStack(spacing: Layout.spacingM) {
-            Button("Bail", action: onBail)
-                // Bail darf 25% breiter sein als die Make-Buttons (Nutzerwunsch).
-                .buttonStyle(AssignmentButtonStyle(color: Theme.actionBail, isWide: true))
-                .accessibilityLabel("Bail")
-
-            if !athletes.isEmpty {
-                // Eigener Zeilenumbruch statt LazyVGrid mit .adaptive-Spalten
-                // (Nutzerwunsch: Hintergrund muss sich der Athletenzahl
-                // anpassen) — .adaptive füllte immer die volle angebotene
-                // Breite, auch bei nur ein bis zwei Athleten. MakeButtonsFlowLayout
-                // misst jeden Button vorab und meldet nur die tatsächlich
-                // benötigte Breite/Höhe, wodurch der Hintergrund in beide
-                // Richtungen mit der Athletenzahl mitwächst bzw. -schrumpft.
-                MakeButtonsFlowLayout(spacing: Layout.spacingS) {
-                    ForEach(athletes) { athlete in
-                        let displayName = athlete.name.isEmpty ? athlete.shortcode : athlete.name
-                        Button(athlete.shortcode) { onMake(athlete) }
-                            .buttonStyle(AssignmentButtonStyle(color: Theme.actionMake))
-                            .accessibilityLabel("Make \(displayName)")
+            if tags.isEmpty {
+                // Kein Tag vorhanden (SPEC.md §9.2) — die Aufnahme bleibt so
+                // lange in Unsorted/, bis mindestens ein Tag existiert.
+                Text("Noch keine Tags — leg einen an")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.vertical, Layout.spacingS)
+            } else {
+                // Eigener Zeilenumbruch statt LazyVGrid mit .adaptive-Spalten —
+                // .adaptive füllte immer die volle angebotene Breite, auch bei
+                // nur ein bis zwei Tags. TagButtonsFlowLayout misst jeden Button
+                // vorab und meldet nur die tatsächlich benötigte Breite/Höhe,
+                // wodurch der Hintergrund in beide Richtungen mit der Tag-Zahl
+                // mitwächst bzw. -schrumpft.
+                TagButtonsFlowLayout(spacing: Layout.spacingS) {
+                    ForEach(tags) { tag in
+                        Button(tag.name) { onAssign(tag) }
+                            .buttonStyle(AssignmentButtonStyle(color: Theme.actionTag))
+                            .accessibilityLabel(tag.name)
                     }
                 }
             }
         }
         .padding(Layout.spacingM)
         // Schwarz statt surface.panel für besseren Kontrast gegen die
-        // Kamera-Vorschau (Nutzerwunsch) — background.primary ist bereits das
-        // dunkelste vorhandene Token, kein neuer Hex-Wert nötig.
+        // Kamera-Vorschau — background.primary ist bereits das dunkelste
+        // vorhandene Token, kein neuer Hex-Wert nötig.
         .background(Theme.backgroundPrimary)
         .clipShape(RoundedRectangle(cornerRadius: Layout.cornerRadius))
         .padding(.horizontal, Layout.spacingM)
@@ -48,15 +51,14 @@ struct AssignmentPanel: View {
 
 // Bewusste, dokumentierte Ausnahme von CLAUDE.md §6 ("keine Schatten, keine
 // Farbverläufe") — auf ausdrücklichen Nutzerwunsch geprüft und freigegeben
-// (siehe spec.md), gilt ausschließlich für Bail/Make-Buttons. Alle übrigen
-// Formen der App bleiben ohne Schatten/Verlauf.
+// (siehe TrickCam CLAUDE.md), gilt ausschließlich für Tag-Buttons. Alle
+// übrigen Formen der App bleiben ohne Schatten/Verlauf.
 private struct AssignmentButtonStyle: ButtonStyle {
     let color: Color
-    var isWide: Bool = false
 
-    // 5% größer als der bisherige Wert (44pt Tap-Ziel / 16pt Schrift) auf
-    // Nutzerwunsch — bewusst lokal statt im gemeinsamen Layout/Typography-
-    // Token, da Objektiv- und Modus-Buttons ausdrücklich nicht mitwachsen sollen.
+    // 5% größer als der Standardwert (44pt Tap-Ziel / 16pt Schrift) — bewusst
+    // lokal statt im gemeinsamen Layout/Typography-Token, da Objektiv- und
+    // Modus-Buttons ausdrücklich nicht mitwachsen sollen.
     private var minTapTarget: CGFloat { Layout.minTapTarget * 1.05 }
     private var fontSize: CGFloat { 16 * 1.05 }
 
@@ -66,7 +68,7 @@ private struct AssignmentButtonStyle: ButtonStyle {
             .font(.system(size: fontSize, weight: .semibold))
             .foregroundStyle(Theme.textPrimary)
             .padding(.horizontal, Layout.spacingM)
-            .frame(minWidth: isWide ? minTapTarget * 1.25 : minTapTarget, minHeight: minTapTarget)
+            .frame(minWidth: minTapTarget, minHeight: minTapTarget)
             .background(
                 LinearGradient(
                     colors: [color.opacity(0.92), color, color.opacity(0.78)],
@@ -79,7 +81,7 @@ private struct AssignmentButtonStyle: ButtonStyle {
             )
             // Dezenter heller Glanzstreifen an der Oberkante als
             // Bevel-Andeutung — zusammen mit dem Verlauf oben der "angedeutete
-            // 3D-Look" (Nutzerwunsch).
+            // 3D-Look".
             .overlay(
                 RoundedRectangle(cornerRadius: Layout.cornerRadius)
                     .strokeBorder(
@@ -100,11 +102,12 @@ private struct AssignmentButtonStyle: ButtonStyle {
         Theme.backgroundPrimary.ignoresSafeArea()
         VStack {
             AssignmentPanel(
-                athletes: [
-                    Athlete(id: UUID(), name: "Max Mustermann", shortcode: "MM"),
-                    Athlete(id: UUID(), name: "Julia Schmidt", shortcode: "JS")
+                tags: [
+                    Tag(id: UUID(), name: "Oma"),
+                    Tag(id: UUID(), name: "Kuchen"),
+                    Tag(id: UUID(), name: "Beste Szenen")
                 ],
-                onBail: {}, onMake: { _ in }
+                onAssign: { _ in }
             )
             Spacer()
         }

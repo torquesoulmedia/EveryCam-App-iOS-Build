@@ -1,12 +1,12 @@
 import SwiftUI
 
-// Drei-Ebenen-Navigation (spec.md, Gesamt-Workflow): Aufnahme und
+// Drei-Ebenen-Navigation (SPEC.md §13, Gesamt-Workflow): Aufnahme und
 // Sessions-Übersicht liegen als Wisch-Seiten nebeneinander (kein Tab-Bar-Chrome,
 // das würde die kamera-randlose Vorschau stören), Session-Galerie wird von der
 // Sessions-Übersicht aus per Push geöffnet.
 struct RootView: View {
     @State private var appState = AppState()
-    @State private var sessionStore = SessionStore(fileStore: FileStore(pathBuilder: .standard), pathBuilder: .standard)
+    @State private var collectionStore = MediaCollectionStore(fileStore: FileStore(pathBuilder: .standard), pathBuilder: .standard)
     @State private var settingsStore = SettingsStore()
     @State private var isShowingLaunchScreen = true
 
@@ -41,11 +41,11 @@ struct RootView: View {
         // Verhalten ohne diesen Modifier.
         .environment(\.locale, settingsStore.appLanguage.locale ?? Locale.autoupdatingCurrent)
         .task {
-            // Erzeugt Documents/Sessions/ sofort beim Start, unabhängig davon,
+            // Erzeugt Documents/Sammlungen/ sofort beim Start, unabhängig davon,
             // ob die Sessions-Übersicht bereits sichtbar war — sonst existiert
             // der Ordner erst nach dem ersten Besuch dieser Seite und taucht
-            // entsprechend spät in der Dateien-App auf (spec.md §3).
-            _ = try? await sessionStore.listSessions()
+            // entsprechend spät in der Dateien-App auf (SPEC.md §3).
+            _ = try? await collectionStore.listCollections()
         }
     }
 
@@ -60,13 +60,13 @@ struct RootView: View {
             get: { appState.activeTab },
             set: { appState.activeTab = $0 }
         )) {
-            CaptureView(sessionStore: sessionStore, settingsStore: settingsStore)
+            CaptureView(collectionStore: collectionStore, settingsStore: settingsStore)
                 .tag(AppTab.capture)
 
             NavigationStack {
-                SessionListView(sessionStore: sessionStore, settingsStore: settingsStore)
+                CollectionListView(collectionStore: collectionStore, settingsStore: settingsStore)
             }
-            .tag(AppTab.sessions)
+            .tag(AppTab.collections)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .indexViewStyle(.page(backgroundDisplayMode: .never))

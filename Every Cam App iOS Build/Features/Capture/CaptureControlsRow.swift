@@ -16,15 +16,18 @@ struct CaptureControlsRow: View {
     let canRecord: Bool
     let isCameraReady: Bool
     let recordingMode: RecordingMode
-    let hasActiveSession: Bool
+    let captureKind: CaptureKind
+    let isCapturingPhoto: Bool
+    let hasActiveCollection: Bool
     let isCropGuideVisible: Bool
     let isCompositionGridVisible: Bool
     let onRecordTap: () -> Void
     let onSelectMode: (RecordingMode) -> Void
-    let onNewSession: () -> Void
-    let onManageAthletes: () -> Void
+    let onSelectCaptureKind: (CaptureKind) -> Void
+    let onNewCollection: () -> Void
+    let onManageTags: () -> Void
     let onOpenSettings: () -> Void
-    let onOpenSessions: () -> Void
+    let onOpenCollections: () -> Void
     let onToggleCropGuide: () -> Void
     let onToggleCompositionGrid: () -> Void
 
@@ -51,10 +54,20 @@ struct CaptureControlsRow: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            RecordButton(isRecording: isRecording, isEnabled: canRecord, action: onRecordTap)
+            RecordButton(captureKind: captureKind, isRecording: isRecording, isEnabled: canRecord, action: onRecordTap)
 
             if isCameraReady {
                 VStack(spacing: Layout.spacingM) {
+                    // Foto-/Video-Umschalter (SPEC.md §7.1, neu) — zentriert
+                    // über der Icon-Zeile, unabhängig vom Single/Dual-
+                    // Umschalter darunter (der in Phase 4 aus der UI
+                    // verschwindet).
+                    CaptureKindToggle(
+                        kind: captureKind,
+                        isEnabled: !isRecording && !isCapturingPhoto,
+                        onSelect: onSelectCaptureKind
+                    )
+
                     HStack {
                         HStack(spacing: iconSpacing) {
                             Button(action: onOpenSettings) {
@@ -64,10 +77,11 @@ struct CaptureControlsRow: View {
                             .buttonStyle(ContrastIconButtonStyle(size: iconSize))
                             .accessibilityLabel("Einstellungen öffnen")
 
-                            // Nur im Dual-Modus — zeigt den konkreten
-                            // Crop-Ausschnitt, den es außerhalb von Dual
-                            // gar nicht gibt (spec.md §7.4).
-                            if recordingMode == .dual {
+                            // Nur im Dual-Video-Modus — zeigt den konkreten
+                            // Crop-Ausschnitt, den es außerhalb von Dual gar
+                            // nicht gibt (spec.md §7.4) und der für Fotos
+                            // nie existiert (SPEC.md §4.2).
+                            if recordingMode == .dual && captureKind == .video {
                                 CropGuideToggle(isActive: isCropGuideVisible, size: iconSize, onToggle: onToggleCropGuide)
                             }
 
@@ -81,35 +95,39 @@ struct CaptureControlsRow: View {
                         Spacer()
 
                         HStack(spacing: iconSpacing) {
-                            Button(action: onNewSession) {
+                            Button(action: onNewCollection) {
                                 Image(systemName: "plus")
                                     .foregroundStyle(Theme.textPrimary)
                             }
                             .buttonStyle(ContrastIconButtonStyle(size: iconSize))
-                            .accessibilityLabel("Neue Session anlegen")
+                            .accessibilityLabel("Neue Sammlung anlegen")
 
-                            if hasActiveSession {
-                                Button(action: onManageAthletes) {
+                            if hasActiveCollection {
+                                Button(action: onManageTags) {
                                     Image(systemName: "person.badge.plus")
                                         .foregroundStyle(Theme.textPrimary)
                                 }
                                 .buttonStyle(ContrastIconButtonStyle(size: iconSize))
-                                .accessibilityLabel("Athleten verwalten")
+                                .accessibilityLabel("Tags verwalten")
                             }
                         }
                     }
 
                     HStack {
-                        ModeToggle(mode: recordingMode, isEnabled: !isRecording, onSelect: onSelectMode)
+                        // Deaktiviert im Foto-Modus statt ausgeblendet — hat
+                        // dort keine Wirkung, da Fotos immer mode: .single
+                        // sind (SPEC.md §4.2). Verschwindet ganz erst mit
+                        // Phase 4.
+                        ModeToggle(mode: recordingMode, isEnabled: !isRecording && captureKind == .video, onSelect: onSelectMode)
 
                         Spacer()
 
                         // Auf gleicher Höhe wie Single/Dual, spiegelbildlich
-                        // rechts (Update, Nutzerwunsch) — Direktzugriff auf die
-                        // Sessions-Übersicht zusätzlich zur Wisch-Geste. Im
-                        // Kapsel-Stil von Single/Dual ausgeschrieben statt als
-                        // reines Icon (Update, Nutzerwunsch).
-                        SessionAccessButton(action: onOpenSessions)
+                        // rechts (aus TrickCam übernommen) — Direktzugriff auf
+                        // die Sammlungen-Übersicht zusätzlich zur Wisch-Geste.
+                        // Im Kapsel-Stil von Single/Dual ausgeschrieben statt
+                        // als reines Icon.
+                        CollectionAccessButton(action: onOpenCollections)
                     }
                     // 9pt höher als die Icon-Zeile es vorgeben würde (Update,
                     // Nutzerwunsch) — etwas mehr Abstand zum unteren Rand.
@@ -144,10 +162,10 @@ private struct ContrastIconButtonStyle: ButtonStyle {
         Theme.backgroundPrimary.ignoresSafeArea()
         CaptureControlsRow(
             isRecording: false, canRecord: true, isCameraReady: true,
-            recordingMode: .dual, hasActiveSession: true,
+            recordingMode: .dual, captureKind: .video, isCapturingPhoto: false, hasActiveCollection: true,
             isCropGuideVisible: true, isCompositionGridVisible: false,
-            onRecordTap: {}, onSelectMode: { _ in }, onNewSession: {}, onManageAthletes: {},
-            onOpenSettings: {}, onOpenSessions: {},
+            onRecordTap: {}, onSelectMode: { _ in }, onSelectCaptureKind: { _ in }, onNewCollection: {}, onManageTags: {},
+            onOpenSettings: {}, onOpenCollections: {},
             onToggleCropGuide: {}, onToggleCompositionGrid: {}
         )
     }

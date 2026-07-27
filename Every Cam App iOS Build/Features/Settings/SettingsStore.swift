@@ -142,6 +142,30 @@ nonisolated enum AudioCodec: String, CaseIterable, Identifiable, Hashable, Senda
     var requiresQuickTimeContainer: Bool { self == .linearPCM }
 }
 
+// Foto-Dateiformat (SPEC.md §12, neu) — analog zu VideoFileFormat, aber ohne
+// Codec-Kopplung: Foto-Aufnahme läuft immer über AVCapturePhotoOutput, das
+// Format bestimmt hier direkt die Container-/Kompressionswahl.
+nonisolated enum PhotoFormat: String, CaseIterable, Identifiable, Hashable, Sendable {
+    case heic
+    case jpeg
+
+    var id: String { rawValue }
+
+    var displayLabel: String {
+        switch self {
+        case .heic: return "HEIC"
+        case .jpeg: return "JPEG"
+        }
+    }
+
+    var fileExtension: String {
+        switch self {
+        case .heic: return "heic"
+        case .jpeg: return "jpg"
+        }
+    }
+}
+
 nonisolated enum FrameRate: Int, CaseIterable, Identifiable, Hashable, Sendable {
     case fps24 = 24
     case fps30 = 30
@@ -167,6 +191,7 @@ final class SettingsStore {
         static let videoCodec = "settings.videoCodec"
         static let audioCodec = "settings.audioCodec"
         static let appLanguage = "settings.appLanguage"
+        static let photoFormat = "settings.photoFormat"
     }
 
     private let userDefaults: UserDefaults
@@ -177,6 +202,12 @@ final class SettingsStore {
 
     var fileFormat: VideoFileFormat {
         didSet { userDefaults.set(fileFormat.rawValue, forKey: Keys.fileFormat) }
+    }
+
+    // Standard HEIC (SPEC.md §12) — kleinere Dateien, analog zur nativen
+    // Kamera-App-Voreinstellung.
+    var photoFormat: PhotoFormat {
+        didSet { userDefaults.set(photoFormat.rawValue, forKey: Keys.photoFormat) }
     }
 
     var videoCodec: VideoCodec {
@@ -257,6 +288,12 @@ final class SettingsStore {
             fileFormat = value
         } else {
             fileFormat = .mov
+        }
+
+        if let raw = userDefaults.string(forKey: Keys.photoFormat), let value = PhotoFormat(rawValue: raw) {
+            photoFormat = value
+        } else {
+            photoFormat = .heic
         }
 
         if let raw = userDefaults.string(forKey: Keys.videoCodec), let value = VideoCodec(rawValue: raw) {

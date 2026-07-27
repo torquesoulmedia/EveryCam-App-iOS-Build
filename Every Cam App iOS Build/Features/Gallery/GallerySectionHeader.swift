@@ -31,7 +31,7 @@ struct GallerySectionHeader: View {
     ZStack {
         Theme.backgroundPrimary.ignoresSafeArea()
         GallerySectionHeader(
-            section: GallerySection(kind: .bail, primaryLabel: "Bail", secondaryLabel: "3 Clips", items: [])
+            section: GallerySection(kind: .tag(tagId: UUID()), primaryLabel: "Oma", secondaryLabel: "3 Aufnahmen", items: [])
         )
         .padding()
     }

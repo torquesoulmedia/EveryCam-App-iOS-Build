@@ -51,7 +51,7 @@ nonisolated final class ProResRecorder: @unchecked Sendable {
         // `isReadyForMoreMediaData` sinnvoll berechnet wird.
         videoInput.expectsMediaDataInRealTime = true
         guard writer.canAdd(videoInput) else {
-            throw TrickCamError.recordingFailed(underlying: nil)
+            throw EveryCamError.recordingFailed(underlying: nil)
         }
         writer.add(videoInput)
 
@@ -66,7 +66,7 @@ nonisolated final class ProResRecorder: @unchecked Sendable {
         }
 
         guard writer.startWriting() else {
-            throw writer.error ?? TrickCamError.recordingFailed(underlying: nil)
+            throw writer.error ?? EveryCamError.recordingFailed(underlying: nil)
         }
 
         self.writer = writer
@@ -103,7 +103,7 @@ nonisolated final class ProResRecorder: @unchecked Sendable {
     /// Fehlerpfad.
     func finish(completion: @escaping (Result<URL, Error>) -> Void) {
         guard let writer, let url = outputURL, isRecording else {
-            completion(.failure(TrickCamError.recordingFailed(underlying: nil)))
+            completion(.failure(EveryCamError.recordingFailed(underlying: nil)))
             return
         }
         isRecording = false
@@ -115,7 +115,7 @@ nonisolated final class ProResRecorder: @unchecked Sendable {
         guard hasStartedSession else {
             writer.cancelWriting()
             reset()
-            completion(.failure(TrickCamError.recordingFailed(underlying: nil)))
+            completion(.failure(EveryCamError.recordingFailed(underlying: nil)))
             return
         }
 
@@ -136,7 +136,7 @@ nonisolated final class ProResRecorder: @unchecked Sendable {
                 // abspielbar — Material retten statt verwerfen.
                 completion(.success(url))
             } else {
-                completion(.failure(writerError ?? TrickCamError.recordingFailed(underlying: nil)))
+                completion(.failure(writerError ?? EveryCamError.recordingFailed(underlying: nil)))
             }
         }
     }
