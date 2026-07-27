@@ -126,11 +126,12 @@ passende Werte" ausgesucht):**
   `.dark`/`nil`-Umschalten). Die frühere TrickCam-Ausnahme „Loading-Screen folgt dem Systemmodus" ist mit dem
   neuen, immer hellen Splash (`LaunchScreenView`, statisch statt Video) entfallen — es gibt keine Stelle in der
   App mehr, die vom Systemmodus abhängt.
-- **App-Icon (Zwischenlösung):** `TrickCam ICON v1 Final.icon` ist weiterhin das aktive Icon-Composer-Bundle
-  (`ASSETCATALOG_COMPILER_APPICON_NAME`), aber `Assets/app-icon-1024.png` darin wurde durch ein einfaches,
-  palettenfarbenes Platzhalter-Motiv (konzentrische Ringe: `text.primary`/`action.tag`/`background.primary`)
-  ersetzt — kein TrickCam-Artwork mehr in der laufenden App. Eine echte Icon-Gestaltung (inkl. Umbenennung des
-  Icon-Composer-Bundles) ist bewusst auf einen eigenen, späteren Durchgang verschoben, siehe `SPEC.md` §16.
+- **App-Icon final (Update, 2026-07-27):** Das Platzhalter-Motiv aus Phase 5 (konzentrische Ringe) ist durch das
+  finale, vom Nutzer gelieferte Artwork ersetzt (`EveryCam_Icon_HQ_render.png`, dunkler Ring mit Hexagon-Mitte
+  und drei Farbkugeln in Gold/Terrakotta/Türkis auf Sand-Hintergrund — dieselbe Bildsprache wie unter
+  `/Users/adamschock/Documents/EC- EveryCam Assets/`). Weiterhin technisch im selben `TrickCam ICON v1 Final.icon`-
+  Bundle (`ASSETCATALOG_COMPILER_APPICON_NAME`) — nur `Assets/app-icon-1024.png` wurde ersetzt, eine Umbenennung
+  des Bundle-Ordners selbst steht noch aus (rein kosmetisch, kein TrickCam-Artwork mehr enthalten).
 
 ---
 
