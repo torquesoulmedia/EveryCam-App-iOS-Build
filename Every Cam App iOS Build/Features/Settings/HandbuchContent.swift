@@ -44,16 +44,20 @@ struct HandbuchSection: Identifiable {
     let blocks: [HandbuchBlock]
 }
 
-// Inhalt 1:1 aus Handbuch.md übernommen (Quelle: spec.md, Stand 2026-07-18),
-// um Spanisch und brasilianisches Portugiesisch erweitert (Update, Nutzerwunsch).
+// Ursprünglich 1:1 aus TrickCams Handbuch.md übernommen (Bail/Make,
+// Athleten, Sessions) — mit dem EveryCam-Pivot inhaltlich vollständig neu
+// geschrieben (Phase 6, 2026-07-27): Tags statt Bail/Make, Sammlungen statt
+// Sessions, Foto **und** Video statt nur Video, und der seit Phase 4 aus der
+// UI entfernte Single/Dual-Umschalter ist entsprechend nicht mehr
+// dokumentiert (SPEC.md §7.2 — nicht erreichbar, also auch nicht erklärt).
 enum HandbuchContent {
     static let sections: [HandbuchSection] = [
         HandbuchSection(titleDE: "Aufnahme-Hauptbildschirm", titleEN: "Capture Main Screen", titleES: "Pantalla principal de grabación", titlePT: "Tela principal de gravação", blocks: [
             .paragraph(
-                de: "Der Startbildschirm der App — hier passiert der komplette Aufnahme-Zyklus.",
-                en: "The app's starting screen — the entire recording cycle happens here.",
-                es: "La pantalla de inicio de la app — aquí ocurre todo el ciclo de grabación.",
-                pt: "A tela inicial do app — aqui acontece todo o ciclo de gravação."
+                de: "Der Startbildschirm der App — hier passiert der komplette Aufnahme-Zyklus, für Fotos wie für Videos.",
+                en: "The app's starting screen — the entire capture cycle happens here, for both photos and videos.",
+                es: "La pantalla de inicio de la app — aquí ocurre todo el ciclo de captura, tanto para fotos como para videos.",
+                pt: "A tela inicial do app — aqui acontece todo o ciclo de captura, tanto para fotos quanto para vídeos."
             ),
             .heading(de: "Kamera-Vorschau", en: "Camera preview", es: "Vista previa de la cámara", pt: "Visualização da câmera"),
             .bullets(de: [
@@ -85,272 +89,268 @@ enum HandbuchContent {
             .bullets(de: [
                 "Blitz-Button oben links.",
                 "Bildraten- und Auflösungsanzeige oben rechts — reine Information, nicht antippbar. Zeigt die aktuell in den Einstellungen gewählten Werte.",
-                "Während einer laufenden Aufnahme erscheint direkt über dem Aufnahmeknopf eine Zeitanzeige mit rotem Rahmen, die die Aufnahmedauer hochzählt."
+                "Während einer laufenden Videoaufnahme erscheint direkt über dem Aufnahmeknopf eine Zeitanzeige mit rotem Rahmen, die die Aufnahmedauer hochzählt."
             ], en: [
                 "Flash button, top left.",
                 "Frame-rate and resolution indicators, top right — purely informational, not tappable. Shows the values currently selected in Settings.",
-                "While recording, a capsule with a red border appears directly above the record button, counting up the elapsed recording time."
+                "While a video is recording, a capsule with a red border appears directly above the record button, counting up the elapsed recording time."
             ], es: [
                 "Botón de flash arriba a la izquierda.",
                 "Indicadores de velocidad de fotogramas y resolución arriba a la derecha — puramente informativos, no se pueden tocar. Muestran los valores seleccionados actualmente en Ajustes.",
-                "Durante la grabación aparece justo encima del botón de grabación una cápsula con borde rojo que cuenta el tiempo de grabación transcurrido."
+                "Mientras se graba un video aparece justo encima del botón de grabación una cápsula con borde rojo que cuenta el tiempo de grabación transcurrido."
             ], pt: [
                 "Botão de flash no canto superior esquerdo.",
                 "Indicadores de taxa de quadros e resolução no canto superior direito — puramente informativos, não são tocáveis. Mostram os valores atualmente selecionados em Ajustes.",
-                "Durante a gravação, aparece diretamente acima do botão de gravação uma cápsula com borda vermelha que conta o tempo de gravação decorrido."
+                "Enquanto um vídeo está sendo gravado, aparece diretamente acima do botão de gravação uma cápsula com borda vermelha que conta o tempo de gravação decorrido."
             ]),
             .heading(de: "Objektivauswahl (Leiste oberhalb des Aufnahmeknopfs)", en: "Lens picker (bar above the record button)", es: "Selector de objetivo (barra encima del botón de grabación)", pt: "Seletor de lente (barra acima do botão de gravação)"),
             .bullets(de: [
                 "Zeigt feste Zoom-Sprungmarken (0.5x/1x/2x/5x/10x), aber nur jene, die das jeweilige Gerät tatsächlich unterstützt.",
                 "Ein Tipp springt direkt auf diesen Zoomwert, die aktive Marke ist hervorgehoben.",
-                "Während der Aufnahme gesperrt.",
-                "In beiden Modi (Single und Dual) nutzbar.",
+                "Während einer laufenden Videoaufnahme gesperrt.",
                 "**„ZL“-Zoom-Sperre** neben der 0.5x-Marke: aktivierbar von 0.5x oder von 1x aus, standardmäßig deaktiviert und muss jedes Mal manuell aktiviert werden (Deaktivieren geht dagegen jederzeit). Von 0.5x aus aktiviert bleibt der Zoom auf den optischen Bereich des Ultra-Weitwinkels beschränkt — weder Pinch noch ein Tipp auf ein anderes Objektiv wechselt dann noch das Objektiv, der Zoom endet an der Leistungsgrenze des 0.5x-Objektivs. Von 1x aus aktiviert gilt die umgekehrte Richtung: nach oben (2x/5x/10x) bleibt frei zoombar, nur der Rückweg zu 0.5x ist gesperrt."
             ], en: [
                 "Shows fixed zoom marks (0.5x/1x/2x/5x/10x), but only the ones the current device actually supports.",
                 "Tapping a mark jumps straight to that zoom level; the active mark is highlighted.",
-                "Locked during recording.",
-                "Usable in both modes (Single and Dual).",
+                "Locked while a video is recording.",
                 "**\"ZL\" zoom lock** next to the 0.5x mark: can be turned on from either 0.5x or 1x, off by default and must be turned on manually each time (turning it off, however, works at any time). Activated from 0.5x, zoom stays confined to the ultra-wide lens's own optical range — neither pinching nor tapping another lens switches lenses anymore; zoom simply stops at the 0.5x lens's capability limit. Activated from 1x, the direction is inverted: zooming further out (2x/5x/10x) stays free, only the way back to 0.5x is blocked."
             ], es: [
                 "Muestra marcas de zoom fijas (0.5x/1x/2x/5x/10x), pero solo las que el dispositivo actual realmente admite.",
                 "Tocar una marca salta directamente a ese nivel de zoom; la marca activa aparece resaltada.",
-                "Bloqueado durante la grabación.",
-                "Disponible en ambos modos (Individual y Dual).",
+                "Bloqueado mientras se graba un video.",
                 "**Bloqueo de zoom «ZL»** junto a la marca 0.5x: se puede activar desde 0.5x o desde 1x, desactivado de forma predeterminada y hay que activarlo manualmente cada vez (desactivarlo, en cambio, funciona en cualquier momento). Activado desde 0.5x, el zoom queda limitado al rango óptico propio del gran angular — ni el pellizco ni tocar otro objetivo cambian ya de objetivo; el zoom simplemente se detiene en el límite del objetivo 0.5x. Activado desde 1x, la dirección se invierte: seguir haciendo zoom hacia fuera (2x/5x/10x) queda libre, solo se bloquea el regreso a 0.5x."
             ], pt: [
                 "Mostra marcas fixas de zoom (0,5x/1x/2x/5x/10x), mas apenas as que o aparelho atual realmente suporta.",
                 "Tocar em uma marca salta diretamente para esse nível de zoom; a marca ativa fica destacada.",
-                "Bloqueado durante a gravação.",
-                "Utilizável em ambos os modos (Individual e Dual).",
+                "Bloqueado enquanto um vídeo está sendo gravado.",
                 "**Trava de zoom \"ZL\"** ao lado da marca 0,5x: pode ser ativada a partir de 0,5x ou de 1x, desativada por padrão e precisa ser ativada manualmente sempre (já a desativação funciona a qualquer momento). Ativada a partir de 0,5x, o zoom fica restrito à faixa óptica própria da lente ultra grande angular — nem o pinça nem tocar em outra lente muda mais de lente; o zoom simplesmente para no limite da lente 0,5x. Ativada a partir de 1x, a direção se inverte: continuar aumentando o zoom (2x/5x/10x) permanece livre, só o caminho de volta a 0,5x fica bloqueado."
             ]),
-            .heading(de: "Icon-Zeile (direkt über Single/Dual bzw. dem Session-Button)", en: "Icon row (directly above Single/Dual and the Session button)", es: "Fila de iconos (justo encima de Individual/Dual y el botón de sesión)", pt: "Linha de ícones (diretamente acima de Individual/Dual e do botão de sessão)"),
+            .heading(de: "Icon-Zeile (direkt unter dem Aufnahmeknopf)", en: "Icon row (directly below the record button)", es: "Fila de iconos (justo debajo del botón de grabación)", pt: "Linha de ícones (diretamente abaixo do botão de gravação)"),
             .bullets(de: [
-                "Links: Zahnrad (Einstellungen), Crop-Hilfsraster (nur Dual), Komposition-Raster (beide Modi).",
-                "Rechts: Plus (neue Session), Athlet-Schnellzugriff (nur bei aktiver Session)."
+                "Links: Zahnrad (Einstellungen), Komposition-Raster.",
+                "Rechts: Plus (neue Sammlung), Tags-Schnellzugriff (nur bei aktiver Sammlung)."
             ], en: [
-                "Left: gear (settings), crop guide (Dual only), composition grid (both modes).",
-                "Right: plus (new session), athlete quick access (only with an active session)."
+                "Left: gear (settings), composition grid.",
+                "Right: plus (new collection), tags quick access (only with an active collection)."
             ], es: [
-                "Izquierda: engranaje (ajustes), guía de recorte (solo Dual), cuadrícula de composición (ambos modos).",
-                "Derecha: más (nueva sesión), acceso rápido a atletas (solo con una sesión activa)."
+                "Izquierda: engranaje (ajustes), cuadrícula de composición.",
+                "Derecha: más (nueva colección), acceso rápido a tags (solo con una colección activa)."
             ], pt: [
-                "Esquerda: engrenagem (ajustes), guia de recorte (somente Dual), grade de composição (ambos os modos).",
-                "Direita: mais (nova sessão), acesso rápido ao atleta (somente com sessão ativa)."
+                "Esquerda: engrenagem (ajustes), grade de composição.",
+                "Direita: mais (nova coleção), acesso rápido a tags (somente com coleção ativa)."
             ]),
             .heading(de: "Unterste Zeile", en: "Bottom row", es: "Fila inferior", pt: "Linha inferior"),
             .bullets(de: [
-                "Single/Dual-Umschalter links, Direktzugriff „Session“ auf die Sessions-Übersicht rechts.",
-                "Ein dezenter Wisch-Hinweis am rechten Bildschirmrand erinnert daran, dass sich zur Sessions-Übersicht auch wischen lässt."
+                "**Foto/Video-Umschalter** links: wechselt zwischen Foto- und Video-Modus. Direktzugriff „Sammlungen“ auf die Sammlungen-Übersicht rechts.",
+                "Ein dezenter Wisch-Hinweis am rechten Bildschirmrand erinnert daran, dass sich zur Sammlungen-Übersicht auch wischen lässt."
             ], en: [
-                "Single/Dual toggle on the left, direct access to the sessions overview (\"Session\") on the right.",
-                "A subtle swipe hint on the right screen edge reminds you that you can also swipe to the sessions overview."
+                "**Photo/Video toggle** on the left: switches between photo and video mode. Direct access to the collections overview (\"Collections\") on the right.",
+                "A subtle swipe hint on the right screen edge reminds you that you can also swipe to the collections overview."
             ], es: [
-                "Interruptor Individual/Dual a la izquierda, acceso directo «Sesión» al resumen de sesiones a la derecha.",
-                "Una discreta indicación de deslizamiento en el borde derecho de la pantalla recuerda que también puedes deslizar para ir al resumen de sesiones."
+                "**Interruptor Foto/Video** a la izquierda: alterna entre el modo foto y el modo video. Acceso directo «Colecciones» al resumen de colecciones a la derecha.",
+                "Una discreta indicación de deslizamiento en el borde derecho de la pantalla recuerda que también puedes deslizar para ir al resumen de colecciones."
             ], pt: [
-                "Alternância Individual/Dual à esquerda, acesso direto \"Sessão\" ao resumo de sessões à direita.",
-                "Uma discreta dica de deslize na borda direita da tela lembra que também é possível deslizar até o resumo de sessões."
+                "**Alternância Foto/Vídeo** à esquerda: alterna entre o modo foto e o modo vídeo. Acesso direto \"Coleções\" ao resumo de coleções à direita.",
+                "Uma discreta dica de deslize na borda direita da tela lembra que também é possível deslizar até o resumo de coleções."
             ]),
             .heading(de: "Aufnahmeknopf", en: "Record button", es: "Botón de grabación", pt: "Botão de gravação"),
             .bullets(de: [
-                "Kreis im Ruhezustand, wird während der Aufnahme zu einem Quadrat mit abgerundeten Ecken.",
-                "Ohne aktive Session ist der Knopf deaktiviert, ein Hinweis „Zuerst Session anlegen“ erscheint."
+                "**Foto-Modus:** ein Tipp macht sofort ein Foto; der Knopf bleibt dabei ein Kreis.",
+                "**Video-Modus:** ein Tipp startet die Aufnahme, der Kreis wird zu einem Quadrat mit abgerundeten Ecken; ein erneuter Tipp stoppt.",
+                "Ohne aktive Sammlung ist der Knopf deaktiviert, ein Hinweis „Zuerst Sammlung anlegen“ erscheint."
             ], en: [
-                "A circle at rest; turns into a square with rounded corners while recording.",
-                "Disabled with no active session — a \"Create a session first\" hint appears."
+                "**Photo mode:** a tap immediately takes a photo; the button stays a circle throughout.",
+                "**Video mode:** a tap starts recording and the circle turns into a square with rounded corners; tapping again stops it.",
+                "Disabled with no active collection — a \"Create a collection first\" hint appears."
             ], es: [
-                "Círculo en reposo; se convierte en un cuadrado con esquinas redondeadas durante la grabación.",
-                "Desactivado si no hay una sesión activa — aparece el aviso «Crea primero una sesión»."
+                "**Modo foto:** un toque hace una foto de inmediato; el botón permanece como un círculo en todo momento.",
+                "**Modo video:** un toque inicia la grabación y el círculo se convierte en un cuadrado con esquinas redondeadas; tocar de nuevo la detiene.",
+                "Desactivado si no hay una colección activa — aparece el aviso «Crea primero una colección»."
             ], pt: [
-                "Um círculo em repouso, que se transforma em um quadrado com cantos arredondados durante a gravação.",
-                "Desativado sem uma sessão ativa — aparece o aviso \"Crie uma sessão primeiro\"."
-            ]),
-            .paragraph(
-                de: "**Single-Modus:** freie Objektivwahl, Ausrichtung folgt der Gerätehaltung beim Start.",
-                en: "**Single mode:** free lens choice, orientation follows the device's physical position at the moment recording starts.",
-                es: "**Modo individual:** elección libre de objetivo, la orientación sigue la posición física del dispositivo al iniciar la grabación.",
-                pt: "**Modo individual:** escolha livre de lente, a orientação segue a posição física do aparelho no momento em que a gravação começa."
-            ),
-            .paragraph(
-                de: "**Dual-Modus:** nimmt zusätzlich zur Hauptdatei automatisch einen zweiten, gegenläufigen Bildausschnitt auf (z. B. 16:9 aus einer 9:16-Aufnahme oder umgekehrt) — abhängig davon, ob das Gerät beim Start hoch- oder querformatig gehalten wird. Das Crop-Hilfsraster zeigt vorab, wo der Ausschnitt liegen wird.",
-                en: "**Dual mode:** in addition to the main file, automatically records a second, complementary crop (e.g. 16:9 out of a 9:16 recording, or vice versa) — depending on whether the device is held in portrait or landscape when recording starts. The crop guide previews where that crop will land.",
-                es: "**Modo dual:** además del archivo principal, graba automáticamente un segundo recorte complementario (p. ej. 16:9 a partir de una grabación 9:16, o al revés) — según si el dispositivo se sostiene en vertical o en horizontal al iniciar la grabación. La guía de recorte muestra de antemano dónde quedará ese recorte.",
-                pt: "**Modo dual:** além do arquivo principal, grava automaticamente um segundo recorte complementar (por exemplo, 16:9 a partir de uma gravação 9:16, ou vice-versa) — dependendo de o aparelho estar em modo retrato ou paisagem no início da gravação. A guia de recorte mostra antecipadamente onde ficará esse recorte."
-            )
-        ]),
-
-        HandbuchSection(titleDE: "Neue Session anlegen", titleEN: "Creating a New Session", titleES: "Crear una nueva sesión", titlePT: "Criar uma nova sessão", blocks: [
-            .paragraph(
-                de: "Aufrufbar über das Plus-Symbol, auf dem Aufnahme-Bildschirm und in der Sessions-Übersicht.",
-                en: "Opened via the plus icon, on both the capture screen and the sessions overview.",
-                es: "Se abre con el icono de más, tanto en la pantalla de grabación como en el resumen de sesiones.",
-                pt: "Acessível pelo ícone de mais, tanto na tela de gravação quanto no resumo de sessões."
-            ),
-            .bullets(de: [
-                "**Sessionname:** Pflichtfeld, freier Text. Sonderzeichen sind erlaubt — der Name wird beim Anlegen des Ordners automatisch bereinigt, in der App bleibt der Originalname sichtbar.",
-                "**Datum:** wird automatisch gesetzt, nicht änderbar.",
-                "**Athleten hinzufügen:** Name (optional) + Kürzel (Pflicht, 1–6 Zeichen). Aus dem Namen wird ein Kürzel-Vorschlag erzeugt. Ist das Kürzel bereits vergeben, schlägt die App automatisch eine Variante vor (z. B. „MM2“).",
-                "**Athleten-Schnellauswahl:** Athleten, die am selben Tag bereits in einer anderen Session angelegt wurden, lassen sich per Tipp direkt übernehmen — praktisch bei mehreren Sessions am selben Spot-Tag.",
-                "**Bestätigen** legt die Session an und macht sie sofort zur aktiven Session. **Abbrechen** verwirft alle Eingaben.",
-                "Athleten lassen sich jederzeit **nachträglich** ergänzen, auch während die Session bereits läuft (über den Athlet-Schnellzugriff auf dem Aufnahme-Bildschirm oder in der Galerie)."
-            ], en: [
-                "**Session name:** required, free text. Special characters are allowed — the name is automatically sanitized when the folder is created, while the app keeps showing the original name.",
-                "**Date:** set automatically, not editable.",
-                "**Adding athletes:** name (optional) + shortcode (required, 1–6 characters). A shortcode suggestion is generated from the name. If that shortcode is already taken, the app automatically suggests a variant (e.g. \"MM2\").",
-                "**Athlete quick-pick:** athletes already added to another session earlier the same day can be added with a single tap — handy when filming multiple sessions at the same spot on one day.",
-                "**Confirm** creates the session and immediately makes it the active session. **Cancel** discards everything entered.",
-                "Athletes can always be added **later**, even while the session is already running (via the athlete quick-access icon on the capture screen, or from the gallery)."
-            ], es: [
-                "**Nombre de la sesión:** obligatorio, texto libre. Se permiten caracteres especiales — el nombre se limpia automáticamente al crear la carpeta, mientras que la app sigue mostrando el nombre original.",
-                "**Fecha:** se establece automáticamente, no se puede modificar.",
-                "**Añadir atletas:** nombre (opcional) + código (obligatorio, 1–6 caracteres). A partir del nombre se genera una sugerencia de código. Si ese código ya está en uso, la app sugiere automáticamente una variante (p. ej. «MM2»).",
-                "**Selección rápida de atletas:** los atletas ya añadidos ese mismo día en otra sesión se pueden incorporar con un solo toque — muy útil cuando se filman varias sesiones en el mismo spot el mismo día.",
-                "**Confirmar** crea la sesión y la convierte de inmediato en la sesión activa. **Cancelar** descarta todo lo introducido.",
-                "Los atletas siempre se pueden añadir **más tarde**, incluso con la sesión ya en marcha (mediante el acceso rápido a atletas en la pantalla de grabación o desde la galería)."
-            ], pt: [
-                "**Nome da sessão:** obrigatório, texto livre. Caracteres especiais são permitidos — o nome é automaticamente higienizado ao criar a pasta, enquanto o app continua mostrando o nome original.",
-                "**Data:** definida automaticamente, não pode ser alterada.",
-                "**Adicionar atletas:** nome (opcional) + código (obrigatório, 1–6 caracteres). Uma sugestão de código é gerada a partir do nome. Se esse código já estiver em uso, o app sugere automaticamente uma variante (por exemplo, \"MM2\").",
-                "**Seleção rápida de atletas:** atletas já adicionados a outra sessão no mesmo dia podem ser incorporados com um único toque — útil ao filmar várias sessões no mesmo local no mesmo dia.",
-                "**Confirmar** cria a sessão e a torna imediatamente a sessão ativa. **Cancelar** descarta tudo o que foi inserido.",
-                "Atletas sempre podem ser adicionados **depois**, mesmo com a sessão já em andamento (pelo acesso rápido a atletas na tela de gravação ou na galeria)."
+                "**Modo foto:** um toque tira uma foto imediatamente; o botão permanece um círculo o tempo todo.",
+                "**Modo vídeo:** um toque inicia a gravação e o círculo se transforma em um quadrado com cantos arredondados; tocar novamente interrompe.",
+                "Desativado sem uma coleção ativa — aparece o aviso \"Crie uma coleção primeiro\"."
             ])
         ]),
 
-        HandbuchSection(titleDE: "Zuordnungs-Panel (Bail/Make)", titleEN: "Assignment Panel (Bail/Make)", titleES: "Panel de asignación (Bail/Make)", titlePT: "Painel de atribuição (Bail/Make)", blocks: [
+        HandbuchSection(titleDE: "Neue Sammlung anlegen", titleEN: "Creating a New Collection", titleES: "Crear una nueva colección", titlePT: "Criar uma nova coleção", blocks: [
             .paragraph(
-                de: "Öffnet sich **automatisch**, sobald eine Aufnahme gestoppt wird.",
-                en: "Opens **automatically** as soon as a recording is stopped.",
-                es: "Se abre **automáticamente** en cuanto se detiene una grabación.",
-                pt: "Abre-se **automaticamente** assim que uma gravação é interrompida."
+                de: "Aufrufbar über das Plus-Symbol, auf dem Aufnahme-Bildschirm und in der Sammlungen-Übersicht.",
+                en: "Opened via the plus icon, on both the capture screen and the collections overview.",
+                es: "Se abre con el icono de más, tanto en la pantalla de grabación como en el resumen de colecciones.",
+                pt: "Acessível pelo ícone de mais, tanto na tela de gravação quanto no resumo de coleções."
             ),
             .bullets(de: [
-                "**Ausklapp-Punkt** oben: öffnet/schließt das Panel manuell, zeigt die Vorschau des letzten Clips darunter.",
-                "**Bail:** ein einzelner roter Button — der Versuch ist misslungen.",
-                "**Make:** ein grüner Button pro Athlet der aktiven Session, beschriftet mit dessen Kürzel — der Versuch ist gelungen und wird genau diesem Athleten zugeordnet.",
-                "Ein Tipp auf Bail oder Make verschiebt die Datei sofort in den richtigen Ordner und schließt das Panel automatisch — bereit für die nächste Aufnahme.",
-                "Wird das Panel geschlossen, ohne eine Auswahl zu treffen, bleibt der Clip als „nicht zugeordnet“ gespeichert und kann später in der Galerie nachträglich zugeordnet werden — nichts geht verloren.",
+                "**Sammlungsname:** Pflichtfeld, freier Text. Sonderzeichen sind erlaubt — der Name wird beim Anlegen des Ordners automatisch bereinigt, in der App bleibt der Originalname sichtbar.",
+                "**Datum:** wird automatisch gesetzt, nicht änderbar.",
+                "**Tag hinzufügen:** ein frei wählbarer Name pro Tag, kein Kürzel nötig. Ist der Name innerhalb der Sammlung bereits vergeben, weist die App darauf hin.",
+                "**Tag-Schnellauswahl:** Tags, die am selben Tag bereits in einer anderen Sammlung angelegt wurden, lassen sich per Tipp direkt übernehmen — praktisch bei mehreren Sammlungen am selben Anlass-Tag.",
+                "**Bestätigen** legt die Sammlung an und macht sie sofort zur aktiven Sammlung. **Abbrechen** verwirft alle Eingaben.",
+                "Eine Sammlung lässt sich auch **ganz ohne Tag** anlegen — Aufnahmen bleiben dann als „Nicht zugeordnet“ erhalten, bis später ein Tag ergänzt wird.",
+                "Tags lassen sich jederzeit **nachträglich** ergänzen, auch während die Sammlung bereits läuft (über den Tags-Schnellzugriff auf dem Aufnahme-Bildschirm oder in der Galerie)."
+            ], en: [
+                "**Collection name:** required, free text. Special characters are allowed — the name is automatically sanitized when the folder is created, while the app keeps showing the original name.",
+                "**Date:** set automatically, not editable.",
+                "**Adding a tag:** a freely chosen name per tag, no shortcode needed. If that name is already used within the collection, the app points this out.",
+                "**Tag quick-pick:** tags already added to another collection earlier the same day can be added with a single tap — handy when creating multiple collections for the same occasion on one day.",
+                "**Confirm** creates the collection and immediately makes it the active collection. **Cancel** discards everything entered.",
+                "A collection can also be created **with no tag at all** — captures then stay marked \"Unassigned\" until a tag is added later.",
+                "Tags can always be added **later**, even while the collection is already running (via the tags quick-access icon on the capture screen, or from the gallery)."
+            ], es: [
+                "**Nombre de la colección:** obligatorio, texto libre. Se permiten caracteres especiales — el nombre se limpia automáticamente al crear la carpeta, mientras que la app sigue mostrando el nombre original.",
+                "**Fecha:** se establece automáticamente, no se puede modificar.",
+                "**Añadir un tag:** un nombre de libre elección por tag, sin necesidad de código. Si ese nombre ya está en uso dentro de la colección, la app lo indica.",
+                "**Selección rápida de tags:** los tags ya añadidos ese mismo día en otra colección se pueden incorporar con un solo toque — muy útil cuando se crean varias colecciones para el mismo motivo el mismo día.",
+                "**Confirmar** crea la colección y la convierte de inmediato en la colección activa. **Cancelar** descarta todo lo introducido.",
+                "También se puede crear una colección **sin ningún tag** — las capturas quedan entonces marcadas como «sin asignar» hasta que se añada un tag más tarde.",
+                "Los tags siempre se pueden añadir **más tarde**, incluso con la colección ya en marcha (mediante el acceso rápido a tags en la pantalla de grabación o desde la galería)."
+            ], pt: [
+                "**Nome da coleção:** obrigatório, texto livre. Caracteres especiais são permitidos — o nome é automaticamente higienizado ao criar a pasta, enquanto o app continua mostrando o nome original.",
+                "**Data:** definida automaticamente, não pode ser alterada.",
+                "**Adicionar um tag:** um nome de livre escolha por tag, sem precisar de código. Se esse nome já estiver em uso dentro da coleção, o app avisa.",
+                "**Seleção rápida de tags:** tags já adicionados a outra coleção no mesmo dia podem ser incorporados com um único toque — útil ao criar várias coleções para o mesmo motivo no mesmo dia.",
+                "**Confirmar** cria a coleção e a torna imediatamente a coleção ativa. **Cancelar** descarta tudo o que foi inserido.",
+                "Também é possível criar uma coleção **sem nenhum tag** — as capturas ficam então marcadas como \"não atribuído\" até que um tag seja adicionado depois.",
+                "Tags sempre podem ser adicionados **depois**, mesmo com a coleção já em andamento (pelo acesso rápido a tags na tela de gravação ou na galeria)."
+            ])
+        ]),
+
+        HandbuchSection(titleDE: "Zuordnungs-Panel (Tags)", titleEN: "Assignment Panel (Tags)", titleES: "Panel de asignación (tags)", titlePT: "Painel de atribuição (tags)", blocks: [
+            .paragraph(
+                de: "Öffnet sich **automatisch**, sobald eine Videoaufnahme gestoppt oder ein Foto gemacht wird.",
+                en: "Opens **automatically** as soon as a video recording is stopped or a photo is taken.",
+                es: "Se abre **automáticamente** en cuanto se detiene una grabación de video o se hace una foto.",
+                pt: "Abre-se **automaticamente** assim que uma gravação de vídeo é interrompida ou uma foto é tirada."
+            ),
+            .bullets(de: [
+                "**Ausklapp-Punkt** oben: öffnet/schließt das Panel manuell.",
+                "Ein Button pro Tag der aktiven Sammlung, beschriftet mit dessen Namen — alle Tags sind gleichwertig, es gibt keinen festen ersten oder besonderen Button.",
+                "Gibt es noch keinen Tag in der Sammlung, zeigt das Panel stattdessen den Hinweis „Noch keine Tags — leg einen an“.",
+                "Ein Tipp auf einen Tag verschiebt die Aufnahme sofort in den richtigen Ordner und schließt das Panel automatisch — bereit für die nächste Aufnahme.",
+                "Wird das Panel geschlossen, ohne eine Auswahl zu treffen, bleibt die Aufnahme als „nicht zugeordnet“ gespeichert und kann später in der Galerie nachträglich zugeordnet werden — nichts geht verloren.",
                 "Startet eine neue Aufnahme, während das Panel noch offen ist, schließt es sich automatisch."
             ], en: [
-                "**Expand toggle** at the top: opens/closes the panel manually, with a preview of the last clip shown below it.",
-                "**Bail:** a single red button — the attempt was unsuccessful.",
-                "**Make:** one green button per athlete in the active session, labeled with their shortcode — the attempt was successful and gets assigned to exactly that athlete.",
-                "Tapping Bail or Make instantly moves the file to the correct folder and closes the panel automatically — ready for the next take.",
-                "Closing the panel without making a choice leaves the clip marked \"unassigned\"; it can be assigned later from the gallery — nothing is ever lost.",
+                "**Expand toggle** at the top: opens/closes the panel manually.",
+                "One button per tag in the active collection, labeled with its name — all tags are equally weighted, there is no fixed first or special button.",
+                "If the collection has no tag yet, the panel instead shows the hint \"No tags yet — create one\".",
+                "Tapping a tag instantly moves the capture to the correct folder and closes the panel automatically — ready for the next take.",
+                "Closing the panel without making a choice leaves the capture marked \"unassigned\"; it can be assigned later from the gallery — nothing is ever lost.",
                 "Starting a new recording while the panel is still open closes it automatically."
             ], es: [
-                "**Punto desplegable** arriba: abre/cierra el panel manualmente, muestra debajo la vista previa del último clip.",
-                "**Bail:** un único botón rojo — el intento ha fallado.",
-                "**Make:** un botón verde por cada atleta de la sesión activa, con su código como etiqueta — el intento ha salido bien y se asigna exactamente a ese atleta.",
-                "Tocar Bail o Make mueve el archivo de inmediato a la carpeta correcta y cierra el panel automáticamente — listo para la siguiente toma.",
-                "Si se cierra el panel sin elegir nada, el clip queda marcado como «sin asignar» y se puede asignar más tarde desde la galería — nunca se pierde nada.",
-                "Si se inicia una nueva grabación mientras el panel sigue abierto, este se cierra automáticamente."
+                "**Punto desplegable** arriba: abre/cierra el panel manualmente.",
+                "Un botón por cada tag de la colección activa, con su nombre como etiqueta — todos los tags tienen el mismo peso, no hay un primer botón fijo ni especial.",
+                "Si la colección todavía no tiene ningún tag, el panel muestra en su lugar el aviso «Aún no hay tags — crea uno».",
+                "Tocar un tag mueve la captura de inmediato a la carpeta correcta y cierra el panel automáticamente — listo para la siguiente toma.",
+                "Si se cierra el panel sin elegir nada, la captura queda marcada como «sin asignar» y se puede asignar más tarde desde la galería — nunca se pierde nada.",
+                "Si se inicia una nueva captura mientras el panel sigue abierto, este se cierra automáticamente."
             ], pt: [
-                "**Alça de expansão** no topo: abre/fecha o painel manualmente, mostra abaixo dela a prévia do último clipe.",
-                "**Bail:** um único botão vermelho — a tentativa não deu certo.",
-                "**Make:** um botão verde por atleta da sessão ativa, identificado com seu código — a tentativa deu certo e é atribuída exatamente a esse atleta.",
-                "Tocar em Bail ou Make move o arquivo imediatamente para a pasta correta e fecha o painel automaticamente — pronto para a próxima tomada.",
-                "Fechar o painel sem fazer uma escolha deixa o clipe marcado como \"não atribuído\"; ele pode ser atribuído depois pela galeria — nada se perde.",
-                "Iniciar uma nova gravação enquanto o painel ainda está aberto o fecha automaticamente."
+                "**Alça de expansão** no topo: abre/fecha o painel manualmente.",
+                "Um botão por tag da coleção ativa, identificado com seu nome — todos os tags têm o mesmo peso, não há um primeiro botão fixo ou especial.",
+                "Se a coleção ainda não tiver nenhum tag, o painel mostra em vez disso o aviso \"Ainda não há tags — crie um\".",
+                "Tocar em um tag move a captura imediatamente para a pasta correta e fecha o painel automaticamente — pronto para a próxima captura.",
+                "Fechar o painel sem fazer uma escolha deixa a captura marcada como \"não atribuída\"; ela pode ser atribuída depois pela galeria — nada se perde.",
+                "Iniciar uma nova captura enquanto o painel ainda está aberto o fecha automaticamente."
             ])
         ]),
 
-        HandbuchSection(titleDE: "Sessions-Übersicht", titleEN: "Sessions Overview", titleES: "Resumen de sesiones", titlePT: "Resumo de sessões", blocks: [
+        HandbuchSection(titleDE: "Sammlungen-Übersicht", titleEN: "Collections Overview", titleES: "Resumen de colecciones", titlePT: "Resumo de coleções", blocks: [
             .paragraph(
-                de: "Zeigt alle bisher angelegten Sessions, erreichbar per Wisch oder über den „Session“-Button.",
-                en: "Shows every session created so far, reachable by swiping or via the \"Session\" button.",
-                es: "Muestra todas las sesiones creadas hasta ahora, accesible deslizando o mediante el botón «Sesión».",
-                pt: "Mostra todas as sessões criadas até agora, acessível deslizando ou pelo botão \"Sessão\"."
+                de: "Zeigt alle bisher angelegten Sammlungen, erreichbar per Wisch oder über den „Sammlungen“-Button.",
+                en: "Shows every collection created so far, reachable by swiping or via the \"Collections\" button.",
+                es: "Muestra todas las colecciones creadas hasta ahora, accesible deslizando o mediante el botón «Colecciones».",
+                pt: "Mostra todas as coleções criadas até agora, acessível deslizando ou pelo botão \"Coleções\"."
             ),
             .bullets(de: [
-                "**Liste:** ein Eintrag pro Session (Datum + Name), standardmäßig neueste zuerst. Über das Sortier-Symbol umstellbar auf älteste zuerst oder alphabetisch.",
-                "Sessions des heutigen Tages sind hervorgehoben (fett) — sie lassen sich weiterhin fortsetzen.",
-                "**Kamera-Icon** je Zeile: legt diese Session als Ziel für neue Aufnahmen fest. Rot, wenn bereits aktiv.",
+                "**Liste:** ein Eintrag pro Sammlung (Datum + Name), standardmäßig neueste zuerst. Über das Sortier-Symbol umstellbar auf älteste zuerst oder alphabetisch.",
+                "Sammlungen des heutigen Tages sind hervorgehoben (fett) — sie lassen sich weiterhin fortsetzen.",
+                "**Kamera-Icon** je Zeile: legt diese Sammlung als Ziel für neue Aufnahmen fest. Rot, wenn bereits aktiv.",
                 "**Tipp auf eine Zeile** öffnet die zugehörige Galerie.",
-                "**Auswählen/Fertig** (im „⋯“-Menü) aktiviert die Mehrfachauswahl zum Löschen mehrerer Sessions.",
-                "**Löschen** fragt zweistufig nach, bevor eine Session inklusive aller Clips endgültig entfernt wird.",
+                "**Auswählen/Fertig** (im „⋯“-Menü) aktiviert die Mehrfachauswahl zum Löschen mehrerer Sammlungen.",
+                "**Löschen** fragt zweistufig nach, bevor eine Sammlung inklusive aller Aufnahmen endgültig entfernt wird.",
                 "**CAM-Button** oben links führt direkt zurück zur Kamera. **Zahnrad** öffnet die Einstellungen."
             ], en: [
-                "**List:** one entry per session (date + name), newest first by default. The sort icon switches to oldest-first or alphabetical.",
-                "Sessions from today are highlighted (bold) — they remain resumable.",
-                "**Camera icon** per row: sets that session as the target for new recordings. Turns red once active.",
-                "**Tapping a row** opens that session's gallery.",
-                "**Select/Done** (in the \"⋯\" menu) enables multi-select for deleting several sessions at once.",
-                "**Delete** asks for confirmation twice before permanently removing a session and all its clips.",
+                "**List:** one entry per collection (date + name), newest first by default. The sort icon switches to oldest-first or alphabetical.",
+                "Collections from today are highlighted (bold) — they remain resumable.",
+                "**Camera icon** per row: sets that collection as the target for new recordings. Turns red once active.",
+                "**Tapping a row** opens that collection's gallery.",
+                "**Select/Done** (in the \"⋯\" menu) enables multi-select for deleting several collections at once.",
+                "**Delete** asks for confirmation twice before permanently removing a collection and all its captures.",
                 "**CAM button** at the top left jumps straight back to the camera. **Gear icon** opens Settings."
             ], es: [
-                "**Lista:** una entrada por sesión (fecha + nombre), por defecto las más recientes primero. El icono de ordenación permite cambiar a más antiguas primero o alfabético.",
-                "Las sesiones de hoy aparecen resaltadas (en negrita) — se pueden seguir retomando.",
-                "**Icono de cámara** en cada fila: establece esa sesión como destino de nuevas grabaciones. Se pone rojo cuando está activa.",
-                "**Tocar una fila** abre la galería de esa sesión.",
-                "**Seleccionar/Listo** (en el menú «⋯») activa la selección múltiple para eliminar varias sesiones a la vez.",
-                "**Eliminar** pide confirmación dos veces antes de eliminar definitivamente una sesión junto con todos sus clips.",
+                "**Lista:** una entrada por colección (fecha + nombre), por defecto las más recientes primero. El icono de ordenación permite cambiar a más antiguas primero o alfabético.",
+                "Las colecciones de hoy aparecen resaltadas (en negrita) — se pueden seguir retomando.",
+                "**Icono de cámara** en cada fila: establece esa colección como destino de nuevas grabaciones. Se pone rojo cuando está activa.",
+                "**Tocar una fila** abre la galería de esa colección.",
+                "**Seleccionar/Listo** (en el menú «⋯») activa la selección múltiple para eliminar varias colecciones a la vez.",
+                "**Eliminar** pide confirmación dos veces antes de eliminar definitivamente una colección junto con todas sus capturas.",
                 "**Botón CAM** arriba a la izquierda vuelve directamente a la cámara. **Engranaje** abre los ajustes."
             ], pt: [
-                "**Lista:** uma entrada por sessão (data + nome), por padrão as mais recentes primeiro. O ícone de ordenação permite alternar para mais antigas primeiro ou ordem alfabética.",
-                "Sessões de hoje aparecem destacadas (em negrito) — ainda podem ser retomadas.",
-                "**Ícone de câmera** em cada linha: define essa sessão como destino para novas gravações. Fica vermelho quando já está ativa.",
+                "**Lista:** uma entrada por coleção (data + nome), por padrão as mais recentes primeiro. O ícone de ordenação permite alternar para mais antigas primeiro ou ordem alfabética.",
+                "Coleções de hoje aparecem destacadas (em negrito) — ainda podem ser retomadas.",
+                "**Ícone de câmera** em cada linha: define essa coleção como destino para novas gravações. Fica vermelho quando já está ativa.",
                 "**Tocar em uma linha** abre a galeria correspondente.",
-                "**Selecionar/Concluído** (no menu \"⋯\") ativa a seleção múltipla para excluir várias sessões.",
-                "**Excluir** pede confirmação em duas etapas antes de remover definitivamente uma sessão e todos os seus clipes.",
+                "**Selecionar/Concluído** (no menu \"⋯\") ativa a seleção múltipla para excluir várias coleções.",
+                "**Excluir** pede confirmação em duas etapas antes de remover definitivamente uma coleção e todas as suas capturas.",
                 "**Botão CAM** no canto superior esquerdo volta direto para a câmera. **Engrenagem** abre os ajustes."
             ])
         ]),
 
-        HandbuchSection(titleDE: "Session-Galerie", titleEN: "Session Gallery", titleES: "Galería de la sesión", titlePT: "Galeria da sessão", blocks: [
+        HandbuchSection(titleDE: "Sammlung-Galerie", titleEN: "Collection Gallery", titleES: "Galería de la colección", titlePT: "Galeria da coleção", blocks: [
             .paragraph(
-                de: "Zeigt den kompletten Inhalt einer Session, gegliedert nach Zuordnung.",
-                en: "Shows the complete contents of one session, grouped by assignment.",
-                es: "Muestra todo el contenido de una sesión, agrupado por asignación.",
-                pt: "Mostra todo o conteúdo de uma sessão, agrupado por atribuição."
+                de: "Zeigt den kompletten Inhalt einer Sammlung — Fotos und Videos gemeinsam — gegliedert nach Zuordnung.",
+                en: "Shows the complete contents of one collection — photos and videos together — grouped by assignment.",
+                es: "Muestra todo el contenido de una colección —fotos y videos juntos— agrupado por asignación.",
+                pt: "Mostra todo o conteúdo de uma coleção — fotos e vídeos juntos — agrupado por atribuição."
             ),
             .bullets(de: [
-                "**Abschnitte** in fester Reihenfolge: „Nicht zugeordnet“ (falls vorhanden) → je ein Abschnitt pro Athlet mit mindestens einem Clip → „Bail“ ganz unten.",
-                "**Thumbnails:** ein Vorschaubild pro Clip. Im Dual-Modus erscheinen zwei Thumbnails nebeneinander (Original + Ausschnitt), jeweils mit Format-Label („9:16“/„16:9“).",
-                "**Tipp auf ein Thumbnail** öffnet einen einfachen Player (Play/Pause, Zeitleiste).",
-                "**Korrektur:** langes Drücken auf ein Thumbnail öffnet ein Menü mit „Verschieben nach…“ (anderer Athlet/Bail) und „Löschen“.",
-                "**Mehrfachauswahl:** mehrere Clips gleichzeitig markieren, dann im „⋯“-Menü gemeinsam verschieben oder löschen.",
-                "**Teilen:** über den Teilen-Button beim geöffneten Clip oder im Mehrfachauswahl-Modus — öffnet das native iOS-Share-Sheet (WhatsApp, Mail, AirDrop, …).",
-                "**Plus-Symbol:** weitere Athleten zur Session hinzufügen.",
-                "**„Als aktive Session festlegen“** im „⋯“-Menü — praktisch, wenn beim Sichten klar wird, dass hier weitergefilmt werden soll."
+                "**Abschnitte:** „Nicht zugeordnet“ (falls vorhanden) → je ein Abschnitt pro Tag, in der Reihenfolge, in der die Tags angelegt wurden.",
+                "**Thumbnails:** ein Vorschaubild pro Aufnahme, Fotos und Videos gemischt im selben Raster.",
+                "**Tipp auf ein Foto-Thumbnail** öffnet eine Vollbild-Ansicht mit Pinch-Zoom und Verschieben.",
+                "**Tipp auf ein Video-Thumbnail** öffnet einen einfachen Player (Play/Pause, Zeitleiste).",
+                "**Korrektur:** langes Drücken auf ein Thumbnail öffnet ein Menü mit „Nach … verschieben“ (ein anderer Tag) und „Löschen“.",
+                "**Mehrfachauswahl:** mehrere Aufnahmen gleichzeitig markieren, dann im „⋯“-Menü gemeinsam verschieben oder löschen.",
+                "**Teilen:** über den Teilen-Button bei der geöffneten Aufnahme oder im Mehrfachauswahl-Modus — öffnet das native iOS-Share-Sheet (WhatsApp, Mail, AirDrop, …).",
+                "**Plus-Symbol:** weitere Tags zur Sammlung hinzufügen.",
+                "**„Als aktive Sammlung festlegen“** im „⋯“-Menü — praktisch, wenn beim Sichten klar wird, dass hier weiter aufgenommen werden soll."
             ], en: [
-                "**Sections** in a fixed order: \"Unassigned\" (if any) → one section per athlete with at least one clip → \"Bail\" at the very bottom.",
-                "**Thumbnails:** one preview image per clip. In Dual mode, two thumbnails appear side by side (original + crop), each with a format label (\"9:16\"/\"16:9\").",
-                "**Tapping a thumbnail** opens a simple player (play/pause, scrubber).",
-                "**Correcting a clip:** long-press a thumbnail for a menu with \"Move to…\" (a different athlete/Bail) and \"Delete\".",
-                "**Multi-select:** mark several clips at once, then move or delete them together via the \"⋯\" menu.",
-                "**Sharing:** via the share button on an open clip, or from multi-select mode — opens the native iOS share sheet (WhatsApp, Mail, AirDrop, …).",
-                "**Plus icon:** add more athletes to the session.",
-                "**\"Set as active session\"** in the \"⋯\" menu — useful when reviewing clips makes it clear that this is where filming should continue."
+                "**Sections:** \"Unassigned\" (if any) → one section per tag, in the order the tags were created.",
+                "**Thumbnails:** one preview image per capture, photos and videos mixed in the same grid.",
+                "**Tapping a photo thumbnail** opens a full-screen view with pinch-to-zoom and panning.",
+                "**Tapping a video thumbnail** opens a simple player (play/pause, scrubber).",
+                "**Correcting a capture:** long-press a thumbnail for a menu with \"Move to…\" (a different tag) and \"Delete\".",
+                "**Multi-select:** mark several captures at once, then move or delete them together via the \"⋯\" menu.",
+                "**Sharing:** via the share button on an open capture, or from multi-select mode — opens the native iOS share sheet (WhatsApp, Mail, AirDrop, …).",
+                "**Plus icon:** add more tags to the collection.",
+                "**\"Set as active collection\"** in the \"⋯\" menu — useful when reviewing captures makes it clear that this is where recording should continue."
             ], es: [
-                "**Secciones** en un orden fijo: «Sin asignar» (si las hay) → una sección por cada atleta con al menos un clip → «Bail» al final del todo.",
-                "**Miniaturas:** una imagen de vista previa por clip. En modo Dual aparecen dos miniaturas una junto a otra (original + recorte), cada una con una etiqueta de formato («9:16»/«16:9»).",
-                "**Tocar una miniatura** abre un reproductor sencillo (reproducir/pausar, barra de tiempo).",
-                "**Corrección:** mantener pulsada una miniatura abre un menú con «Mover a…» (otro atleta/Bail) y «Eliminar».",
-                "**Selección múltiple:** marca varios clips a la vez y luego muévelos o elimínalos juntos desde el menú «⋯».",
-                "**Compartir:** mediante el botón de compartir en un clip abierto, o desde el modo de selección múltiple — abre la hoja de compartir nativa de iOS (WhatsApp, Mail, AirDrop, …).",
-                "**Icono de más:** añadir más atletas a la sesión.",
-                "**«Establecer como sesión activa»** en el menú «⋯» — útil cuando, al revisar los clips, queda claro que aquí se debe seguir grabando."
+                "**Secciones:** «Sin asignar» (si las hay) → una sección por cada tag, en el orden en que se crearon los tags.",
+                "**Miniaturas:** una imagen de vista previa por captura, fotos y videos mezclados en la misma cuadrícula.",
+                "**Tocar una miniatura de foto** abre una vista a pantalla completa con zoom de pellizco y desplazamiento.",
+                "**Tocar una miniatura de video** abre un reproductor sencillo (reproducir/pausar, barra de tiempo).",
+                "**Corrección:** mantener pulsada una miniatura abre un menú con «Mover a…» (otro tag) y «Eliminar».",
+                "**Selección múltiple:** marca varias capturas a la vez y luego muévelas o elimínalas juntas desde el menú «⋯».",
+                "**Compartir:** mediante el botón de compartir en una captura abierta, o desde el modo de selección múltiple — abre la hoja de compartir nativa de iOS (WhatsApp, Mail, AirDrop, …).",
+                "**Icono de más:** añadir más tags a la colección.",
+                "**«Establecer como colección activa»** en el menú «⋯» — útil cuando, al revisar las capturas, queda claro que aquí se debe seguir grabando."
             ], pt: [
-                "**Seções** em ordem fixa: \"Não atribuído\" (se houver) → uma seção por atleta com pelo menos um clipe → \"Bail\" bem no final.",
-                "**Miniaturas:** uma imagem de prévia por clipe. No modo Dual, aparecem duas miniaturas lado a lado (original + recorte), cada uma com um rótulo de formato (\"9:16\"/\"16:9\").",
-                "**Tocar em uma miniatura** abre um player simples (reproduzir/pausar, barra de progresso).",
-                "**Correção:** toque longo em uma miniatura abre um menu com \"Mover para…\" (outro atleta/Bail) e \"Excluir\".",
-                "**Seleção múltipla:** marque vários clipes ao mesmo tempo e depois mova ou exclua-os juntos pelo menu \"⋯\".",
-                "**Compartilhar:** pelo botão de compartilhar no clipe aberto, ou no modo de seleção múltipla — abre a folha de compartilhamento nativa do iOS (WhatsApp, Mail, AirDrop, …).",
-                "**Ícone de mais:** adicionar mais atletas à sessão.",
-                "**\"Definir como sessão ativa\"** no menu \"⋯\" — útil quando, ao revisar os clipes, fica claro que é aqui que a filmagem deve continuar."
+                "**Seções:** \"Não atribuído\" (se houver) → uma seção por tag, na ordem em que os tags foram criados.",
+                "**Miniaturas:** uma imagem de prévia por captura, fotos e vídeos misturados na mesma grade.",
+                "**Tocar em uma miniatura de foto** abre uma visualização em tela cheia com zoom de pinça e deslocamento.",
+                "**Tocar em uma miniatura de vídeo** abre um player simples (reproduzir/pausar, barra de progresso).",
+                "**Correção:** toque longo em uma miniatura abre um menu com \"Mover para…\" (outro tag) e \"Excluir\".",
+                "**Seleção múltipla:** marque várias capturas ao mesmo tempo e depois mova ou exclua-as juntas pelo menu \"⋯\".",
+                "**Compartilhar:** pelo botão de compartilhar na captura aberta, ou no modo de seleção múltipla — abre a folha de compartilhamento nativa do iOS (WhatsApp, Mail, AirDrop, …).",
+                "**Ícone de mais:** adicionar mais tags à coleção.",
+                "**\"Definir como coleção ativa\"** no menu \"⋯\" — útil quando, ao revisar as capturas, fica claro que é aqui que a gravação deve continuar."
             ])
         ]),
 
         HandbuchSection(titleDE: "Einstellungen", titleEN: "Settings", titleES: "Ajustes", titlePT: "Ajustes", blocks: [
             .paragraph(
-                de: "Erreichbar über das Zahnrad auf dem Aufnahme-Bildschirm oder in der Sessions-Übersicht.",
-                en: "Reachable via the gear icon on the capture screen or the sessions overview.",
-                es: "Accesible mediante el icono de engranaje en la pantalla de grabación o en el resumen de sesiones.",
-                pt: "Acessível pela engrenagem na tela de gravação ou no resumo de sessões."
+                de: "Erreichbar über das Zahnrad auf dem Aufnahme-Bildschirm oder in der Sammlungen-Übersicht.",
+                en: "Reachable via the gear icon on the capture screen or the collections overview.",
+                es: "Accesible mediante el icono de engranaje en la pantalla de grabación o en el resumen de colecciones.",
+                pt: "Acessível pela engrenagem na tela de gravação ou no resumo de coleções."
             ),
             .heading(de: "Video", en: "Video", es: "Video", pt: "Vídeo"),
             .bullets(de: [
@@ -374,6 +374,16 @@ enum HandbuchContent {
                 "**Codec de vídeo:** H.264, H.265 (HEVC) ou ProRes 422 — o ProRes só aparece em aparelhos que realmente o suportam.",
                 "**Formato de arquivo:** .MOV ou .MP4 (com ProRes/PCM, .MOV é obrigatório)."
             ]),
+            .heading(de: "Foto", en: "Photo", es: "Foto", pt: "Foto"),
+            .bullets(de: [
+                "**Foto-Format:** HEIC oder JPEG."
+            ], en: [
+                "**Photo format:** HEIC or JPEG."
+            ], es: [
+                "**Formato de foto:** HEIC o JPEG."
+            ], pt: [
+                "**Formato de foto:** HEIC ou JPEG."
+            ]),
             .heading(de: "Audio", en: "Audio", es: "Audio", pt: "Áudio"),
             .bullets(de: [
                 "**Audio-Codec:** AAC (komprimiert) oder PCM (unkomprimiert).",
@@ -388,15 +398,25 @@ enum HandbuchContent {
                 "**Codec de áudio:** AAC (comprimido) ou PCM (não comprimido).",
                 "**Entrada de áudio:** microfone do iPhone ou uma fonte externa conectada (Bluetooth/USB)."
             ]),
+            .heading(de: "Sprache", en: "Language", es: "Idioma", pt: "Idioma"),
+            .bullets(de: [
+                "Erzwingt bei Bedarf eine App-Sprache unabhängig von der Gerätesprache — „System“ folgt weiterhin der iOS-Einstellung."
+            ], en: [
+                "Optionally forces an app language independent of the device language — \"System\" keeps following the iOS setting."
+            ], es: [
+                "Permite forzar un idioma para la app independiente del idioma del dispositivo — «Sistema» sigue el ajuste de iOS."
+            ], pt: [
+                "Permite forçar um idioma do app independente do idioma do aparelho — \"Sistema\" continua seguindo o ajuste do iOS."
+            ]),
             .heading(de: "Hilfe & Rechtliches", en: "Help & Legal", es: "Ayuda y aspectos legales", pt: "Ajuda e aspectos legais"),
             .bullets(de: [
-                "Hilfe/Handbuch (dieser Text), Terms & Conditions, Instagram-Link."
+                "Hilfe/Handbuch (dieser Text), Terms & Conditions, Impressum."
             ], en: [
-                "Help/Manual (this text), Terms & Conditions, Instagram link."
+                "Help/Manual (this text), Terms & Conditions, Legal Notice."
             ], es: [
-                "Ayuda/Manual (este texto), Términos y Condiciones, enlace de Instagram."
+                "Ayuda/Manual (este texto), Términos y Condiciones, Aviso legal."
             ], pt: [
-                "Ajuda/Manual (este texto), Termos e Condições, link do Instagram."
+                "Ajuda/Manual (este texto), Termos e Condições, Aviso legal."
             ]),
             .heading(de: "Gerät", en: "Device", es: "Dispositivo", pt: "Aparelho"),
             .bullets(de: [
@@ -409,10 +429,10 @@ enum HandbuchContent {
                 "Armazenamento do aparelho (livre/total) e versão do app — apenas informativo, não é um ajuste."
             ]),
             .paragraph(
-                de: "Alle Änderungen wirken sofort für künftige Aufnahmen; bereits vorhandene Clips werden nicht nachträglich konvertiert.",
-                en: "All changes take effect immediately for future recordings; existing clips are never converted retroactively.",
-                es: "Todos los cambios se aplican de inmediato a las futuras grabaciones; los clips ya existentes nunca se convierten con carácter retroactivo.",
-                pt: "Todas as alterações têm efeito imediato nas gravações futuras; os clipes já existentes nunca são convertidos retroativamente."
+                de: "Alle Änderungen wirken sofort für künftige Aufnahmen; bereits vorhandene Aufnahmen werden nicht nachträglich konvertiert.",
+                en: "All changes take effect immediately for future recordings; existing captures are never converted retroactively.",
+                es: "Todos los cambios se aplican de inmediato a las futuras grabaciones; las capturas ya existentes nunca se convierten con carácter retroactivo.",
+                pt: "Todas as alterações têm efeito imediato nas gravações futuras; as capturas já existentes nunca são convertidas retroativamente."
             )
         ])
     ]

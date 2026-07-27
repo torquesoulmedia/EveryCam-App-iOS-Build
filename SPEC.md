@@ -436,9 +436,10 @@ mit dem bestehenden Grundsatz „keine manuellen Kamera-Detaileinstellungen" ([�
 oder *einzige* Ablage. Diese Einstellung erlaubt ausschließlich eine optionale, zusätzliche Kopie obendrauf —
 keine Abkehr vom Sandbox-Grundprinzip.
 
-**Hilfe & Rechtliches:** Die Inhalte von Handbuch/Terms/Impressum sind aktuell 1:1 aus TrickCam kopiert und
-nennen noch TrickCam-spezifische Inhalte (Bail/Make-Erklärung, Athleten-Workflow). Müssen für EveryCam
-inhaltlich neu geschrieben werden — siehe `CLAUDE.md` §7, eigene Phase, nicht Teil der Kernumsetzung.
+**Hilfe & Rechtliches (Phase 6, abgeschlossen 2026-07-27):** Handbuch/Terms/Impressum sind inhaltlich für
+EveryCam neu geschrieben (Tags/Sammlungen/Foto+Video statt Bail/Make/Session/Athlet). Der zuvor verlinkte
+Instagram-Account ist ersatzlos entfernt (Nutzerentscheidung, kein EveryCam-Profil vorhanden) — siehe
+`CLAUDE.md` §7.
 
 **Single/Dual:** Kein Eintrag in den Settings in v1 (siehe [§7.2](#72-singledual-in-v1-nicht-sichtbar)).
 

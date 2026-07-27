@@ -151,6 +151,14 @@ sind daher **Migrationsschritte**, keine Neubauten.
 | 7 | **Politur & Edge Cases** | Tag-Namenskollision, Sammlung-ohne-Tags-Verhalten, Viele-Tags-UI, erneute Geräte-Verifikation für Foto **und** Video | Alle Akzeptanzkriterien aus `SPEC.md` §17 abgehakt |
 | 8 | **Kamerarolle-Export (optional)** | `PhotoLibraryExporter`, Settings-Schalter „Zusätzlich in Fotomediathek sichern", `NSPhotoLibraryAddUsageDescription`. Rein additiv, siehe §4/§6 dieser Datei und `SPEC.md` §12. | Schalter an → jede neue Aufnahme landet zusätzlich unverändert in der Kamerarolle; Schalter aus (Standard) → Verhalten unverändert zu Phase 1–7 |
 
+**Phase 6 abgeschlossen (2026-07-27):** `HandbuchContent.swift`/`HandbuchIconLegend.swift` vollständig neu geschrieben
+(Tags/Sammlungen/Foto+Video statt Bail/Make/Session/Athlet/nur-Video; Single/Dual entsprechend §7.2 nicht mehr
+dokumentiert, da in v1 nicht erreichbar). `TermsContent.swift` §1.1/§2.1 auf EveryCam umgestellt, alle übrigen
+Ziffern waren bereits funktionsneutral. **Nutzerentscheidung (2026-07-27):** Der bislang in Settings/Impressum/
+Handbuch verlinkte Instagram-Account (`instagram.com/trickcam.app`) ist ersatzlos entfernt statt auf einen
+Platzhalter umgebogen — es existiert noch kein EveryCam-Profil. Bei Einrichtung eines neuen Profils an allen drei
+Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `HandbuchContent.swift`).
+
 ---
 
 ## 8. Harte Verbote

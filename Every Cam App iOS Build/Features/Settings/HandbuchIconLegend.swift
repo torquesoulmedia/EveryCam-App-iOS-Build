@@ -11,8 +11,8 @@ struct HandbuchIconLegend: View {
         VStack(alignment: .leading, spacing: Layout.spacingM) {
             ForEach(Self.items) { item in
                 if item.isWide {
-                    // Breitere Elemente (Session, Single/Dual, Objektivauswahl)
-                    // passen nicht in die 60pt-Icon-Spalte der kompakten
+                    // Breitere Elemente (Sammlungen-Button, Foto/Video-Umschalter,
+                    // Objektivauswahl) passen nicht in die 60pt-Icon-Spalte der kompakten
                     // Zeilen — ein `.frame(width: 60)` würde ihren Text
                     // unschön umbrechen bzw. quetschen (Bugfix, in einem
                     // Debug-Harness auf echter Hardware-Breite geprüft).
@@ -88,42 +88,34 @@ struct HandbuchIconLegend: View {
             Image(systemName: "bolt.fill").foregroundStyle(Theme.textPrimary).font(.system(size: 22))
         },
         Item(
-            meaningDE: "Einstellungen öffnen (Aufnahme-Bildschirm & Sessions-Übersicht)",
-            meaningEN: "Open settings (capture screen & sessions overview)",
-            meaningES: "Abrir ajustes (pantalla de grabación y resumen de sesiones)",
-            meaningPT: "Abrir ajustes (tela de gravação e resumo de sessões)"
+            meaningDE: "Einstellungen öffnen (Aufnahme-Bildschirm & Sammlungen-Übersicht)",
+            meaningEN: "Open settings (capture screen & collections overview)",
+            meaningES: "Abrir ajustes (pantalla de grabación y resumen de colecciones)",
+            meaningPT: "Abrir ajustes (tela de gravação e resumo de coleções)"
         ) {
             contrastIcon("gearshape")
         },
         Item(
-            meaningDE: "Crop-Hilfsraster ein-/ausblenden — nur im Dual-Modus, zeigt den späteren 16:9/9:16-Ausschnitt",
-            meaningEN: "Toggle crop guide — Dual mode only, previews the later 16:9/9:16 crop",
-            meaningES: "Mostrar/ocultar la guía de recorte — solo en modo Dual, previsualiza el recorte 16:9/9:16 posterior",
-            meaningPT: "Mostrar/ocultar a guia de recorte — somente no modo Dual, mostra o futuro recorte 16:9/9:16"
-        ) {
-            CropGuideToggle(isActive: true, size: 44, onToggle: {})
-        },
-        Item(
-            meaningDE: "Komposition-Raster ein-/ausblenden — 3×3-Drittel-Raster, in beiden Modi verfügbar",
-            meaningEN: "Toggle composition grid — 3×3 rule-of-thirds grid, available in both modes",
-            meaningES: "Mostrar/ocultar la cuadrícula de composición — cuadrícula de tercios 3×3, disponible en ambos modos",
-            meaningPT: "Mostrar/ocultar a grade de composição — grade de terços 3×3, disponível em ambos os modos"
+            meaningDE: "Komposition-Raster ein-/ausblenden — 3×3-Drittel-Raster, für Foto und Video verfügbar",
+            meaningEN: "Toggle composition grid — 3×3 rule-of-thirds grid, available for both photo and video",
+            meaningES: "Mostrar/ocultar la cuadrícula de composición — cuadrícula de tercios 3×3, disponible para foto y video",
+            meaningPT: "Mostrar/ocultar a grade de composição — grade de terços 3×3, disponível para foto e vídeo"
         ) {
             CompositionGridToggle(isActive: true, size: 44, onToggle: {})
         },
         Item(
-            meaningDE: "Neue Session anlegen",
-            meaningEN: "Create a new session",
-            meaningES: "Crear una nueva sesión",
-            meaningPT: "Criar uma nova sessão"
+            meaningDE: "Neue Sammlung anlegen",
+            meaningEN: "Create a new collection",
+            meaningES: "Crear una nueva colección",
+            meaningPT: "Criar uma nova coleção"
         ) {
             contrastIcon("plus")
         },
         Item(
-            meaningDE: "Athleten der aktiven Session verwalten (nur bei aktiver Session sichtbar)",
-            meaningEN: "Manage athletes of the active session (visible only with an active session)",
-            meaningES: "Gestionar los atletas de la sesión activa (visible solo con una sesión activa)",
-            meaningPT: "Gerenciar os atletas da sessão ativa (visível somente com uma sessão ativa)"
+            meaningDE: "Tags der aktiven Sammlung verwalten (nur bei aktiver Sammlung sichtbar)",
+            meaningEN: "Manage tags of the active collection (visible only with an active collection)",
+            meaningES: "Gestionar los tags de la colección activa (visible solo con una colección activa)",
+            meaningPT: "Gerenciar os tags da coleção ativa (visível somente com uma coleção ativa)"
         ) {
             contrastIcon("person.badge.plus")
         },
@@ -144,20 +136,20 @@ struct HandbuchIconLegend: View {
             RecordButton(captureKind: .video, isRecording: true, isEnabled: true, action: {}).scaleEffect(0.75)
         },
         Item(
-            meaningDE: "Ausklapp-Punkt für das Zuordnungs-Panel — linke Hälfte rot (Bail), rechte Hälfte grün (Make)",
-            meaningEN: "Expand/collapse toggle for the assignment panel — left half red (Bail), right half green (Make)",
-            meaningES: "Punto para desplegar/contraer el panel de asignación — mitad izquierda roja (Bail), mitad derecha verde (Make)",
-            meaningPT: "Alça para expandir/recolher o painel de atribuição — metade esquerda vermelha (Bail), metade direita verde (Make)"
+            meaningDE: "Ausklapp-Punkt für das Zuordnungs-Panel",
+            meaningEN: "Expand/collapse toggle for the assignment panel",
+            meaningES: "Punto para desplegar/contraer el panel de asignación",
+            meaningPT: "Alça para expandir/recolher o painel de atribuição"
         ) {
             AssignmentToggleButton(isExpanded: true, unsortedCount: 0, onToggle: {}).scaleEffect(0.85)
         },
         Item(
-            meaningDE: "Roter Button — Aufnahme war ein misslungener Versuch",
-            meaningEN: "Red button — the attempt was unsuccessful",
-            meaningES: "Botón rojo — el intento ha fallado",
-            meaningPT: "Botão vermelho — a gravação foi uma tentativa malsucedida"
+            meaningDE: "Tag-Button im Zuordnungs-Panel, beschriftet mit dem Tag-Namen — alle Tags sind gleichwertig, es gibt keine Erfolg-/Fehler-Farbgebung",
+            meaningEN: "Tag button in the assignment panel, labeled with the tag's name — all tags are equally weighted, there is no success/failure color coding",
+            meaningES: "Botón de tag en el panel de asignación, con el nombre del tag como etiqueta — todos los tags tienen el mismo peso, no hay codificación de color de éxito/fallo",
+            meaningPT: "Botão de tag no painel de atribuição, identificado com o nome do tag — todos os tags têm o mesmo peso, não há codificação de cor de sucesso/falha"
         ) {
-            Button("Bail", action: {})
+            Button("Oma", action: {})
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Theme.textPrimary)
                 .padding(.horizontal, Layout.spacingS)
@@ -166,44 +158,30 @@ struct HandbuchIconLegend: View {
                 .clipShape(RoundedRectangle(cornerRadius: Layout.cornerRadius))
         },
         Item(
-            meaningDE: "Grüner Button, beschriftet mit Athleten-Kürzel — Aufnahme war ein gelungener Versuch",
-            meaningEN: "Green button, labeled with the athlete's shortcode — the attempt was successful",
-            meaningES: "Botón verde con el código del atleta como etiqueta — el intento ha salido bien",
-            meaningPT: "Botão verde, identificado com o código do atleta — a gravação foi uma tentativa bem-sucedida"
-        ) {
-            Button("MM", action: {})
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.textPrimary)
-                .padding(.horizontal, Layout.spacingS)
-                .frame(height: 40)
-                .background(Theme.actionTag)
-                .clipShape(RoundedRectangle(cornerRadius: Layout.cornerRadius))
-        },
-        Item(
-            meaningDE: "Direkt zurück zum Aufnahme-Bildschirm (in der Sessions-Übersicht)",
-            meaningEN: "Jump straight back to the capture screen (from the sessions overview)",
-            meaningES: "Volver directamente a la pantalla de grabación (desde el resumen de sesiones)",
-            meaningPT: "Volta direto para a tela de gravação (no resumo de sessões)"
+            meaningDE: "Direkt zurück zum Aufnahme-Bildschirm (in der Sammlungen-Übersicht)",
+            meaningEN: "Jump straight back to the capture screen (from the collections overview)",
+            meaningES: "Volver directamente a la pantalla de grabación (desde el resumen de colecciones)",
+            meaningPT: "Volta direto para a tela de gravação (no resumo de coleções)"
         ) {
             Text("CAM").font(Typography.body).foregroundStyle(Theme.textPrimary)
         },
         Item(
-            meaningDE: "Direkt zur Sessions-Übersicht (auf dem Aufnahme-Bildschirm)",
-            meaningEN: "Jump straight to the sessions overview (from the capture screen)",
-            meaningES: "Ir directamente al resumen de sesiones (desde la pantalla de grabación)",
-            meaningPT: "Vai direto para o resumo de sessões (na tela de gravação)",
+            meaningDE: "Direkt zur Sammlungen-Übersicht (auf dem Aufnahme-Bildschirm)",
+            meaningEN: "Jump straight to the collections overview (from the capture screen)",
+            meaningES: "Ir directamente al resumen de colecciones (desde la pantalla de grabación)",
+            meaningPT: "Vai direto para o resumo de coleções (na tela de gravação)",
             isWide: true
         ) {
             CollectionAccessButton(action: {})
         },
         Item(
-            meaningDE: "Umschalter für den Aufnahmemodus",
-            meaningEN: "Toggles the recording mode",
-            meaningES: "Interruptor del modo de grabación",
-            meaningPT: "Alternador do modo de gravação",
+            meaningDE: "Umschalter zwischen Foto- und Video-Modus",
+            meaningEN: "Toggles between photo and video mode",
+            meaningES: "Interruptor entre el modo foto y el modo video",
+            meaningPT: "Alternador entre o modo foto e o modo vídeo",
             isWide: true
         ) {
-            ModeToggle(mode: .single, isEnabled: true, onSelect: { _ in })
+            CaptureKindToggle(kind: .photo, isEnabled: true, onSelect: { _ in })
         },
         Item(
             meaningDE: "Objektivauswahl-Leiste, feste Zoom-Sprungmarken",
@@ -236,18 +214,18 @@ struct HandbuchIconLegend: View {
                 .clipShape(Circle())
         },
         Item(
-            meaningDE: "Sortier-Menü in der Sessions-Übersicht",
-            meaningEN: "Sort menu on the sessions overview",
-            meaningES: "Menú de ordenación en el resumen de sesiones",
-            meaningPT: "Menu de ordenação no resumo de sessões"
+            meaningDE: "Sortier-Menü in der Sammlungen-Übersicht",
+            meaningEN: "Sort menu on the collections overview",
+            meaningES: "Menú de ordenación en el resumen de colecciones",
+            meaningPT: "Menu de ordenação no resumo de coleções"
         ) {
             Image(systemName: "arrow.up.arrow.down.circle").foregroundStyle(Theme.textPrimary).font(.system(size: 22))
         },
         Item(
-            meaningDE: "Zeigt/setzt die aktive Aufnahme-Session — grau = inaktiv, rot = aktives Aufnahmeziel",
-            meaningEN: "Shows/sets the active recording session — gray = inactive, red = current recording target",
-            meaningES: "Muestra/establece la sesión de grabación activa — gris = inactiva, rojo = destino de grabación actual",
-            meaningPT: "Mostra/define a sessão de gravação ativa — cinza = inativa, vermelho = destino de gravação atual"
+            meaningDE: "Zeigt/setzt die aktive Aufnahme-Sammlung — grau = inaktiv, rot = aktives Aufnahmeziel",
+            meaningEN: "Shows/sets the active recording collection — gray = inactive, red = current recording target",
+            meaningES: "Muestra/establece la colección de grabación activa — gris = inactiva, rojo = destino de grabación actual",
+            meaningPT: "Mostra/define a coleção de gravação ativa — cinza = inativa, vermelho = destino de gravação atual"
         ) {
             Image(systemName: "video.fill").foregroundStyle(Theme.actionRecord).font(.system(size: 22))
         },
@@ -268,18 +246,18 @@ struct HandbuchIconLegend: View {
             Image(systemName: "square.and.arrow.up").foregroundStyle(Theme.textPrimary).font(.system(size: 22))
         },
         Item(
-            meaningDE: "Markiert ein Element in der Mehrfachauswahl (Galerie, Sessions-Übersicht)",
-            meaningEN: "Marks an item in multi-select mode (gallery, sessions overview)",
-            meaningES: "Marca un elemento en la selección múltiple (galería, resumen de sesiones)",
-            meaningPT: "Marca um item na seleção múltipla (galeria, resumo de sessões)"
+            meaningDE: "Markiert ein Element in der Mehrfachauswahl (Galerie, Sammlungen-Übersicht)",
+            meaningEN: "Marks an item in multi-select mode (gallery, collections overview)",
+            meaningES: "Marca un elemento en la selección múltiple (galería, resumen de colecciones)",
+            meaningPT: "Marca um item na seleção múltipla (galeria, resumo de coleções)"
         ) {
             Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.textPrimary).font(.system(size: 22))
         },
         Item(
-            meaningDE: "Athlet aus der Liste entfernen (Neue-Session-Dialog, Athletenverwaltung)",
-            meaningEN: "Remove an athlete from the list (new-session dialog, athlete management)",
-            meaningES: "Eliminar un atleta de la lista (diálogo de nueva sesión, gestión de atletas)",
-            meaningPT: "Remover um atleta da lista (diálogo de nova sessão, gerenciamento de atletas)"
+            meaningDE: "Tag aus der Liste entfernen (Neue-Sammlung-Dialog, Tag-Verwaltung)",
+            meaningEN: "Remove a tag from the list (new-collection dialog, tag management)",
+            meaningES: "Eliminar un tag de la lista (diálogo de nueva colección, gestión de tags)",
+            meaningPT: "Remover um tag da lista (diálogo de nova coleção, gerenciamento de tags)"
         ) {
             Image(systemName: "minus.circle.fill").foregroundStyle(Theme.textSecondary).font(.system(size: 22))
         },

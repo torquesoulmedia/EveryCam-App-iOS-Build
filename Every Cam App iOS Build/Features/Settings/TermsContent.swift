@@ -43,20 +43,26 @@ enum TermsProvider {
 // Portugiesisch RGPD/RLL verwendet, da es um die EU-Rechtslage geht, nicht
 // um die brasilianische LGPD).
 // Zwei Stellen (§1.3, §6.5) wurden angepasst, da die Vorlage von einem
-// gleichzeitigen iOS+Android-Release ausging: TrickCam erscheint zunächst
+// gleichzeitigen iOS+Android-Release ausging: die App erscheint zunächst
 // nur auf iOS, eine Android-Version ist erst nach Fertigstellung der
 // iOS-Version geplant (Nutzerangabe) — die dortigen offenen
 // Versions-Platzhalter wurden entsprechend in eine "wird bei
 // Android-Veröffentlichung bekanntgegeben"-Formulierung überführt statt
 // eine Zahl zu raten.
+// Phase 6 (EveryCam-Pivot, 2026-07-27): App-Name in §1.1 von TrickCam auf
+// EveryCam umgestellt; §2.1 inhaltlich neu gefasst (Foto **und** Video, jeder
+// Anlass statt Action-Sport, Sammlung/Tag statt Session/Athlet). Alle
+// übrigen Ziffern (Kauf, Lizenz, Haftung, Datenschutz, Updates etc.) waren
+// bereits funktionsneutral formuliert und mussten inhaltlich nicht
+// angepasst werden.
 enum TermsContent {
     static let sections: [TermsSection] = [
         TermsSection(titleDE: "1. Geltungsbereich und Anbieter", titleEN: "1. Scope and Provider", titleES: "1. Ámbito de aplicación y proveedor", titlePT: "1. Âmbito de aplicação e fornecedor", blocks: [
             .paragraph(
-                de: "1.1 Diese Nutzungsbedingungen („Bedingungen“) regeln die Nutzung der mobilen Applikation **TrickCam** („App“) sowie aller damit verbundenen Funktionen und Inhalte zwischen dem Anbieter und Ihnen als Nutzer bzw. Nutzerin („Sie“, „Nutzer“).",
-                en: "1.1 These Terms & Conditions (“Terms”) govern the use of the mobile application **TrickCam** (“App”) and all related features and content between the provider and you as the user (“you”, “User”).",
-                es: "1.1 Estas condiciones de uso («Condiciones») regulan el uso de la aplicación móvil **TrickCam** («App»), así como de todas las funciones y contenidos relacionados, entre el proveedor y usted como usuario o usuaria («usted», «Usuario»).",
-                pt: "1.1 Estes termos de uso (\"Termos\") regem o uso do aplicativo móvel **TrickCam** (\"App\") e de todas as funcionalidades e conteúdos relacionados entre o fornecedor e você como usuário ou usuária (\"você\", \"Usuário\")."
+                de: "1.1 Diese Nutzungsbedingungen („Bedingungen“) regeln die Nutzung der mobilen Applikation **EveryCam** („App“) sowie aller damit verbundenen Funktionen und Inhalte zwischen dem Anbieter und Ihnen als Nutzer bzw. Nutzerin („Sie“, „Nutzer“).",
+                en: "1.1 These Terms & Conditions (“Terms”) govern the use of the mobile application **EveryCam** (“App”) and all related features and content between the provider and you as the user (“you”, “User”).",
+                es: "1.1 Estas condiciones de uso («Condiciones») regulan el uso de la aplicación móvil **EveryCam** («App»), así como de todas las funciones y contenidos relacionados, entre el proveedor y usted como usuario o usuaria («usted», «Usuario»).",
+                pt: "1.1 Estes termos de uso (\"Termos\") regem o uso do aplicativo móvel **EveryCam** (\"App\") e de todas as funcionalidades e conteúdos relacionados entre o fornecedor e você como usuário ou usuária (\"você\", \"Usuário\")."
             ),
             .paragraph(de: "1.2 Anbieter der App ist:", en: "1.2 The provider of the App is:", es: "1.2 El proveedor de la App es:", pt: "1.2 O fornecedor do App é:"),
             .providerBlock,
@@ -76,10 +82,10 @@ enum TermsContent {
 
         TermsSection(titleDE: "2. Vertragsgegenstand und Leistungsbeschreibung", titleEN: "2. Subject Matter and Description of Services", titleES: "2. Objeto del contrato y descripción de los servicios", titlePT: "2. Objeto do contrato e descrição dos serviços", blocks: [
             .paragraph(
-                de: "2.1 TrickCam ist eine mobile Anwendung zur Aufnahme und Organisation von Videoclips, insbesondere für den Action-Sport-Bereich (z. B. Skateboarding, BMX, Snowboard). Die App nutzt die geräteeigene Kamera und das Mikrofon zur Videoaufnahme und ordnet die aufgenommenen Clips lokal in einer Ordner- und Sessionstruktur.",
-                en: "2.1 TrickCam is a mobile application for recording and organizing video clips, in particular for action sports (e.g. skateboarding, BMX, snowboarding). The App uses the device's built-in camera and microphone to record video and organizes the recorded clips locally within a folder and session structure.",
-                es: "2.1 TrickCam es una aplicación móvil para grabar y organizar clips de video, especialmente para deportes de acción (p. ej. skateboarding, BMX, snowboard). La App utiliza la cámara y el micrófono integrados del dispositivo para grabar video y organiza los clips grabados localmente en una estructura de carpetas y sesiones.",
-                pt: "2.1 TrickCam é um aplicativo móvel para gravar e organizar clipes de vídeo, especialmente para esportes de ação (por exemplo, skate, BMX, snowboard). O App utiliza a câmera e o microfone integrados do aparelho para gravar vídeo e organiza os clipes gravados localmente em uma estrutura de pastas e sessões."
+                de: "2.1 EveryCam ist eine mobile Anwendung zur Aufnahme und Organisation von Fotos und Videos für beliebige Anlässe (z. B. Feste, Familienereignisse, Haustiere, Reisen). Die App nutzt die geräteeigene Kamera und das Mikrofon zur Aufnahme und ordnet die Aufnahmen lokal in einer Ordner- und Sammlungsstruktur, ergänzt um frei benennbare Tags.",
+                en: "2.1 EveryCam is a mobile application for capturing and organizing photos and videos for any occasion (e.g. parties, family events, pets, travel). The App uses the device's built-in camera and microphone for capture and organizes the captures locally within a folder and collection structure, complemented by freely nameable tags.",
+                es: "2.1 EveryCam es una aplicación móvil para capturar y organizar fotos y videos para cualquier ocasión (p. ej. fiestas, eventos familiares, mascotas, viajes). La App utiliza la cámara y el micrófono integrados del dispositivo para la captura y organiza las capturas localmente en una estructura de carpetas y colecciones, complementada con etiquetas de nombre libre.",
+                pt: "2.1 O EveryCam é um aplicativo móvel para capturar e organizar fotos e vídeos para qualquer ocasião (por exemplo, festas, eventos familiares, animais de estimação, viagens). O App utiliza a câmera e o microfone integrados do aparelho para a captura e organiza as capturas localmente em uma estrutura de pastas e coleções, complementada por tags de nome livre."
             ),
             .paragraph(
                 de: "2.2 Die App arbeitet **vollständig offline**. Es findet keine Übertragung von Aufnahmen oder personenbezogenen Daten an den Anbieter oder an Dritte statt. Sämtliche Aufnahmen und Metadaten werden ausschließlich lokal im Gerätespeicher (App-Sandbox) abgelegt. Ein Teilen von Inhalten erfolgt nur, wenn Sie dies aktiv über die systemeigene Teilen-Funktion (iOS Share Sheet) auslösen; die Verantwortung für ein solches Teilen liegt bei Ihnen.",

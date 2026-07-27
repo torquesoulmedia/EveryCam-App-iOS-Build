@@ -13,10 +13,6 @@ struct SettingsView: View {
     @State private var audioInputs: [AudioInputOption] = []
     @State private var storageInfo: DeviceStorageInfo?
 
-    // Feste, bekannte URL (kein Nutzer-Input, keine dynamische Konstruktion)
-    // — force-unwrap hier unproblematisch (CLAUDE.md §5.2).
-    private let instagramURL = URL(string: "https://www.instagram.com/trickcam.app")!
-
     // Externe (nicht eingebaute) Audioquellen — das eingebaute Mikrofon wird
     // in der Auswahl separat als Standard (nil) geführt, siehe unten.
     private var externalAudioInputs: [AudioInputOption] {
@@ -100,16 +96,6 @@ struct SettingsView: View {
                 NavigationLink("Impressum") {
                     ImpressumView()
                 }
-                Link(destination: instagramURL) {
-                    HStack {
-                        Text("Instagram")
-                            .foregroundStyle(Theme.textPrimary)
-                        Spacer()
-                        Text("trickcam.app")
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-                }
-                .accessibilityLabel("Instagram-Profil öffnen")
             }
             .listRowBackground(Theme.surfacePanel)
 

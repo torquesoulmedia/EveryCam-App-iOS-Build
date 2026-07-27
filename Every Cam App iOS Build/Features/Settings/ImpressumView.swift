@@ -4,8 +4,12 @@ import SwiftUI
 // „Hilfe & Rechtliches“, bewusst NICHT Teil der Terms & Conditions: §5 DDG
 // verlangt, dass die Anbieterkennzeichnung leicht erkennbar, unmittelbar
 // erreichbar und ständig verfügbar ist — ein in den AGB versteckter Block
-// genügt dem nicht. Gilt ausdrücklich auch für das verlinkte
-// Instagram-Profil (zweite öffentliche Präsenz desselben Anbieters).
+// genügt dem nicht.
+//
+// Der frühere „Geltungsbereich"-Abschnitt (Instagram-Profil
+// instagram.com/trickcam.app) ist mit dem EveryCam-Pivot entfallen (Phase 6,
+// Nutzerentscheidung 2026-07-27) — es existiert noch kein EveryCam-Profil.
+// Bei Einrichtung eines neuen Profils hier wieder ergänzen.
 //
 // Sprachumschalter DE/EN/ES/PT oben — dieselbe dokumentierte Ausnahme von
 // CLAUDE.md §5.1 wie bei HandbuchView/TermsView.
@@ -60,14 +64,6 @@ struct ImpressumView: View {
                     bodyEN: "Steffen Adamczyk, address as above.",
                     bodyES: "Steffen Adamczyk, dirección indicada arriba.",
                     bodyPT: "Steffen Adamczyk, endereço acima."
-                )
-
-                section(
-                    titleDE: "Geltungsbereich", titleEN: "Scope", titleES: "Ámbito de aplicación", titlePT: "Âmbito de aplicação",
-                    bodyDE: "Dieses Impressum gilt auch für das Instagram-Profil instagram.com/trickcam.app.",
-                    bodyEN: "This legal notice also applies to the Instagram profile instagram.com/trickcam.app.",
-                    bodyES: "Este aviso legal también se aplica al perfil de Instagram instagram.com/trickcam.app.",
-                    bodyPT: "Este aviso legal também se aplica ao perfil do Instagram instagram.com/trickcam.app."
                 )
 
                 section(
