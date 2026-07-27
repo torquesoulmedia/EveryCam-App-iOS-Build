@@ -25,8 +25,9 @@ EveryCam entsteht als eigenständiges Xcode-Projekt aus einer **1:1-Kopie des fe
 | Farbschema | Rot=Bail, Grün=Make, sonst Graustufen | **Komplett neu zu gestalten** (siehe §6) |
 
 Alles, was im Folgenden nicht explizit abweicht, gilt als aus TrickCam übernommenes, bewährtes Grundprinzip
-(native Kamerafunktionen, kein Nachbau, atomare Persistenz, keine Aufnahme-Limits, Offline-only, feste Dunkeldarstellung
-als Ausgangspunkt bis zur neuen Palette).
+(native Kamerafunktionen, kein Nachbau, atomare Persistenz, keine Aufnahme-Limits, Offline-only, ein fester,
+nicht vom System abhängiger Darstellungsmodus — jetzt aber **fest hell** mit warmer Sand-/Champagner-Palette
+statt TrickCams festem Dunkelmodus, siehe [§6](#6-style-guide)).
 
 ---
 
@@ -113,8 +114,8 @@ Kamera-Detaileinstellungen. Siehe [§15](#15-explizit-nicht-umzusetzen).
 | **Deployment Target** | iOS 17.0 |
 | **Geräte** | iPhone 14 und neuer |
 | **Geräte-Kompatibilität** | **Feature-Detection statt Whitelist**, unverändert aus TrickCam: Objektive/Zoomstufen zur Laufzeit über `AVCaptureDevice.DiscoverySession`. Feste Zoom-Sprungmarken (0.5x/1x/2x/5x/10x, `LensDiscovery.swift`) bleiben als dokumentierte Ausnahme bestehen, gekoppelt an den echten, laufzeitermittelten Zoombereich. |
-| **Speicher** | App-Sandbox über `FileManager`, `Documents/Sammlungen/`, sichtbar unter „Auf diesem iPhone" in der Dateien-App. **Keine** Photos-Library/`PHPhotoLibrary` als primäre Speicherung — auch nicht für Fotos. |
-| **Darstellungsmodus** | Vorerst fest dunkel (Ausgangspunkt, unverändert aus TrickCam), bis die neue Farbpalette feststeht ([§6](#6-style-guide)). Kein Folgen des System-Hell-/Dunkelmodus, kein In-App-Override — diese Grundregel bleibt unabhängig vom neuen Farbschema bestehen. |
+| **Speicher** | App-Sandbox über `FileManager`, `Documents/Sammlungen/`, sichtbar unter „Auf diesem iPhone" in der Dateien-App, bleibt die **alleinige Quelle der Wahrheit** für Sammlungen/Tags/`collection.json`. **Keine** Photos-Library/`PHPhotoLibrary` als primäre Speicherung — auch nicht für Fotos. **Neu (Nutzerentscheidung, 2026-07-27):** optional, per Settings-Schalter, wird zusätzlich eine unveränderte Kopie jeder Aufnahme in die System-Fotomediathek (Kamerarolle) geschrieben — reiner Fire-and-Forget-Export nach Abschluss der Aufnahme, unabhängig von Sammlung/Tag/Zuordnung. Ändert nichts an der Zuordnungs-Transaktion oder am Datenmodell; die Kamerarolle wird nirgends gelesen oder als Quelle behandelt. Siehe [§12](#12-bildschirm-4--globale-settings). |
+| **Darstellungsmodus** | Fest **hell** — warme Sand-/Champagner-Palette, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund (Nutzerentscheidung vom 2026-07-27, siehe [§6](#6-style-guide)). Löst TrickCams festen Dunkelmodus ab. Kein Folgen des System-Hell-/Dunkelmodus, kein In-App-Override — diese Grundregel (fester Modus, keine Umschaltung) bleibt bestehen, nur die Polung dreht von dunkel auf hell. |
 | **Netzwerk** | Keine Cloud, kein iCloud/CloudKit-Sync, kein GPS. Vollständig offline. |
 | **Teilen** | Natives iOS Share Sheet (`UIActivityViewController`), für Fotos und Videos gleichermaßen. |
 | **Orientierung** | Portrait + Landscape im Single-Modus, unverändert. |
@@ -123,9 +124,13 @@ Kamera-Detaileinstellungen. Siehe [§15](#15-explizit-nicht-umzusetzen).
 ### Erforderliche Info.plist-Einträge
 
 Unverändert aus TrickCam übernommen: `NSCameraUsageDescription`, `NSMicrophoneUsageDescription`,
-`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`. Kein `UIBackgroundModes`. Keine
-Photos-Berechtigung (kein Photos-Library-Zugriff als Primärspeicher — Fotoaufnahme über `AVCapturePhotoOutput`
-schreibt direkt in die eigene Sandbox, nicht in die System-Fotomediathek).
+`UIFileSharingEnabled`, `LSSupportsOpeningDocumentsInPlace`. Kein `UIBackgroundModes`. Kein voller
+Photos-Library-Lesezugriff (kein `NSPhotoLibraryUsageDescription`) — Fotoaufnahme über `AVCapturePhotoOutput`
+schreibt weiterhin primär in die eigene Sandbox, nicht in die System-Fotomediathek.
+
+**Neu:** `NSPhotoLibraryAddUsageDescription` (reine „Hinzufügen"-Berechtigung, kein Lesezugriff) — wird nur
+für den optionalen „Zusätzlich in Fotomediathek sichern"-Schalter benötigt ([§12](#12-bildschirm-4--globale-settings)),
+und auch dann erst beim ersten Einschalten des Schalters abgefragt, nicht beim App-Start.
 
 ---
 
@@ -233,17 +238,20 @@ Sammlungen/
 
 ## 6. Style Guide
 
-> **Status: bewusst nur als Architektur-Gerüst spezifiziert, konkrete Werte offen.** Die alte Regel
+> **Status: Grundrichtung entschieden (Nutzer, 2026-07-27), konkrete Hex-/Token-Werte offen.** Die alte Regel
 > „`action.bail` ausschließlich Rot, `action.make` ausschließlich Grün" verliert mit dem Wegfall der
 > Bail/Make-Rollen ihre Grundlage — es gibt keine feste Erfolg/Fehler-Semantik mehr, die eine Farbzuordnung
-> rechtfertigen würde. Die eigentliche Farbentscheidung („farblich neu gestalten") ist ein eigener, noch
-> ausstehender Design-Auftrag, siehe [§16](#16-noch-offen--annahmen) und `CLAUDE.md` §7 (Phase „Design System").
+> rechtfertigen würde. Neu entschieden: EveryCam wird **fest hell** dargestellt (löst TrickCams festen
+> Dunkelmodus ab, siehe [§3](#3-technische-rahmenbedingungen)) — warme **Sand-/Champagner-Palette**, warm und
+> freundlich, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. Offen bleiben die konkreten
+> Hex-/Token-Werte selbst — das ist weiterhin ein eigener Design-Auftrag für Phase 5, siehe
+> [§16](#16-noch-offen--annahmen) und `CLAUDE.md` §7.
 
-### 6.1 Token-Architektur (Struktur steht, Werte folgen)
+### 6.1 Token-Architektur (Richtung steht, Werte folgen)
 
 | Token | Verwendung | Status |
 |---|---|---|
-| `background.primary` / `surface.panel` / `border.subtle` / `text.primary` / `text.secondary` | Grundgerüst für Flächen, Panels, Text — Rollen unverändert aus TrickCam übernommen | Werte werden in der Design-Phase neu festgelegt |
+| `background.primary` / `surface.panel` / `border.subtle` / `text.primary` / `text.secondary` | Grundgerüst für Flächen, Panels, Text — Rollen unverändert aus TrickCam übernommen, jetzt in warmen, hellen Sand-/Champagner-Tönen (`background.primary`/`surface.panel`) mit schwarzer/nahezu schwarzer Schrift (`text.primary`/`text.secondary`) statt TrickCams dunklen Grautönen | Richtung entschieden, konkrete Hex-Werte offen (Phase 5) |
 | `action.record` | Dediziert für den Start-/Stopp- bzw. Auslöse-Knopf, unabhängig vom gewählten Foto-/Video-Modus | Bleibt als eigenes, dediziertes Token bestehen |
 | `action.tag` (Arbeitsname) | **Neu.** Ein gemeinsamer Akzent für alle Tag-Buttons im Zuordnungs-Panel — bewusst **ein** Token statt vieler individueller Farben pro Tag, da Tags gleichwertig sind und keine gute/schlechte Konnotation tragen sollen | Wert offen, Design-Phase |
 | `focus.indicator` | Fokus-Rechteck bei Tap-to-Focus/AE-AF-Sperre, unverändert aus TrickCam übernommen (natives Kamera-Gelb) | Bleibt |
@@ -411,6 +419,18 @@ Ergänzung:
 Keine weiteren Einstellungen — kein manueller Qualitäts-/Kompressionsregler, kein RAW-Schalter, konsistent
 mit dem bestehenden Grundsatz „keine manuellen Kamera-Detaileinstellungen" ([§15](#15-explizit-nicht-umzusetzen)).
 
+#### Neuer Abschnitt „Speicherort" (Nutzerentscheidung, 2026-07-27)
+
+| Einstellung | Verhalten |
+|---|---|
+| **Zusätzlich in Fotomediathek sichern** | Schalter, Standard **aus**. Bei „ein" wird nach jeder abgeschlossenen Aufnahme (Foto oder Video, unabhängig von Sammlung/Tag/`Unsorted`) zusätzlich eine unveränderte Kopie per `PHAssetCreationRequest` in die System-Kamerarolle geschrieben. Rein additiv — die App-Sandbox bleibt in jedem Fall die primäre Ablage und einzige Quelle für Sammlungen/Tags/`collection.json`; die Fotomediathek wird nie gelesen, nie als Zuordnungsziel verwendet und taucht nirgends im Datenmodell auf. |
+| Erste Aktivierung | Fragt genau einmal die `NSPhotoLibraryAddUsageDescription`-Berechtigung ab (reine Hinzufügen-Berechtigung). Lehnt der Nutzer ab, bleibt der Schalter aus, kein blockierender Re-Prompt — Hinweistext statt Systemdialog-Wiederholung. |
+| Fehlschlag beim Export | Nicht-blockierend: schlägt das Schreiben in die Fotomediathek fehl (z. B. Berechtigung nachträglich entzogen), wird die eigentliche Aufnahme in der App-Sandbox davon nicht berührt — kein Fehlerdialog, der den Aufnahme-Zyklus unterbricht, höchstens ein `text.secondary`-Hinweis analog zum „Wenig Speicherplatz"-Muster. |
+
+**Ausdrücklich weiterhin nicht erlaubt** ([§15](#15-explizit-nicht-umzusetzen)): die Fotomediathek als *primäre*
+oder *einzige* Ablage. Diese Einstellung erlaubt ausschließlich eine optionale, zusätzliche Kopie obendrauf —
+keine Abkehr vom Sandbox-Grundprinzip.
+
 **Hilfe & Rechtliches:** Die Inhalte von Handbuch/Terms/Impressum sind aktuell 1:1 aus TrickCam kopiert und
 nennen noch TrickCam-spezifische Inhalte (Bail/Make-Erklärung, Athleten-Workflow). Müssen für EveryCam
 inhaltlich neu geschrieben werden — siehe `CLAUDE.md` §7, eigene Phase, nicht Teil der Kernumsetzung.
@@ -486,7 +506,8 @@ Wie TrickCam, unverändert:
 - ❌ iCloud-Sync, CloudKit, jede sonstige Cloud-Anbindung
 - ❌ Manueller Hell-/Dunkel-Modus-Override in den Settings
 - ❌ `AVCaptureMultiCamSession` / echte gleichzeitige Zwei-Kamera-Aufnahme
-- ❌ Speicherung in der Photos-Library als Primärablage
+- ❌ Speicherung in der Photos-Library als **Primär**- oder Einzigablage — eine rein additive, opt-in
+  Zusatzkopie in die Kamerarolle ist seit 2026-07-27 erlaubt, siehe [§12](#12-bildschirm-4--globale-settings)
 - ❌ Benutzerkonten, Login, Analytics, Crash-Reporting-SDKs
 
 **Neu gegenüber TrickCam:**
@@ -507,7 +528,7 @@ explizit bestätigt wurden. Vor der jeweiligen Umsetzungsphase kurz gegenprüfen
 |---|---|---|
 | 1 | Eine Sammlung ohne jeden Tag ist erlaubt (§8.2, §14.2) — Aufnahmen warten dann unbegrenzt in `Unsorted/`. | Konsistent mit TrickCams bestehender Regel, dass eine Session auch ohne Athleten anlegbar war. Alternative wäre, mindestens einen Tag vor „Bestätigen" zu verlangen. |
 | 2 | Tag-Abschnitte in der Galerie ([§11](#11-bildschirm-3--sammlung-galerie)) erscheinen in **Anlage-Reihenfolge** der Tags. | TrickCam hatte eine erzwungene Reihenfolge (Bail immer zuletzt), die mit dem Wegfall der Rollen keine Grundlage mehr hat. Alternativen: alphabetisch, oder nach Anzahl Aufnahmen. |
-| 3 | Farbpalette, App-Icon und Markenauftritt sind vollständig offen — dieses Dokument legt nur die Token-**Architektur** fest ([§6](#6-style-guide)), keine Werte. | Nutzerauftrag „farblich neu gestalten" ohne konkrete Vorgabe — eigener Design-Auftrag, nicht Teil dieser fachlichen Spezifikation. |
+| 3 | **Teilweise entschieden (2026-07-27):** EveryCam wird fest hell dargestellt, warme Sand-/Champagner-Palette, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. App-Icon und die konkreten Hex-/Token-Werte selbst bleiben offen — dieses Dokument legt weiterhin nur Richtung + Token-**Architektur** fest ([§6](#6-style-guide)), keine Werte. | Nutzerentscheidung, löst TrickCams festen Dunkelmodus ab; exakte Werte sind eigener Design-Auftrag, nicht Teil dieser fachlichen Spezifikation. |
 | 4 | Tag-Buttons im Zuordnungs-Panel bei sehr vielen Tags: konkretes UX-Muster (Scroll/Suche/Sortierung) offen ([§9.2](#92-elemente)). | Erfordert Ausprobieren am echten Gerät, keine reine Spezifikationsfrage. |
 | 5 | Rechtstexte (Impressum/Terms/Handbuch) sind inhaltlich noch 1:1 TrickCam-Text und müssen für EveryCam neu geschrieben werden ([§12](#12-bildschirm-4--globale-settings)). | Bewusst als eigene, spätere Phase behandelt, nicht Teil der fachlichen Kernumsetzung. |
 

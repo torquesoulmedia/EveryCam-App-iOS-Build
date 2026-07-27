@@ -72,6 +72,12 @@ Neue Services/Erweiterungen:
   Output-Swap-Mechanismus, den es für den ProRes-Hybrid bereits gibt (`updateVideoCodec`-artiges Muster).
 - `ThumbnailService` erweitert um einen Foto-Zweig (direktes Downsampling der Bilddatei statt
   `AVAssetImageGenerator`-Frame-Extraktion).
+- **Neu (Nutzerentscheidung, 2026-07-27):** `PhotoLibraryExporter` (neuer Service unter `Services/Media/`) —
+  schreibt optional, wenn der Settings-Schalter „Zusätzlich in Fotomediathek sichern" aktiv ist, nach
+  Abschluss jeder Aufnahme eine unveränderte Kopie per `PHAssetCreationRequest` in die System-Kamerarolle.
+  Rein additiv, fire-and-forget, `async`, blockiert nie die Zuordnungs-Transaktion — läuft parallel dazu, nicht
+  davor. Kein Lesezugriff auf die Fotomediathek, kein Einfluss auf `PathBuilder`/`collection.json`, siehe
+  `SPEC.md` §3/§12.
 
 ---
 
@@ -92,14 +98,20 @@ Identisch zu TrickCam (siehe dortige `CLAUDE.md` §5) mit einer Vereinfachung:
 
 ## 6. Design System
 
-`SPEC.md` §6 legt nur die **Token-Architektur** fest (`action.record` bleibt dediziert, `action.tag` als
-gemeinsamer Akzent für alle Tag-Buttons, keine individuelle Tag-Einfärbung) — konkrete Farbwerte sind
-**bewusst offen** und Teil einer eigenen Design-Phase (siehe §7, Phase 5). Bis dahin:
+`SPEC.md` §6 legt die **Token-Architektur** fest (`action.record` bleibt dediziert, `action.tag` als
+gemeinsamer Akzent für alle Tag-Buttons, keine individuelle Tag-Einfärbung) sowie die **Grundrichtung**
+(Nutzerentscheidung, 2026-07-27): EveryCam wird **fest hell** dargestellt — warme Sand-/Champagner-Palette,
+schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. Das löst TrickCams festen Dunkelmodus ab, siehe
+`SPEC.md` §3. Konkrete Hex-/Token-Werte bleiben offen und sind Teil einer eigenen Design-Phase (siehe §7,
+Phase 5). Bis dahin:
 
 - Keine Hex-Farbwerte im Code — auch Platzhalterwerte laufen über den Asset-Katalog, nie hart codiert.
 - Die alte Regel „`action.bail` exklusiv Rot, `action.make` exklusiv Grün" aus TrickCam **gilt hier nicht
   mehr** — es gibt keine Erfolg/Fehler-Rollen mehr, die eine feste Farbsemantik rechtfertigen würden. Keine
   neue Signalfarben-Regel improvisieren, ohne sie zuerst mit dem Nutzer abzustimmen.
+- `.preferredColorScheme(.dark)` (aktuell app-weit auf `RootView` sowie in diversen Preview-Providern gesetzt,
+  1:1 aus TrickCam übernommen) wird erst in Phase 5 durch `.light` ersetzt — vorher nicht anfassen, das ist
+  Teil der Design-Phase, nicht der laufenden Migrationsphasen 1–4.
 
 ---
 
@@ -118,6 +130,7 @@ sind daher **Migrationsschritte**, keine Neubauten.
 | 5 | **Neues Design System** | Farbpalette (mit Nutzer abzustimmen), App-Icon, ggf. neuer Splash-Screen | Kein TrickCam-Branding/-Farbschema mehr im Code oder in der laufenden App |
 | 6 | **Rechtstexte neu schreiben** | Handbuch/Terms/Impressum inhaltlich für EveryCam anpassen (aktuell 1:1 TrickCam-Text) | Keine TrickCam-spezifischen Inhalte (Bail/Make-Erklärung etc.) mehr sichtbar |
 | 7 | **Politur & Edge Cases** | Tag-Namenskollision, Sammlung-ohne-Tags-Verhalten, Viele-Tags-UI, erneute Geräte-Verifikation für Foto **und** Video | Alle Akzeptanzkriterien aus `SPEC.md` §17 abgehakt |
+| 8 | **Kamerarolle-Export (optional)** | `PhotoLibraryExporter`, Settings-Schalter „Zusätzlich in Fotomediathek sichern", `NSPhotoLibraryAddUsageDescription`. Rein additiv, siehe §4/§6 dieser Datei und `SPEC.md` §12. | Schalter an → jede neue Aufnahme landet zusätzlich unverändert in der Kamerarolle; Schalter aus (Standard) → Verhalten unverändert zu Phase 1–7 |
 
 ---
 
@@ -125,7 +138,8 @@ sind daher **Migrationsschritte**, keine Neubauten.
 
 Wie TrickCam, unverändert übernommen (siehe `SPEC.md` §15 für die vollständige Liste): kein Tracking-Editor,
 keine manuellen Kamera-Regler, kein Colorspace-/HDR-Umschalter, kein GPS, keine Cloud-Anbindung, kein
-`AVCaptureMultiCamSession`, keine Photos-Library als Primärablage, keine externen Packages, keine
+`AVCaptureMultiCamSession`, keine Photos-Library als **Primär**- oder Einzigablage (eine opt-in
+Zusatzkopie ist seit 2026-07-27 erlaubt, siehe §4/§7 Phase 8), keine externen Packages, keine
 Aufnahme-Längen-/Größenbegrenzung, keine Analytics/Crash-Reporting-SDKs.
 
 **Neu:**
@@ -179,6 +193,7 @@ Phase, die eine davon berührt, kurz gegenprüfen statt stillschweigend darauf a
 | Xcode-Projekt/Bundle-ID/Homescreen-Name umbenannt | ✅ erledigt (2026-07-27) |
 | Kamera-/Mikrofon-Berechtigungstexte auf „Every Cam App iOS Build" umgestellt | ✅ erledigt |
 | Signing & Provisioning für ein physisches Testgerät | offen |
-| Farbe-Asset-Katalog für die neue Palette | offen, Phase 5 |
+| Farbe-Asset-Katalog für die neue Palette (fest hell, Sand-/Champagner, schwarze Schrift) | offen, Phase 5 |
 | Neues App-Icon | offen, Phase 5 — aktuell noch `TrickCam ICON v1 Final.icon` |
 | Build & Test auf physischem iPhone | nach jeder Phase, zwingend nach Phase 3 (Foto) |
+| `NSPhotoLibraryAddUsageDescription` in Info.plist ergänzen | offen, Phase 8 |
