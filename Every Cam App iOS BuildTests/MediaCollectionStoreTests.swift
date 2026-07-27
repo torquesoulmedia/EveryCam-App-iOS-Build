@@ -160,6 +160,53 @@ struct MediaCollectionStoreTests {
         #expect(fetched.captures.first?.tagId == nil)
     }
 
+    // Nutzerfrage: bleibt Unsorted/ korrekt nutzbar, wenn mehrere Fotos
+    // hintereinander aufgenommen werden, ohne sie einem Tag zuzuordnen?
+    // createCollection legt Unsorted/ bereits beim Anlegen an (siehe
+    // createCollectionBuildsFolderStructure), unsortedDestination stellt den
+    // Ordner zusätzlich vor jeder Aufnahme defensiv erneut sicher
+    // (ensureUnsortedFolder ist idempotent) und jede Datei bekommt einen
+    // eindeutigen UUID-Dateinamen — mehrere nicht zugeordnete Fotos dürfen
+    // sich deshalb nie gegenseitig überschreiben.
+    @Test func multipleUnassignedPhotosCoexistInUnsortedFolder() async throws {
+        let (store, root, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let collection = try await store.createCollection(name: "Familienfest")
+        var captureIds: [UUID] = []
+
+        for _ in 0..<3 {
+            let captureId = UUID()
+            let destination = try await store.unsortedDestination(collectionId: collection.id, captureId: captureId, fileExtension: "heic")
+            try Data("fake-photo".utf8).write(to: destination.fileURL)
+            let capture = Capture(
+                id: captureId,
+                recordedAt: Date(),
+                kind: .photo,
+                mode: .single,
+                orientation: .portrait,
+                lens: "1x",
+                tagId: nil,
+                files: CaptureFiles(primary: destination.relativePath, cropped169: nil)
+            )
+            try await store.addCapture(capture, toCollectionId: collection.id)
+            captureIds.append(captureId)
+        }
+
+        let fetched = try await store.collection(withId: collection.id)
+        #expect(fetched.captures.count == 3)
+        #expect(fetched.captures.allSatisfy { $0.tagId == nil })
+        #expect(Set(fetched.captures.map(\.id)) == Set(captureIds))
+
+        let unsortedFolder = root
+            .appendingPathComponent("\(collection.date)_Familienfest", isDirectory: true)
+            .appendingPathComponent("Unsorted", isDirectory: true)
+        #expect(FileManager.default.fileExists(atPath: unsortedFolder.path))
+        for captureId in captureIds {
+            #expect(FileManager.default.fileExists(atPath: unsortedFolder.appendingPathComponent("\(captureId.uuidString).heic").path))
+        }
+    }
+
     @Test func addCaptureToUnknownCollectionThrows() async throws {
         let (store, _, cleanupRoot) = makeStore()
         defer { try? FileManager.default.removeItem(at: cleanupRoot) }
