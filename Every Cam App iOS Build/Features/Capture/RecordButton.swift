@@ -11,7 +11,14 @@ struct RecordButton: View {
     let isEnabled: Bool
     let action: () -> Void
 
-    private let outerDiameter: CGFloat = 72
+    // Um 9% vergrößert (Nutzerwunsch, nach Test auf physischem iPhone 16 Pro,
+    // 2026-07-28) — alle drei Maße bleiben zueinander proportional, damit der
+    // Kreis-zu-Quadrat-Formwechsel exakt wie zuvor aussieht, nur größer.
+    private static let sizeScale: CGFloat = 1.09
+    private let outerDiameter: CGFloat = 72 * sizeScale
+    private let restDiameter: CGFloat = 60 * sizeScale
+    private let squareSide: CGFloat = 32 * sizeScale
+    private let squareCornerRadius: CGFloat = 8 * sizeScale
 
     // Defensiv auch auf captureKind geprüft: Fotos morphen nie zum Quadrat,
     // selbst falls isRecording aus einem vorherigen Video-Zustand noch true
@@ -25,9 +32,9 @@ struct RecordButton: View {
                     .stroke(Theme.textPrimary, lineWidth: 4)
                     .frame(width: outerDiameter, height: outerDiameter)
 
-                RoundedRectangle(cornerRadius: isSquare ? 8 : 30)
+                RoundedRectangle(cornerRadius: isSquare ? squareCornerRadius : restDiameter / 2)
                     .fill(isEnabled ? Theme.actionRecord : Theme.textSecondary)
-                    .frame(width: isSquare ? 32 : 60, height: isSquare ? 32 : 60)
+                    .frame(width: isSquare ? squareSide : restDiameter, height: isSquare ? squareSide : restDiameter)
             }
             .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
             .contentShape(Rectangle())

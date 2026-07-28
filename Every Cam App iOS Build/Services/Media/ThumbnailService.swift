@@ -43,7 +43,7 @@ actor ThumbnailService {
             cgImage = result.image
         }
 
-        guard let data = UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.7) else {
+        guard let data = UIImage(cgImage: Self.strippingAlpha(cgImage)).jpegData(compressionQuality: 0.7) else {
             throw EveryCamError.fileOperationFailed(underlying: CocoaError(.fileWriteUnknown))
         }
 
@@ -79,7 +79,7 @@ actor ThumbnailService {
         guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
             throw EveryCamError.fileOperationFailed(underlying: CocoaError(.fileReadCorruptFile))
         }
-        guard let data = UIImage(cgImage: cgImage).jpegData(compressionQuality: 0.7) else {
+        guard let data = UIImage(cgImage: Self.strippingAlpha(cgImage)).jpegData(compressionQuality: 0.7) else {
             throw EveryCamError.fileOperationFailed(underlying: CocoaError(.fileWriteUnknown))
         }
 
@@ -88,5 +88,28 @@ actor ThumbnailService {
         )
         try data.write(to: cacheURL, options: .atomic)
         return cacheURL
+    }
+
+    // HEIC-/Videoframe-Quellbilder tragen fast immer einen ungenutzten
+    // Alpha-Kanal (Fotos/Videos sind immer voll deckend) — ImageIO warnt beim
+    // JPEG-Schreiben genau davor ("trying to save an opaque image ... with
+    // AlphaPremulLast", gefunden im Geräte-Log nach dem iPhone-16-Pro-Test,
+    // 2026-07-28): unnötig größerer Speicherbedarf beim Verarbeiten. Ein
+    // Redraw in einen alpha-freien Bitmap-Kontext vor dem JPEG-Encode
+    // vermeidet das. `jpegData` selbst würde den Kanal ohnehin verwerfen (JPEG
+    // kennt kein Alpha) — das hier spart nur den unnötigen Zwischenschritt.
+    private static func strippingAlpha(_ image: CGImage) -> CGImage {
+        let colorSpace = image.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: nil,
+            width: image.width,
+            height: image.height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ) else { return image }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return context.makeImage() ?? image
     }
 }

@@ -133,7 +133,13 @@ struct CaptureView: View {
                     )
                     // Mittig oben, in einer Flucht mit Blitz und
                     // Auflösungs-Anzeige statt als Teil des Panels darunter.
-                    // 9pt tiefer als die Zeile selbst (aus TrickCam übernommen).
+                    // Kein manueller Top-Versatz mehr nötig (Bugfix,
+                    // Nutzerwunsch, 2026-07-28): CaptureTopBar richtet seine
+                    // Icons/Info-Kapsel jetzt per `.top` aus statt `.center,
+                    // und AssignmentToggleButton skaliert seit demselben Fix
+                    // um `anchor: .top` statt der Mitte — beide Elemente
+                    // beginnen dadurch strukturell an derselben Oberkante,
+                    // ganz ohne einen von Hand austarierten Zahlenwert.
                     .overlay(alignment: .top) {
                         if appState.activeCollectionId != nil {
                             AssignmentToggleButton(
@@ -141,7 +147,6 @@ struct CaptureView: View {
                                 unsortedCount: viewModel.unsortedCount,
                                 onToggle: { viewModel.toggleAssignmentPanel() }
                             )
-                            .padding(.top, 9)
                         }
                     }
                 }

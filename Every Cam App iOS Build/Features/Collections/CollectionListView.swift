@@ -17,6 +17,18 @@ struct CollectionListView: View {
 
     var body: some View {
         content
+            // Dauerhafter Hinweis ganz unten auf Export/Datensicherung
+            // (Nutzerwunsch) — nur sichtbar, wenn es tatsächlich etwas zu
+            // exportieren gibt. Als safeAreaInset statt Listen-Footer, damit
+            // er beim Scrollen fest am unteren Bildschirmrand stehen bleibt
+            // statt mit der Liste mitzulaufen — dieselbe passive, ohne
+            // eigenes Popup auskommende Machart wie der Hinweis im
+            // „Gerät"-Abschnitt der Einstellungen.
+            .safeAreaInset(edge: .bottom) {
+                if !viewModel.collections.isEmpty {
+                    exportReminderFooter
+                }
+            }
             // Wisch nach rechts führt weiterhin zurück zur Aufnahme (Geste
             // selbst unverändert, Teil der TabView(.page) in RootView) — der
             // eigene Strich-Hinweis entfällt hier aber (aus TrickCam
@@ -225,6 +237,20 @@ struct CollectionListView: View {
                 }
             }
         }
+    }
+
+    // Text und Ton bewusst identisch zum Hinweis in SettingsView (Abschnitt
+    // „Gerät") — hier zusätzlich direkt am Ort, wo „Exportieren" tatsächlich
+    // ausgeführt wird, statt nur in den Einstellungen.
+    private var exportReminderFooter: some View {
+        Text("Alle Sammlungen sind ausschließlich lokal gespeichert, es gibt keine Cloud-Sicherung. Beim Löschen der App gehen sie unwiderruflich verloren — regelmäßiges Exportieren schützt davor.")
+            .font(Typography.caption)
+            .foregroundStyle(Theme.textSecondary)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, Layout.spacingM)
+            .padding(.vertical, Layout.spacingS)
+            .frame(maxWidth: .infinity)
+            .background(Theme.backgroundPrimary)
     }
 
     @ViewBuilder

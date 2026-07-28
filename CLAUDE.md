@@ -243,8 +243,14 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
   `SWIFT_EMIT_LOC_STRINGS` für das Haupt-Target (Debug **und** Release) von `YES` auf `NO` gesetzt — der Katalog
   wird in diesem Projekt ohnehin ausschließlich manuell gepflegt (siehe alle bisherigen Katalog-Updates), eine
   automatische Extraktion lief dem nur zuwider. 85 bereits vorhandene Leer-Einträge (42 aus früheren Builds, 43
-  aus den Builds während dieser Änderung) entfernt, Katalog danach bei sauberen 180 Schlüsseln, ein erneuter
-  vollständiger Build bestätigt: keine neuen Leer-Einträge mehr.
+  aus den Builds während dieser Änderung) entfernt, Katalog danach bei sauberen 180 Schlüsseln.
+  **Korrektur (2026-07-28, selber Tag):** Der Fix wirkt nur teilweise — nach dem nächsten Bearbeiten von
+  Capture-/Sammlungen-Dateien (Record-Button, CaptureTopBar, CollectionListView) tauchten beim darauffolgenden
+  Build erneut 9 Leer-Einträge auf, obwohl `SWIFT_EMIT_LOC_STRINGS` weiterhin `NO` war. Ein zweiter Build **ohne**
+  Quelländerung dazwischen erzeugte danach keine weiteren — die Extraktion scheint an geänderte Swift-Dateien
+  gekoppelt zu sein, nicht (nur) an diesen einen Build-Setting. Bis die genaue Ursache gefunden ist: **nach jeder
+  Änderung an catalog-gekoppelten Views einmal `python3 -c "import json; ..."`-Check auf leere
+  `localizations`-Einträge fahren, bevor committet wird** — nicht mehr blind auf den Build-Setting-Fix verlassen.
 - **Sammlung-Export** (`CollectionExportPicker.swift`, Nutzerwunsch) — `UIDocumentPickerViewController(forExporting:asCopy:)`
   als dokumentierte UIKit-Ausnahme (CLAUDE.md §3), kopiert eine oder mehrere Sammlung-Ordner systemseitig an
   einen vom Nutzer gewählten Ort (Dateien auf dem Gerät, iCloud Drive, Drittanbieter) — genau der native Weg,
@@ -280,6 +286,55 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
   warnt (siehe "ZL"-Textbadge-Präzedenzfall in `LensPickerPanel`). Durch das gebotene `.attach`+Screenshot vor
   dem Abschluss gefunden, nicht durch Code-Review — Ersetzt durch `iphone`, ein garantiert vorhandenes,
   eindeutiges Symbol; danach visuell erneut bestätigt.
+- **Drei UI-Korrekturen nach dem ersten physischen Gerätetest (iPhone 16 Pro, Nutzerwunsch, 2026-07-28):**
+  1. **Aufnahmeknopf um 9% vergrößert** (`RecordButton.swift`) — alle drei Maße (Außenring, Kreis/Quadrat-Größe,
+     Eckenradius) über einen gemeinsamen `sizeScale`-Faktor `1.09` proportional skaliert, damit der
+     Kreis-zu-Quadrat-Formwechsel exakt wie zuvor aussieht, nur größer.
+  2. **Icons der oberen Reihe jetzt hinterlegt** (`CaptureTopBar.swift`, `SelfTimerControl.swift`,
+     `PhotoFlashControl.swift`) — der Video-Blitz-Button bekommt eine neue `TopBarContrastIconButtonStyle`
+     (dieselbe Optik wie `ContrastIconButtonStyle` in `CaptureControlsRow.swift`, dort file-private, deshalb
+     erneut dupliziert statt importiert — gleiches Muster wie schon in `HandbuchIconLegend`), Timer-Auslöser und
+     Foto-Blitz bekommen dieselbe `surfacePanel`-Fläche + `borderSubtle`-Rand in ihrem jeweils inaktiven Zustand
+     (im aktiven Zustand sorgt die bereits volle Kapsel-Füllung für genug Kontrast, keine Änderung nötig). Grund:
+     ein reines Icon direkt über der Kamera-Vorschau war gegen helle/wechselnde Hintergründe schlecht erkennbar.
+  3. **Export-/Datensicherungs-Hinweis direkt in der Sammlungen-Übersicht** (`CollectionListView.swift`) — ein
+     `.safeAreaInset(edge: .bottom)`-Footer mit demselben Text/Ton wie der bestehende Hinweis in
+     `SettingsView`s „Gerät"-Abschnitt, nur ohne den dortigen Verweis „in der Sammlungen-Übersicht" (wäre hier
+     zirkulär) — bleibt beim Scrollen der Liste fest am unteren Bildschirmrand stehen, nur sichtbar, wenn
+     mindestens eine Sammlung existiert.
+  Auf dem Simulator verifiziert: Export-Footer erscheint korrekt am unteren Rand. Blitz/Timer-Hinterlegung und
+  die neue Aufnahmeknopf-Größe hängen an `cameraStatus == .ready` und sind — wie immer — nur auf dem physischen
+  Gerät sichtbar; laut Nutzer nach diesem Test „sauber" gelaufen.
+- **Thumbnail-Encoding-Ineffizienz behoben** (`ThumbnailService.swift`, gefunden im vom Nutzer mitgeschickten
+  Geräte-Log) — sowohl Video-Frame- als auch Foto-Thumbnails trugen beim JPEG-Schreiben einen ungenutzten
+  Alpha-Kanal aus der Quelldekodierung mit (ImageIO-Warnung: „trying to save an opaque image ... with
+  AlphaPremulLast ... will double the required memory when decoding"). Neue private `strippingAlpha(_:)` rendert
+  das `CGImage` vor dem Encode einmal in einen alpha-freien Bitmap-Kontext (`CGImageAlphaInfo.noneSkipLast`) —
+  behebt die Warnung an der Quelle statt sie nur zu unterdrücken. Rein eine Effizienzkorrektur, keine
+  Verhaltensänderung (Thumbnails sind ohnehin immer voll deckend).
+- **Weitere drei UI-Korrekturen nach demselben Gerätetest (Nutzerwunsch, 2026-07-28):**
+  1. **Bildrate/Auflösung jetzt ebenfalls hinterlegt** (`CaptureTopBar.swift`, neue `frameRateAndResolutionInfo`) —
+     beide Werte teilen sich jetzt eine gemeinsame Kapsel im selben `surfacePanel`/`borderSubtle`-Look wie die
+     Icon-Hinterlegung daneben, statt als nackter Text direkt über der Vorschau zu stehen.
+  2. **Ausrichtungs-Bugfix der gesamten oberen Reihe** — `CaptureTopBar`s `HStack` richtet seine Kinder jetzt
+     per `.top` statt dem Standard `.center` aus, und die neue Info-Kapsel bekommt dieselbe Mindesthöhe
+     (`Layout.minTapTarget`) wie die Icon-Kontrollen — beide Gruppen beginnen dadurch exakt an derselben
+     Oberkante statt (wie zuvor bei zentrierter Ausrichtung) versetzt zueinander zu stehen, da Icon-Hinterlegung
+     und reiner Text unterschiedlich hoch sind. `AssignmentToggleButton` bekam denselben Fix strukturell statt
+     kosmetisch: `.scaleEffect(scale, anchor: .top)` statt der Standard-Mitte — der bisherige, von Hand
+     austarierte `.padding(.top, 9)`-Ausgleich in `CaptureView.swift` konnte dadurch ersatzlos entfallen, da
+     Skalieren um die Oberkante die Position der Oberkante gar nicht mehr verändert (unabhängig davon, wie groß
+     `diameter`/`scale` künftig werden).
+  3. **Marke im Zuordnungs-Panel-Button** (`AssignmentToggleButton.swift`) — der innere Kreis (bisher reine
+     `action.tag`-Füllung) ist von 20pt auf 30pt vergrößert und zeigt jetzt zusätzlich das neue `LogoMark`-Asset
+     (`Assets.xcassets/LogoMark.imageset`, aus `EveryCam_Mark_B_transparent.png`,
+     `/Users/adamschock/Documents/EC- EveryCam Assets/`) über der Farbfläche — der Farbton bleibt als
+     Grundfläche erhalten (behält die etablierte Tag-Bedeutung des Tokens), die Marke macht den Button
+     zusätzlich als eigenständiges Marken-Element erkennbar.
+  Alle drei hängen an `cameraStatus == .ready` und sind wie immer nur auf dem physischen Gerät sichtbar, nicht
+  im Simulator — Katalog-Pollution beim erneuten Build erneut aufgetreten (9 Leer-Einträge, dieselben wie beim
+  letzten Mal) und wieder bereinigt, siehe Korrektur-Eintrag oben — scheint bei praktisch jedem inkrementellen
+  Build erneut aufzutreten, nicht nur bei geänderten Dateien; **vor jedem Commit den Katalog-Check wiederholen.**
 
 ---
 

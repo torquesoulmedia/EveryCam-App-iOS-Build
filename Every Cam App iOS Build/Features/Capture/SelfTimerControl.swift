@@ -37,7 +37,16 @@ struct SelfTimerControl: View {
             .foregroundStyle(isActive ? Theme.backgroundPrimary : Theme.textPrimary)
             .padding(.horizontal, isActive ? Layout.spacingS : 0)
             .frame(minWidth: Layout.minTapTarget, minHeight: Layout.minTapTarget)
-            .background(isActive ? Theme.textPrimary : Color.clear)
+            .background(isActive ? Theme.textPrimary : Theme.surfacePanel.opacity(0.6))
+            // Dezenter Rand nur im inaktiven Zustand (Nutzerwunsch, nach Test
+            // auf physischem iPhone 16 Pro: reines Icon über der
+            // Kamera-Vorschau war schlecht erkennbar) — im aktiven Zustand
+            // sorgt die volle Kapsel-Füllung bereits für genug Kontrast.
+            .overlay {
+                if !isActive {
+                    Capsule().stroke(Theme.borderSubtle, lineWidth: 1)
+                }
+            }
             .clipShape(Capsule())
         }
         .disabled(!isEnabled)
