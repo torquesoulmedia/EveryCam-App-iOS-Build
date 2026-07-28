@@ -23,22 +23,24 @@ import SwiftUI
 // contrastCircleBackground() (aus TrickCam übernommen) — dessen
 // Standard-Opazität (0.6) gilt weiterhin für Objektivauswahl/Plus/Tag/
 // Settings/Sessions, nur dieser eine Button bekommt eine dichtere
-// Hinterlegung. Zusätzlich nochmals 10% größer als der Ausgangswert
-// (Gesamtfaktor 1.05 × 1.05 × 1.10, bewusst lokal per scaleEffect statt am
-// gemeinsamen Layout.minTapTarget gedreht, das weiterhin für alle übrigen
-// frei schwebenden Icon-Buttons gilt). `anchor: .top` statt des
-// SwiftUI-Standards `.center` (Bugfix, Nutzerwunsch): Skalieren um die Mitte
-// verschob die Oberkante des Buttons nach oben, wodurch er nicht mehr auf
-// derselben Höhe wie Blitz/Auflösungs-Anzeige in CaptureTopBar lag — mit
-// `.top` als Anker wächst der Button ausschließlich nach unten, die Oberkante
-// bleibt exakt an der von CaptureView vorgegebenen Position stehen, egal wie
-// scale sich künftig ändert.
+// Hinterlegung.
+//
+// **Korrektur (Nutzerwunsch, nach mehrfachem Sichten auf dem physischen
+// Gerät, 2026-07-29):** Frühere Fassungen vergrößerten den ganzen Button über
+// den Ausgangswert hinaus (erst per `.scaleEffect`, dann direkt als größeres
+// Rahmenmaß) — dadurch war der Button zwar oben bündig mit Blitz/
+// Auflösungs-Anzeige in `CaptureTopBar`, aber spürbar höher als der Rest der
+// Reihe (die Reihe richtet sich an `Layout.minTapTarget` = 44pt aus). `diameter`
+// ist jetzt wieder exakt `Layout.minTapTarget`, identisch zur Höhe der
+// übrigen Reihen-Elemente — kein eigenständiges Vergrößern des Buttons mehr.
+// Die Marke bleibt trotzdem groß/kräftig: Innenabstand nur 2pt, nutzt damit
+// fast die komplette (jetzt wieder reihenkonforme) Kreisfläche aus.
 struct AssignmentToggleButton: View {
     let isExpanded: Bool
     let unsortedCount: Int
     let onToggle: () -> Void
 
-    private let scale: CGFloat = 1.05 * 1.05 * 1.10
+    private let diameter: CGFloat = Layout.minTapTarget
     private let backgroundOpacity: CGFloat = 0.85
 
     var body: some View {
@@ -46,13 +48,12 @@ struct AssignmentToggleButton: View {
             Image("LogoMark")
                 .resizable()
                 .scaledToFit()
-                .padding(4)
-                .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
+                .padding(2)
+                .frame(width: diameter, height: diameter)
                 .background(Theme.surfacePanel.opacity(backgroundOpacity))
                 .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))
                 .clipShape(Circle())
         }
-        .scaleEffect(scale, anchor: .top)
         .accessibilityLabel(isExpanded ? "Zuordnung einklappen" : "Zuordnung ausklappen, \(unsortedCount) offen")
     }
 }

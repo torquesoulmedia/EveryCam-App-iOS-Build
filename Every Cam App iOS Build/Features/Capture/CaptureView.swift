@@ -142,16 +142,16 @@ struct CaptureView: View {
                     .padding(.top, Layout.spacingM)
                     // Mittig oben, in einer Flucht mit Blitz und
                     // Auflösungs-Anzeige statt als Teil des Panels darunter.
-                    // Kein manueller Top-Versatz mehr nötig (Bugfix,
-                    // Nutzerwunsch, 2026-07-28): CaptureTopBar richtet seine
-                    // Icons/Info-Kapsel jetzt per `.top` aus statt `.center,
-                    // und AssignmentToggleButton skaliert seit demselben Fix
-                    // um `anchor: .top` statt der Mitte — beide Elemente
-                    // beginnen dadurch strukturell an derselben Oberkante,
-                    // ganz ohne einen von Hand austarierten Zahlenwert. Die
-                    // neue Top-Padding oben verschiebt beide gemeinsam nach
-                    // unten, da der Overlay-Modifier auf dem bereits
-                    // gepaddeten CaptureTopBar aufsetzt.
+                    // **Korrektur (Nutzerwunsch, per annotiertem
+                    // Geräte-Screenshot, 2026-07-29):** CaptureTopBar richtet
+                    // seine Icons/Info-Kapsel zwar per `.top` aus, aber am
+                    // Gerät saß AssignmentToggleButton dadurch spürbar höher
+                    // als Blitz/Auflösungs-Anzeige, nicht auf derselben Höhe.
+                    // Der rein strukturelle Ansatz (kein Zahlenwert) reichte
+                    // also nicht — hier wieder ein von Hand austarierter
+                    // Top-Versatz, diesmal auf Basis der vom Nutzer im
+                    // Screenshot markierten Ziel-Oberkante. Bei Bedarf anhand
+                    // eines neuen Screenshots weiter nachjustieren.
                     .overlay(alignment: .top) {
                         if appState.activeCollectionId != nil {
                             AssignmentToggleButton(
@@ -159,6 +159,7 @@ struct CaptureView: View {
                                 unsortedCount: viewModel.unsortedCount,
                                 onToggle: { viewModel.toggleAssignmentPanel() }
                             )
+                            .padding(.top, 8)
                         }
                     }
                 }

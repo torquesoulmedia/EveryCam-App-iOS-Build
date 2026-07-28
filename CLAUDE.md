@@ -369,6 +369,20 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
   Galerie-Vorschau braucht keine Kamera, nur vorhandene Dateien) — Testsammlung mit drei künstlich eingefügten
   Foto-Dateien unter einem gemeinsamen Tag angelegt, Wisch vorwärts (Rot→Grün→Blau) und rückwärts bestätigt,
   „Schließen" schließt zuverlässig unabhängig von der gerade sichtbaren Seite.
+- **Zuordnungs-Panel-Button: mehrere Anläufe zur Oberkanten-Korrektur** (Nutzerwunsch, nach mehrfachem Sichten
+  auf dem physischen Gerät, 2026-07-29) — Verlauf, damit nicht erneut dieselben Sackgassen versucht werden:
+  1. Erst `.scaleEffect(scale, anchor: .top)` — reichte am Gerät nicht, Oberkante blieb höher als
+     Blitz/Auflösungs-Anzeige.
+  2. Dann `diameter` direkt als größeres Rahmenmaß (`Layout.minTapTarget × 1.05 × 1.05 × 1.10`, kein
+     `.scaleEffect` mehr) — löste zwar den Transform-Anker-Verdacht auf, machte den Button aber **höher als
+     der Rest der Reihe** (44pt-Referenzhöhe), erkennbar am vom Nutzer im Screenshot grün eingezeichneten
+     Ziel-Oberkante-Strich.
+  3. **Aktueller Stand:** `diameter` zurück auf exakt `Layout.minTapTarget` (reihenkonforme Höhe), Marke bleibt
+     dank 2pt Innenabstand trotzdem groß. Zusätzlich ein von Hand austarierter `.padding(.top, 8)` in
+     `CaptureView.swift` auf dem `AssignmentToggleButton`-Overlay (nicht auf der ganzen Reihe) — der rein
+     strukturelle `.top`-Ausrichtungsansatz allein reichte am Gerät wiederholt nicht aus, um die vom Nutzer
+     markierte Ziel-Oberkante exakt zu treffen. Der `8`-Wert ist eine Schätzung auf Basis des Screenshots, noch
+     nicht am Gerät nachbestätigt — bei Abweichung mit neuem Screenshot nachjustieren.
 
 ---
 
