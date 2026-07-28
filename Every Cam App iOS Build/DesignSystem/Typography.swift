@@ -16,4 +16,8 @@ enum Typography {
     // Wortmarke auf dem Loading Screen — fix statt Dynamic Type, da die
     // Markendarstellung beim Start nicht mit der Systemschriftgröße mitwachsen soll.
     static let wordmark = Font.system(size: 34, weight: .bold)
+
+    // Selbstauslöser-Countdown (Nutzerwunsch) — "mittig groß" auf der
+    // Vorschau, deutlich über allen anderen Overlay-Schriften.
+    static let countdown = Font.system(size: 96, weight: .bold, design: .rounded)
 }

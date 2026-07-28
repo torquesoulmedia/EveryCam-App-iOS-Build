@@ -24,6 +24,11 @@ struct CaptureControlsRow: View {
     let recordingMode: RecordingMode
     let captureKind: CaptureKind
     let isCapturingPhoto: Bool
+    // Sperrt den Foto-/Video-Umschalter zusätzlich zu isRecording/
+    // isCapturingPhoto, solange ein Selbstauslöser-Countdown läuft
+    // (Nutzerwunsch) — ein Moduswechsel mitten im Countdown wäre sonst
+    // widersprüchlich.
+    let isSelfTimerCountingDown: Bool
     let hasActiveCollection: Bool
     let isCropGuideVisible: Bool
     let isCompositionGridVisible: Bool
@@ -118,7 +123,7 @@ struct CaptureControlsRow: View {
                         // CropService) und sind jederzeit reaktivierbar.
                         CaptureKindToggle(
                             kind: captureKind,
-                            isEnabled: !isRecording && !isCapturingPhoto,
+                            isEnabled: !isRecording && !isCapturingPhoto && !isSelfTimerCountingDown,
                             onSelect: onSelectCaptureKind
                         )
 
@@ -163,7 +168,8 @@ private struct ContrastIconButtonStyle: ButtonStyle {
         Theme.backgroundPrimary.ignoresSafeArea()
         CaptureControlsRow(
             isRecording: false, canRecord: true, isCameraReady: true,
-            recordingMode: .single, captureKind: .video, isCapturingPhoto: false, hasActiveCollection: true,
+            recordingMode: .single, captureKind: .video, isCapturingPhoto: false,
+            isSelfTimerCountingDown: false, hasActiveCollection: true,
             isCropGuideVisible: true, isCompositionGridVisible: false,
             onRecordTap: {}, onSelectCaptureKind: { _ in }, onNewCollection: {}, onManageTags: {},
             onOpenSettings: {}, onOpenCollections: {},

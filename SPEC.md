@@ -292,10 +292,21 @@ Tritt an die Stelle, an der in TrickCam der Single/Dual-Umschalter saß (siehe [
 | **Foto/Video-Umschalter** | Zwei gleichberechtigte Optionen, bestimmt, was ein Tap auf den Aufnahmeknopf auslöst. |
 | **Aufnahmeknopf im Video-Modus** | Wie gehabt: Start/Stopp, Kreis ↔ Quadrat, `AVCaptureMovieFileOutput`/ProRes-Hybrid (unverändert aus TrickCam). |
 | **Aufnahmeknopf im Foto-Modus** | Ein einzelner Tap löst sofort eine Aufnahme aus — kein Start/Stopp-Zustand, keine Aufnahmezeit-Anzeige. `AVCapturePhotoOutput`, Standard-Foto-Settings (kein manueller RAW/Bracketing-Schalter, siehe [§15](#15-explizit-nicht-umzusetzen)). |
-| **Blitz/Zoom/Fokus/Objektivauswahl** | Gelten in **beiden** Modi identisch — dieselbe Vorschau, derselbe Kamera-Stack, nur der Output unterscheidet sich. |
+| **Zoom/Fokus/Objektivauswahl** | Gelten in **beiden** Modi identisch — dieselbe Vorschau, derselbe Kamera-Stack, nur der Output unterscheidet sich. |
+| **Blitz** | **Unterscheidet sich bewusst je Modus** (Update, Nutzerwunsch) — siehe [§7.1a](#71a-foto-blitz-und-selbstauslöser). |
 
 Nach jeder Aufnahme (ob Foto oder Video) öffnet sich das Zuordnungs-Panel automatisch, exakt wie in TrickCam
 nach dem Stopp eines Videos ([§9](#9-bildschirm-1b--zuordnungs-panel)).
+
+### 7.1a Foto-Blitz und Selbstauslöser (Update, Nutzerwunsch, 2026-07-27)
+
+| Element | Verhalten |
+|---|---|
+| **Blitz im Video-Modus** | Unverändert der bisherige Dauerlicht-Toggle (`device.torchMode`, An/Aus). |
+| **Blitz im Foto-Modus** | Ersetzt den Dauerlicht-Toggle durch einen Auto/Ein/Aus-Dropdown, der den echten `AVCapturePhotoSettings.flashMode` pro Aufnahme setzt — möglichst nah am systemseitigen Kamera-App-Verhalten. Nur sichtbar, wenn das Gerät/Objektiv tatsächlich einen Blitz unterstützt (Feature-Detection, kein Geräte-Whitelisting). |
+| **Selbstauslöser** | Dropdown rechts neben dem Blitz, nur im Foto-Modus: Aus/10/15/20 Sekunden. Aktivierter Zustand ist optisch klar erkennbar (gefüllte Kapsel + Sekunden-Badge). |
+| **Countdown-Ablauf** | Nach Tap auf den Aufnahmeknopf zählt eine große, zentrierte Anzeige auf der Vorschau herunter. Ein erneuter Tap während des Countdowns bricht ihn ab. Bei Ablauf: kurzer Vollbild-Weißblitz als Auslöse-Bestätigung, danach die eigentliche Aufnahme. |
+| **Nach der Aufnahme** | Selbstauslöser springt automatisch auf „Aus" zurück (einmalige Nutzung) — das Zuordnungs-Panel öffnet sich wie gewohnt und bleibt bis zur manuellen Nutzer-Entscheidung offen. |
 
 ### 7.2 Single/Dual: in v1 nicht sichtbar
 

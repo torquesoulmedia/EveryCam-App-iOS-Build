@@ -202,6 +202,23 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
   (separates Repo, nicht Teil dieses Xcode-Projekts) — einzelne `index.html`, DE/EN/ES/PT, selbes Farbschema wie
   die App, für eine App-Store-Connect-Datenschutz-URL. Ergänzt Ziffer 7 der Nutzungsbedingungen, die bislang nur
   auf „eine gesonderte Datenschutzerklärung" verwies, ohne dass diese existierte.
+- **Foto-Selbstauslöser** (`SelfTimerDuration.swift`, `SelfTimerControl.swift`, `SelfTimerCountdownOverlay.swift`)
+  — Dropdown rechts neben dem Blitz in `CaptureTopBar`, nur im Foto-Modus, Optionen 10/15/20 Sekunden. Aktiver
+  Zustand füllt die Kapsel statt nur den Umriss (Grauton, kein Bail/Make/Aufnahme-Farbtoken). Ein Tap auf den
+  Aufnahmeknopf während des Countdowns bricht ihn ab, statt eine zweite Aufnahme anzustoßen. Nach Ablauf: kurzer
+  Vollbild-Weißblitz (`CaptureViewModel.isShowingCaptureFlash`, bewusst System-`.white` statt Theme-Token, siehe
+  Kommentar in `CaptureView`) als Auslöse-Bestätigung, dann die eigentliche Aufnahme — danach springt die Auswahl
+  automatisch auf „Aus" zurück (einmalige Nutzung). Zuordnungs-Panel verhält sich exakt wie bei einer normalen
+  Aufnahme (`capturePhoto` unverändert wiederverwendet).
+- **Echter Foto-Blitz** (`PhotoFlashControl.swift`, `CameraService.photoFlashMode`/`isPhotoFlashAvailable`) —
+  ersetzt im Foto-Modus den Dauerlicht-Blitz-Button durch einen Auto/Ein/Aus-Dropdown, der
+  `AVCapturePhotoSettings.flashMode` pro Aufnahme setzt (statt nur `device.torchMode` dauerhaft zu schalten wie
+  im Video-Modus). Nur sichtbar, wenn `photoOutput.supportedFlashModes` das Gerät tatsächlich unterstützt
+  (Feature-Detection, CLAUDE.md §3, kein Geräte-Whitelisting). Auto-Modus zeigt ein "A"-Textbadge statt eines
+  unsicheren SF-Symbols (analog zum bewährten "ZL"-Zoom-Sperre-Muster in `LensPickerPanel`).
+- **Nur am physischen Gerät prüfbar:** Beide Funktionen hängen an `cameraStatus == .ready`, das der Simulator
+  mangels Kamera nie erreicht (`.unavailable`) — Countdown-Timing, Blitz-Zündung und Display-Flash-Optik sind
+  bislang nur per Code-Review verifiziert, nicht visuell auf einem Gerät.
 
 ---
 

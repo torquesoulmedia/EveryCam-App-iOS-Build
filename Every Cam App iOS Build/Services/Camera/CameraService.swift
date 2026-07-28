@@ -89,6 +89,15 @@ final class CameraService: NSObject {
     private(set) var activeLensId: String?
     private(set) var availableLenses: [LensOption] = []
 
+    // Echter Foto-Blitz (Nutzerwunsch) — unabhängig vom Dauerlicht-Blitz
+    // (isTorchOn) oben: löst nur im Aufnahmemoment selbst aus, per
+    // AVCapturePhotoSettings.flashMode statt device.torchMode. Nur im
+    // Foto-Modus sinnvoll, da Video keinen diskreten Auslösemoment kennt.
+    // isPhotoFlashAvailable wird einmalig bei der Session-Konfiguration per
+    // Feature-Detection gesetzt (CLAUDE.md §3) — kein Geräte-Whitelisting.
+    private(set) var isPhotoFlashAvailable = false
+    private(set) var photoFlashMode: AVCaptureDevice.FlashMode = .off
+
     // Zoom-Sperre "ZL" (Update, Nutzerwunsch): aktivierbar auf 0,5x **oder**
     // 1x, mit jeweils entgegengesetzter Wirkrichtung (zoomLockOrigin hält
     // fest, von welchem der beiden aus aktiviert wurde — bleibt über spätere
@@ -236,6 +245,7 @@ final class CameraService: NSObject {
             self.session.startRunning()
 
             self.publishAvailableVideoCodecs(proResSupported: self.detectProResSupport())
+            self.publishPhotoFlashAvailability()
             completion(true)
         }
     }
@@ -629,13 +639,17 @@ final class CameraService: NSObject {
         let angle = rotationCoordinator?.videoRotationAngleForHorizonLevelCapture ?? 90
         capturedOrientation = Int(angle) % 180 == 0 ? .landscape : .portrait
         pendingPhotoURL = url
+        // Auf dem Main Actor gelesen und als Wert hereingereicht statt in der
+        // nonisolated dispatchCapturePhoto live zugegriffen (CLAUDE.md §5.3) —
+        // photoFlashMode ist eine @MainActor-Property.
+        let flashMode = photoFlashMode
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             self.photoCaptureContinuation = continuation
-            dispatchCapturePhoto(angle: angle, format: format)
+            dispatchCapturePhoto(angle: angle, format: format, flashMode: flashMode)
         }
     }
 
-    nonisolated private func dispatchCapturePhoto(angle: CGFloat, format: PhotoFormat) {
+    nonisolated private func dispatchCapturePhoto(angle: CGFloat, format: PhotoFormat, flashMode: AVCaptureDevice.FlashMode) {
         sessionQueue.async {
             if let connection = self.photoOutput.connection(with: .video), connection.isVideoRotationAngleSupported(angle) {
                 connection.videoRotationAngle = angle
@@ -647,6 +661,12 @@ final class CameraService: NSObject {
                 // Kein availablePhotoCodecTypes-Check nötig: JPEG ist auf jedem
                 // Gerät garantiert, das Standardformat ohne format-Parameter.
                 settings = AVCapturePhotoSettings()
+            }
+            // Defensiv erneut geprüft statt isPhotoFlashAvailable blind zu
+            // vertrauen — welche Modi konkret unterstützt sind, kann sich mit
+            // format/settings geringfügig unterscheiden.
+            if self.photoOutput.supportedFlashModes.contains(flashMode) {
+                settings.flashMode = flashMode
             }
             self.photoOutput.capturePhoto(with: settings, delegate: self)
         }
@@ -722,6 +742,22 @@ final class CameraService: NSObject {
     }
 
     // MARK: - Blitz
+
+    /// Ergebnis läuft über die Session-Queue, da photoOutput.supportedFlashModes
+    /// erst nach dem Hinzufügen zur Session zuverlässig gefüllt ist.
+    nonisolated private func publishPhotoFlashAvailability() {
+        let available = self.photoOutput.supportedFlashModes.contains(.on)
+        Task { @MainActor in
+            self.isPhotoFlashAvailable = available
+        }
+    }
+
+    /// Nur die Auswahl selbst — die Anwendung passiert erst pro Aufnahme in
+    /// capturePhoto/dispatchCapturePhoto, kein sofortiger Hardware-Seiteneffekt
+    /// wie beim Dauerlicht-Blitz, deshalb ohne sessionQueue-Dispatch.
+    func setPhotoFlashMode(_ mode: AVCaptureDevice.FlashMode) {
+        photoFlashMode = mode
+    }
 
     func toggleTorch() {
         dispatchTorchToggle()

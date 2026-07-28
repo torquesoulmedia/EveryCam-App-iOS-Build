@@ -86,6 +86,27 @@ struct CaptureView: View {
                     CompositionGridOverlay()
                         .ignoresSafeArea()
                 }
+
+                // Selbstauslöser-Countdown, mittig groß (Nutzerwunsch) —
+                // zentriert sich von selbst, da ohne eigene alignment-Vorgabe
+                // im ZStack.
+                if let remaining = viewModel.countdownRemaining {
+                    SelfTimerCountdownOverlay(secondsRemaining: remaining)
+                        .transition(.opacity)
+                        .animation(Layout.panelAnimation, value: viewModel.countdownRemaining)
+                }
+
+                // Display-Blitz-Bestätigung bei Ablauf des Timers
+                // (Nutzerwunsch) — bewusst System-Weiß statt eines
+                // Theme-Tokens: simuliert einen fotografischen Blitz, keine
+                // themenfarbene UI-Fläche (gleicher Präzedenzfall wie die
+                // .white-Glanzstreifen in AssignmentButtonStyle).
+                if viewModel.isShowingCaptureFlash {
+                    Color.white
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                        .animation(.easeOut(duration: 0.12), value: viewModel.isShowingCaptureFlash)
+                }
             } else {
                 statusMessage
             }
@@ -98,10 +119,17 @@ struct CaptureView: View {
             VStack {
                 if viewModel.cameraStatus == .ready {
                     CaptureTopBar(
+                        captureKind: viewModel.captureKind,
                         isTorchOn: viewModel.cameraService.isTorchOn,
+                        isPhotoFlashAvailable: viewModel.cameraService.isPhotoFlashAvailable,
+                        photoFlashMode: viewModel.cameraService.photoFlashMode,
+                        selfTimerDuration: viewModel.selfTimerDuration,
+                        isSelfTimerControlEnabled: !viewModel.isRecording && !viewModel.isCapturingPhoto && viewModel.countdownRemaining == nil,
                         frameRateLabel: settingsStore.frameRate.displayLabel,
                         resolutionLabel: settingsStore.resolution.displayLabel,
-                        onToggleTorch: { viewModel.cameraService.toggleTorch() }
+                        onToggleTorch: { viewModel.cameraService.toggleTorch() },
+                        onSelectPhotoFlashMode: { viewModel.cameraService.setPhotoFlashMode($0) },
+                        onSelectSelfTimer: { viewModel.setSelfTimer($0) }
                     )
                     // Mittig oben, in einer Flucht mit Blitz und
                     // Auflösungs-Anzeige statt als Teil des Panels darunter.
@@ -161,7 +189,7 @@ struct CaptureView: View {
                     CaptureBottomAccessoryRow(
                         lenses: viewModel.cameraService.availableLenses,
                         activeLensId: viewModel.cameraService.activeLensId,
-                        isLensSelectionEnabled: !viewModel.isRecording,
+                        isLensSelectionEnabled: !viewModel.isRecording && viewModel.countdownRemaining == nil,
                         isZoomLocked: viewModel.cameraService.isZoomLocked,
                         zoomLockOrigin: viewModel.cameraService.zoomLockOrigin,
                         onSelectLens: { lens in viewModel.selectLens(lens) },
@@ -179,6 +207,7 @@ struct CaptureView: View {
                     recordingMode: viewModel.recordingMode,
                     captureKind: viewModel.captureKind,
                     isCapturingPhoto: viewModel.isCapturingPhoto,
+                    isSelfTimerCountingDown: viewModel.countdownRemaining != nil,
                     hasActiveCollection: appState.activeCollectionId != nil,
                     isCropGuideVisible: viewModel.isCropGuideVisible,
                     isCompositionGridVisible: viewModel.isCompositionGridVisible,

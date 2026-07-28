@@ -33,6 +33,19 @@ final class CaptureViewModel {
     // Video, der Button wäre sonst zwischen Tap und Fertigstellung sofort
     // wieder auslösbar.
     private(set) var isCapturingPhoto = false
+    // Foto-Selbstauslöser (Nutzerwunsch) — nur im Foto-Modus wirksam. `.off`
+    // ist Ruhezustand; nach jeder tatsächlich ausgelösten Aufnahme springt der
+    // Wert automatisch zurück (siehe runSelfTimerCountdown), ein abgebrochener
+    // Countdown lässt die Auswahl dagegen unangetastet.
+    private(set) var selfTimerDuration: SelfTimerDuration = .off
+    // nil = kein Countdown aktiv. Zählt sekündlich runter bis 0, danach folgt
+    // der Blitz-Bestätigungs-Frame und die eigentliche Aufnahme.
+    private(set) var countdownRemaining: Int?
+    // Kurzer Vollbild-Weißblitz als Auslöse-Bestätigung, unabhängig vom
+    // echten Foto-Blitz (CameraService.photoFlashMode) — rein visuelles
+    // UI-Feedback auf dem Display selbst.
+    private(set) var isShowingCaptureFlash = false
+    private var selfTimerTask: Task<Void, Never>?
     // Läuft mindestens ein 16:9-Crop-Export, zeigt die UI einen dezenten
     // „wird verarbeitet"-Hinweis. Die Zuordnung bleibt trotzdem sofort möglich.
     private(set) var isProcessingCrop = false
@@ -127,18 +140,42 @@ final class CaptureViewModel {
     }
 
     /// Foto/Video-Umschalter (SPEC.md §7.1). Wechsel während laufender
-    /// Aufnahme ist gesperrt, analog zu setRecordingMode.
+    /// Aufnahme ist gesperrt, analog zu setRecordingMode — während eines
+    /// laufenden Selbstauslöser-Countdowns ebenfalls, sonst bliebe ein
+    /// Countdown im falschen Modus hängen.
     func setCaptureKind(_ kind: CaptureKind) {
-        guard !isRecording, !isCapturingPhoto, kind != captureKind else { return }
+        guard !isRecording, !isCapturingPhoto, countdownRemaining == nil, kind != captureKind else { return }
         captureKind = kind
+    }
+
+    /// Nur die Auswahl — während eines laufenden Countdowns oder einer
+    /// Aufnahme gesperrt, damit sich der bereits laufende Selbstauslöser nicht
+    /// unter der Hand ändert.
+    func setSelfTimer(_ duration: SelfTimerDuration) {
+        guard !isRecording, !isCapturingPhoto, countdownRemaining == nil else { return }
+        selfTimerDuration = duration
     }
 
     func toggleRecording(activeCollectionId: UUID?) async {
         guard cameraStatus == .ready, let collectionId = activeCollectionId else { return }
         switch captureKind {
         case .photo:
+            // Ein erneuter Tap während des Countdowns bricht ihn ab, statt
+            // eine zweite Aufnahme anzustoßen (Nutzerwunsch) — die
+            // Selbstauslöser-Auswahl selbst bleibt dabei erhalten, da noch
+            // keine Aufnahme stattgefunden hat.
+            if selfTimerTask != nil {
+                selfTimerTask?.cancel()
+                selfTimerTask = nil
+                countdownRemaining = nil
+                return
+            }
             guard !isRecording, !isCapturingPhoto else { return }
-            await capturePhoto(collectionId: collectionId)
+            if selfTimerDuration == .off {
+                await capturePhoto(collectionId: collectionId)
+            } else {
+                selfTimerTask = Task { await runSelfTimerCountdown(collectionId: collectionId) }
+            }
         case .video:
             if isRecording {
                 await stopAndSave(collectionId: collectionId)
@@ -146,6 +183,37 @@ final class CaptureViewModel {
                 await start(collectionId: collectionId)
             }
         }
+    }
+
+    /// Zählt sekündlich herunter, zeigt danach kurz den Display-Blitz und löst
+    /// erst dann die eigentliche Aufnahme aus (Nutzerwunsch). Läuft als
+    /// eigener Task, damit ein erneuter Tap auf den Aufnahmeknopf (siehe
+    /// toggleRecording) ihn per Cancellation sauber abbrechen kann.
+    private func runSelfTimerCountdown(collectionId: UUID) async {
+        var remaining = selfTimerDuration.seconds
+        countdownRemaining = remaining
+        while remaining > 0 {
+            do {
+                try await Task.sleep(for: .seconds(1))
+            } catch {
+                // Abgebrochen (erneuter Tap) — Zustand zurücksetzen, aber
+                // ohne die Selbstauslöser-Auswahl zu verwerfen.
+                countdownRemaining = nil
+                selfTimerTask = nil
+                return
+            }
+            remaining -= 1
+            countdownRemaining = remaining
+        }
+        isShowingCaptureFlash = true
+        try? await Task.sleep(for: .milliseconds(250))
+        isShowingCaptureFlash = false
+        countdownRemaining = nil
+        await capturePhoto(collectionId: collectionId)
+        // Einmalige Nutzung (Nutzerwunsch) — zurück in den normalen
+        // Foto-Modus, erst NACH einer tatsächlich ausgelösten Aufnahme.
+        selfTimerDuration = .off
+        selfTimerTask = nil
     }
 
     /// Ein einzelner Tap löst sofort aus, kein Start/Stopp-Zustand (SPEC.md
