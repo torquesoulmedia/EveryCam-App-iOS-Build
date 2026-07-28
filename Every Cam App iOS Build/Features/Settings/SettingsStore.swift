@@ -9,8 +9,8 @@ import SwiftUI
 // das Gerät eingestellt hat). `.system` lässt die normale iOS-Fallback-Kette
 // (`Bundle.preferredLocalizations`, CLAUDE.md §5.1) unangetastet. Betrifft nur
 // den String-Katalog-gestützten Teil der App — Handbuch/Terms/Impressum haben
-// ohnehin ihren eigenen, unabhängigen DE/EN/ES/PT-Umschalter (HandbuchLanguage).
-// Die vier Sprachnamen bleiben in jeder aktiven UI-Sprache gleich (Eigenname,
+// ohnehin ihren eigenen, unabhängigen Sprach-Umschalter (HandbuchLanguage).
+// Die acht Sprachnamen bleiben in jeder aktiven UI-Sprache gleich (Eigenname,
 // analog zur „Bail"/„Make"-Ausnahme) — im Katalog mit shouldTranslate: false.
 nonisolated enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case system
@@ -18,6 +18,10 @@ nonisolated enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case english = "en"
     case spanish = "es"
     case portugueseBR = "pt-BR"
+    case french = "fr"
+    case italian = "it"
+    case dutch = "nl"
+    case polish = "pl"
 
     var id: String { rawValue }
 
@@ -35,6 +39,10 @@ nonisolated enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
         case .english: "English"
         case .spanish: "Español"
         case .portugueseBR: "Português (Brasil)"
+        case .french: "Français"
+        case .italian: "Italiano"
+        case .dutch: "Nederlands"
+        case .polish: "Polski"
         }
     }
 }

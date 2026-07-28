@@ -119,7 +119,7 @@ Kamera-Detaileinstellungen. Siehe [§15](#15-explizit-nicht-umzusetzen).
 | **Netzwerk** | Keine Cloud, kein iCloud/CloudKit-Sync, kein GPS. Vollständig offline. |
 | **Teilen** | Natives iOS Share Sheet (`UIActivityViewController`), für Fotos und Videos gleichermaßen. |
 | **Orientierung** | Portrait + Landscape im Single-Modus, unverändert. |
-| **Sprache der Oberfläche** | Mehrsprachig: Deutsch (Quellsprache), Englisch, Spanisch, brasilianisches Portugiesisch — `Localizable.xcstrings`, Fallback Englisch bei nicht unterstützter Systemsprache. Infrastruktur 1:1 aus TrickCam übernommen. **Entfällt:** die „Bail"/„Make bleiben unübersetzt"-Ausnahme — es gibt diese Wörter nicht mehr. Tag-Namen sind ohnehin freier Nutzertext, genau wie zuvor schon Athletennamen, und damit nie Teil des Katalogs. |
+| **Sprache der Oberfläche** | Mehrsprachig: Deutsch (Quellsprache), Englisch, Spanisch, brasilianisches Portugiesisch, Französisch, Italienisch, Niederländisch, Polnisch (acht Sprachen, Update 2026-07-28, Nutzerwunsch) — `Localizable.xcstrings`, Fallback Englisch bei nicht unterstützter Systemsprache. Infrastruktur 1:1 aus TrickCam übernommen. **Entfällt:** die „Bail"/„Make bleiben unübersetzt"-Ausnahme — es gibt diese Wörter nicht mehr. Tag-Namen sind ohnehin freier Nutzertext, genau wie zuvor schon Athletennamen, und damit nie Teil des Katalogs. Handbuch/Terms/Impressum haben denselben Sprachumfang über ihren eigenen, katalogunabhängigen Umschalter (`HandbuchLanguage`, siehe `CLAUDE.md` §5). |
 
 ### Erforderliche Info.plist-Einträge
 

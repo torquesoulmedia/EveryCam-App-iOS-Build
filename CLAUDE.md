@@ -86,8 +86,9 @@ Neue Services/Erweiterungen:
 Identisch zu TrickCam (siehe dortige `CLAUDE.md` §5) mit einer Vereinfachung:
 
 - **Mehrsprachig:** Deutsch (Quellsprache) über `Localizable.xcstrings`, Englisch/Spanisch/brasilianisches
-  Portugiesisch als Übersetzungen, Englisch-Fallback bei nicht unterstützter Systemsprache — Infrastruktur
-  1:1 übernommen.
+  Portugiesisch/Französisch/Italienisch/Niederländisch/Polnisch als Übersetzungen (Nutzerwunsch, Update
+  2026-07-28 — Erweiterung um die vier mitgliederstärksten weiteren europäischen Sprachen), Englisch-Fallback
+  bei nicht unterstützter Systemsprache — Infrastruktur 1:1 übernommen.
 - **Entfällt ersatzlos:** die „Bail"/„Make bleiben in allen Sprachen unübersetzt"-Ausnahme aus TrickCams
   CLAUDE.md §5.1 — es gibt diese Wörter nicht mehr. Tag-Namen sind freier Nutzertext und waren es bei den
   Athletennamen schon vorher, also nie Teil des String-Katalogs.
@@ -219,6 +220,21 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
 - **Nur am physischen Gerät prüfbar:** Beide Funktionen hängen an `cameraStatus == .ready`, das der Simulator
   mangels Kamera nie erreicht (`.unavailable`) — Countdown-Timing, Blitz-Zündung und Display-Flash-Optik sind
   bislang nur per Code-Review verifiziert, nicht visuell auf einem Gerät.
+- **Vier weitere Sprachen ergänzt (Nutzerwunsch, 2026-07-28):** Französisch, Italienisch, Niederländisch,
+  Polnisch — sowohl im App-weiten `Localizable.xcstrings`-Katalog (alle bestehenden Schlüssel plus vier neue
+  `shouldTranslate: false`-Einträge für die Sprachnamen selbst, „Français"/„Italiano"/„Nederlands"/„Polski",
+  analog zu „Deutsch"/„English"/„Español"/„Português (Brasil)") als auch in `AppLanguage`
+  (`SettingsStore.swift`, neue Fälle `.french`/`.italian`/`.dutch`/`.polish`) für die erzwingbare App-Sprache in
+  den Einstellungen. `project.pbxproj`s `knownRegions` um `fr`/`it`/`nl`/`pl` erweitert.
+  **Handbuch/Terms/Impressum** (eigener, vom Katalog unabhängiger Umschalter, §5.1-Ausnahme) ebenfalls auf acht
+  Sprachen erweitert: `HandbuchLanguage` hat vier neue Fälle (`.french`/`.italian`/`.dutch`/`.polish`, Kürzel
+  FR/IT/NL/PL), `pick<T>` nimmt jetzt acht Parameter. Die vollständige Nutzungsbedingungen-Übersetzung
+  verwendet je Sprache die dort tatsächlich gebräuchliche Datenschutz-Abkürzung statt einer erfundenen: RGPD
+  (Französisch), RGPD/GDPR (Italienisch, beide Formen dort gebräuchlich), AVG (Niederländisch), RODO
+  (Polnisch) — analog zum bestehenden Muster bei ES (RGPD)/PT (RGPD). `TermsProvider` bekam
+  `cityLineFR/IT/NL/PL` (gleiche Adresse, nur der Ländername übersetzt). Betroffene Dateien: `HandbuchContent.swift`,
+  `HandbuchView.swift`, `HandbuchIconLegend.swift`, `TermsContent.swift`, `TermsView.swift`, `ImpressumView.swift`.
+  Build + volle Testsuite (123/123) grün nach der Erweiterung.
 
 ---
 

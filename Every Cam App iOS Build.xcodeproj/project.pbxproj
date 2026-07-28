@@ -202,6 +202,10 @@
 				de,
 				es,
 				"pt-BR",
+				fr,
+				it,
+				nl,
+				pl,
 				Base,
 			);
 			mainGroup = B15B6BE0300BC5A5009EC862;
