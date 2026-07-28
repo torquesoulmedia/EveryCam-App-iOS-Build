@@ -44,15 +44,16 @@ struct GalleryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             .task { await viewModel.load() }
+            // Wisch-Vorschau statt Einzel-Ansicht (Nutzerwunsch) — items ist
+            // der gesamte Abschnitt (Tag oder Unsorted), zu dem das
+            // angetippte Element gehört, siehe siblingItems(for:).
             .sheet(item: $playingItem) { item in
-                if let url = viewModel.videoURL(for: item) {
-                    switch item.kind {
-                    case .video:
-                        ClipPlayerView(videoURL: url, onShare: { shareURLs = [url] })
-                    case .photo:
-                        PhotoPreviewView(imageURL: url, onShare: { shareURLs = [url] })
-                    }
-                }
+                GalleryItemPagerView(
+                    items: siblingItems(for: item),
+                    initialItem: item,
+                    videoURL: { viewModel.videoURL(for: $0) },
+                    onShare: { url in shareURLs = [url] }
+                )
             }
             .sheet(isPresented: Binding(
                 get: { shareURLs != nil },
@@ -133,6 +134,15 @@ struct GalleryView: View {
         } else {
             playingItem = item
         }
+    }
+
+    // Liefert den gesamten Abschnitt (Tag oder Unsorted), zu dem `item`
+    // gehört, in der bereits angezeigten Reihenfolge — treibt
+    // GalleryItemPagerViews Wisch-Navigation an. Fällt auf `[item]` zurück,
+    // falls der Abschnitt zwischen Tap und Sheet-Aufbau verschwunden sein
+    // sollte (z. B. gerade gelöscht), damit die Vorschau nie leer bleibt.
+    private func siblingItems(for item: GalleryThumbnailItem) -> [GalleryThumbnailItem] {
+        viewModel.sections.first { $0.items.contains(item) }?.items ?? [item]
     }
 
     @ToolbarContentBuilder

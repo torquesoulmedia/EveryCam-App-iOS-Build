@@ -3,7 +3,10 @@ import SwiftUI
 // Bild-Vollansicht beim Tap auf ein Foto-Thumbnail (SPEC.md §11, neu) —
 // Pendant zu ClipPlayerView für Fotos. Einfaches Zoom/Pan per Pinch/Drag,
 // Doppel-Tap setzt zurück; kein eigenes GeometryReader nötig, da nur
-// Skalierung/Versatz des Bildes selbst gebraucht werden.
+// Skalierung/Versatz des Bildes selbst gebraucht werden. Seit dem Nutzerwunsch
+// nach Wisch-Navigation (2026-07-29) eine von mehreren Seiten in
+// GalleryItemPagerViews TabView(.page) — das Pan-per-Drag hier bekommt daher
+// nur im gezoomten Zustand Vorrang vor dem Seitenwechsel (siehe body).
 struct PhotoPreviewView: View {
     let imageURL: URL
     let onShare: () -> Void
@@ -21,14 +24,23 @@ struct PhotoPreviewView: View {
                 Theme.backgroundPrimary.ignoresSafeArea()
 
                 if let image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .scaleEffect(scale)
-                        .offset(offset)
-                        .gesture(magnificationGesture)
-                        .simultaneousGesture(dragGesture)
-                        .onTapGesture(count: 2) { resetZoom() }
+                    Group {
+                        if scale > 1 {
+                            // .highPriorityGesture nur, solange tatsächlich
+                            // gezoomt ist (Bugfix, Nutzerwunsch): diese
+                            // Ansicht steckt jetzt in GalleryItemPagerViews
+                            // TabView(.page). Ohne diese Bedingung würde JEDE
+                            // Wisch-Geste auf dem Foto abgefangen, auch
+                            // ungezoomt — der Seitenwechsel zum nächsten Foto
+                            // wäre dann nie mehr möglich. Nur im gezoomten
+                            // Zustand soll das Verschieben des Bildausschnitts
+                            // Vorrang vor dem Seitenwechsel haben.
+                            imageContent(image).highPriorityGesture(dragGesture)
+                        } else {
+                            imageContent(image)
+                        }
+                    }
+                    .onTapGesture(count: 2) { resetZoom() }
                 } else {
                     Text("Foto konnte nicht geladen werden")
                         .foregroundStyle(Theme.textSecondary)
@@ -52,6 +64,15 @@ struct PhotoPreviewView: View {
             }
         }
         .preferredColorScheme(.light)
+    }
+
+    private func imageContent(_ image: UIImage) -> some View {
+        Image(uiImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .scaleEffect(scale)
+            .offset(offset)
+            .gesture(magnificationGesture)
     }
 
     private var magnificationGesture: some Gesture {

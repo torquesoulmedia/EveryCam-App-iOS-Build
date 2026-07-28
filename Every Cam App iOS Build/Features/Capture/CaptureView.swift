@@ -131,6 +131,15 @@ struct CaptureView: View {
                         onSelectPhotoFlashMode: { viewModel.cameraService.setPhotoFlashMode($0) },
                         onSelectSelfTimer: { viewModel.setSelfTimer($0) }
                     )
+                    // Etwas Abstand zur Bildschirmoberkante (Bugfix,
+                    // Nutzerwunsch, 2026-07-29) — zuvor saß die obere Reihe
+                    // direkt an der oberen Sicherheitszone, während die
+                    // untere Reihe durch CaptureBottomAccessoryRows
+                    // `.padding(.bottom, Layout.spacingM)` spürbar mehr Luft
+                    // zur unteren Bildschirmkante hatte. Derselbe
+                    // Abstandswert hier sorgt für ein symmetrisches Bild oben
+                    // wie unten.
+                    .padding(.top, Layout.spacingM)
                     // Mittig oben, in einer Flucht mit Blitz und
                     // Auflösungs-Anzeige statt als Teil des Panels darunter.
                     // Kein manueller Top-Versatz mehr nötig (Bugfix,
@@ -139,7 +148,10 @@ struct CaptureView: View {
                     // und AssignmentToggleButton skaliert seit demselben Fix
                     // um `anchor: .top` statt der Mitte — beide Elemente
                     // beginnen dadurch strukturell an derselben Oberkante,
-                    // ganz ohne einen von Hand austarierten Zahlenwert.
+                    // ganz ohne einen von Hand austarierten Zahlenwert. Die
+                    // neue Top-Padding oben verschiebt beide gemeinsam nach
+                    // unten, da der Overlay-Modifier auf dem bereits
+                    // gepaddeten CaptureTopBar aufsetzt.
                     .overlay(alignment: .top) {
                         if appState.activeCollectionId != nil {
                             AssignmentToggleButton(

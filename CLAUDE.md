@@ -335,6 +335,40 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
   im Simulator — Katalog-Pollution beim erneuten Build erneut aufgetreten (9 Leer-Einträge, dieselben wie beim
   letzten Mal) und wieder bereinigt, siehe Korrektur-Eintrag oben — scheint bei praktisch jedem inkrementellen
   Build erneut aufzutreten, nicht nur bei geänderten Dateien; **vor jedem Commit den Katalog-Check wiederholen.**
+- **Zwei Korrekturen nach Sichten der vorherigen drei Änderungen auf dem physischen Gerät (Nutzerwunsch,
+  2026-07-29):**
+  1. **Obere Reihe bekommt Abstand zur Bildschirmoberkante** (`CaptureView.swift`) — saß zuvor direkt an der
+     oberen Sicherheitszone, während die untere Reihe durch `CaptureBottomAccessoryRow`s
+     `.padding(.bottom, Layout.spacingM)` spürbar mehr Luft zur unteren Kante hatte. Dieselbe `Layout.spacingM`
+     jetzt auch oben, vor dem `.overlay(alignment: .top)` für `AssignmentToggleButton` gesetzt, damit beide
+     gemeinsam nach unten wandern und aufeinander ausgerichtet bleiben.
+  2. **Zuordnungs-Panel-Button neu gestaltet** (`AssignmentToggleButton.swift`) — die gestrige Fassung (Marke
+     auf einem separaten, kleineren `action.tag`-gefüllten Innenkreis) wirkte am Gerät wie zwei ineinander
+     verschachtelte Kreise und ließ die Marke selbst zu klein wirken. Der Innenkreis entfällt ersatzlos, die
+     Marke liegt jetzt direkt auf der neutralen Kontrast-Hinterlegung und ist dadurch deutlich größer (nutzt
+     fast die volle Hinterlegungsfläche). Der `action.tag`-Farbton ist an dieser Stelle damit nicht mehr
+     vertreten — bewusste Abweichung von der ursprünglichen Tag-Farb-Konvention, auf ausdrücklichen
+     Nutzerwunsch nach Sichten am Gerät.
+  Beide Änderungen hängen wieder an `cameraStatus == .ready`, nur auf dem physischen Gerät prüfbar — nicht
+  selbst am Gerät verifiziert, nur per Build+Code-Review.
+- **Wisch-Navigation in der Vollbild-Vorschau** (Nutzerwunsch, 2026-07-29) — Tap auf ein Thumbnail in der
+  Sammlung-Galerie öffnet nicht mehr nur die eine angetippte Aufnahme, sondern erlaubt, per Wisch durch alle
+  Aufnahmen **desselben Abschnitts** zu blättern (Tag oder Unsorted — beides läuft über dieselbe Logik, kein
+  Sonderfall nötig). Neue `GalleryItemPagerView.swift`: `TabView(selection:)` mit `.page`-Stil (dasselbe
+  native Muster wie in `RootView` für Aufnahme/Sammlungen), eine Seite pro `GalleryThumbnailItem`, je nach
+  `kind` `ClipPlayerView` oder `PhotoPreviewView`. `GalleryView.siblingItems(for:)` findet den Abschnitt, zu
+  dem das angetippte Element gehört (`viewModel.sections.first { $0.items.contains(item) }`), und übergibt
+  dessen komplette `items`-Liste an den Pager — fällt auf `[item]` zurück, falls der Abschnitt zwischenzeitlich
+  verschwunden sein sollte.
+  **Gesten-Konflikt gelöst:** `PhotoPreviewView`s Pinch-Zoom/Pan-Geste sitzt jetzt in einem `TabView(.page)`,
+  dessen eigene Wisch-Geste sonst mit dem Verschieben eines gezoomten Fotos kollidieren würde. Die
+  Drag-Geste wird nur noch angehängt, solange `scale > 1` ist (`.highPriorityGesture`, sonst kein Gesture-
+  Modifier), und beansprucht dann Vorrang vor dem Seitenwechsel — ungezoomt bleibt der Wisch zum nächsten
+  Foto uneingeschränkt möglich.
+  **Auf dem Simulator vollständig end-to-end verifiziert** (anders als die kamera-abhängigen Änderungen oben:
+  Galerie-Vorschau braucht keine Kamera, nur vorhandene Dateien) — Testsammlung mit drei künstlich eingefügten
+  Foto-Dateien unter einem gemeinsamen Tag angelegt, Wisch vorwärts (Rot→Grün→Blau) und rückwärts bestätigt,
+  „Schließen" schließt zuverlässig unabhängig von der gerade sichtbaren Seite.
 
 ---
 

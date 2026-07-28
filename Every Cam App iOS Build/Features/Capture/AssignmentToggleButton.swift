@@ -6,16 +6,18 @@ import SwiftUI
 // (Nutzerwunsch, abweichend von spec.md §9.4) — die Anzahl bleibt nur noch
 // für VoiceOver im accessibilityLabel erhalten.
 //
-// Runder Punkt in `action.tag` als Hinweis auf den Panel-Inhalt darunter
-// (aus TrickCam übernommen, dort noch zweifarbig Bail-Rot/Make-Grün geteilt —
-// entfällt mit dem flachen Tag-System, das keine zwei Rollen mehr kennt, siehe
-// CLAUDE.md §6) mit dünnem weißem Rand. Trägt seit dem Nutzerwunsch vom
-// 2026-07-28 zusätzlich die Marke (`LogoMark`-Asset, aus
-// `EveryCam_Mark_B_transparent.png`) über der `action.tag`-Füllung — der
-// Farbton bleibt als Grundfläche erhalten (behält die etablierte
-// Tag-Bedeutung des Tokens), die Marke macht den Button zugleich als
-// Marken-Element erkennbar. Inner-Kreis dafür von 20pt auf 30pt vergrößert,
-// sonst wäre die Marke bei diesem Maßstab nicht erkennbar.
+// Ausklapp-Button zeigt die Marke (`LogoMark`-Asset, aus
+// `EveryCam_Mark_B_transparent.png`) direkt auf der Kontrast-Hinterlegung.
+// **Korrektur (Nutzerwunsch, nach Sichten auf dem physischen Gerät,
+// 2026-07-29):** Die ursprüngliche Fassung zeigte die Marke klein auf einem
+// separaten, dunkleren `action.tag`-gefüllten Innenkreis (siehe Git-Historie)
+// — wirkte am Gerät wie zwei ineinander verschachtelte Kreise und ließ die
+// Marke selbst zu klein/dünn wirken. Der Innenkreis entfällt ersatzlos, die
+// Marke liegt jetzt direkt auf der neutralen Hinterlegung und ist dadurch
+// spürbar größer (fast die volle Hinterlegungsfläche statt nur des kleinen
+// Innenkreises) und kräftiger lesbar. Der `action.tag`-Farbton ist an dieser
+// Stelle damit nicht mehr vertreten — die Marke selbst übernimmt jetzt die
+// Funktion, den Button als Zuordnungs-Panel-Zugriff erkennbar zu machen.
 //
 // Eigene, weniger transparente Kontrast-Hinterlegung statt des gemeinsamen
 // contrastCircleBackground() (aus TrickCam übernommen) — dessen
@@ -30,28 +32,21 @@ import SwiftUI
 // derselben Höhe wie Blitz/Auflösungs-Anzeige in CaptureTopBar lag — mit
 // `.top` als Anker wächst der Button ausschließlich nach unten, die Oberkante
 // bleibt exakt an der von CaptureView vorgegebenen Position stehen, egal wie
-// diameter/scale sich künftig ändern.
+// scale sich künftig ändert.
 struct AssignmentToggleButton: View {
     let isExpanded: Bool
     let unsortedCount: Int
     let onToggle: () -> Void
 
-    private let diameter: CGFloat = 30
     private let scale: CGFloat = 1.05 * 1.05 * 1.10
     private let backgroundOpacity: CGFloat = 0.85
 
     var body: some View {
         Button(action: onToggle) {
-            Circle()
-                .fill(Theme.actionTag)
-                .frame(width: diameter, height: diameter)
-                .overlay {
-                    Image("LogoMark")
-                        .resizable()
-                        .scaledToFit()
-                        .padding(3)
-                }
-                .overlay(Circle().stroke(.white, lineWidth: 1))
+            Image("LogoMark")
+                .resizable()
+                .scaledToFit()
+                .padding(4)
                 .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
                 .background(Theme.surfacePanel.opacity(backgroundOpacity))
                 .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))

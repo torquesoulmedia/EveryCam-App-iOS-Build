@@ -426,7 +426,7 @@ Entspricht TrickCams Session-Galerie, mit folgenden Anpassungen:
 |---|---|
 | **Gliederung** | „Nicht zugeordnet" (falls vorhanden) → ein Abschnitt **pro Tag mit mindestens einer Aufnahme**. Kein fester „Bail"-Abschnitt am Ende mehr — alle Tag-Abschnitte sind gleichwertig. Reihenfolge der Tag-Abschnitte: siehe [§16](#16-noch-offen--annahmen) (Annahme: Anlage-Reihenfolge der Tags). |
 | **Thumbnails** | Für Videos unverändert per `AVAssetImageGenerator`-Frame-Extraktion. Für Fotos direkt aus der Bilddatei (downsampled), gecacht in `.thumbs/` wie gehabt. |
-| **Tap auf Foto-Thumbnail** | Öffnet eine einfache Bild-Vollansicht (Zoom/Pan), analog zur bestehenden Video-Player-Ansicht. |
+| **Tap auf ein Thumbnail** | Öffnet eine Vollbild-Vorschau (Foto: Zoom/Pan; Video: Player) und erlaubt per Wisch, direkt zur nächsten/vorherigen Aufnahme **desselben Abschnitts** (Tag oder Unsorted) zu blättern, ohne zurück zum Raster zu müssen (Nutzerwunsch, 2026-07-28). Foto- und Video-Seiten können sich dabei abwechseln, je nachdem, was der Abschnitt enthält. |
 | **Korrektur (verschieben)** | „Verschieben nach…" listet jetzt **alle Tags der Sammlung** statt „Athlet oder Bail". |
 | **Teilen** | Unverändert, natives Share Sheet, funktioniert für Fotos und Videos gleichermaßen. |
 | **Dual-Modus-Anzeige** | Entfällt in v1 vollständig aus der Galerie-Darstellung, da der Modus nicht aktiv nutzbar ist (Code/Datenmodell-Unterstützung bleibt für die spätere Reaktivierung erhalten). |
