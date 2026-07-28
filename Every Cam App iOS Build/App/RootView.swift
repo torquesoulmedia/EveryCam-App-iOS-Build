@@ -10,6 +10,7 @@ struct RootView: View {
     @State private var settingsStore = SettingsStore()
     @State private var isShowingLaunchScreen = true
     @State private var isSplashVideoFinished = false
+    @State private var isShowingDataSafetyReminder = false
 
     var body: some View {
         ZStack {
@@ -50,12 +51,29 @@ struct RootView: View {
             // entsprechend spät in der Dateien-App auf (SPEC.md §3).
             _ = try? await collectionStore.listCollections()
         }
+        // Datensicherheits-Hinweis (Nutzerwunsch) — eigener Sheet-Zustand statt
+        // an isShowingLaunchScreen gekoppelt, damit er unabhängig vom Splash
+        // wieder erscheinen kann (alle 30 Tage, siehe SettingsStore).
+        .sheet(isPresented: $isShowingDataSafetyReminder) {
+            DataSafetyReminderView(settingsStore: settingsStore)
+        }
     }
 
     private func dismissLaunchScreenIfReady() {
         guard isSplashVideoFinished, appState.isCaptureScreenReady, isShowingLaunchScreen else { return }
         withAnimation(.easeInOut(duration: 0.3)) {
             isShowingLaunchScreen = false
+        }
+        // Kurze Verzögerung, damit der Hinweis nicht mit der Splash-Ausblend-
+        // Animation kollidiert (Nutzerwunsch: "ohne den Nutzer zu nerven" —
+        // ein Sheet, das exakt im selben Moment wie der Splash aufploppt,
+        // wirkt eher wie ein Fehler als wie eine bewusste Information).
+        if settingsStore.shouldShowDataSafetyReminder {
+            settingsStore.recordDataSafetyReminderShown()
+            Task {
+                try? await Task.sleep(for: .seconds(0.6))
+                isShowingDataSafetyReminder = true
+            }
         }
     }
 

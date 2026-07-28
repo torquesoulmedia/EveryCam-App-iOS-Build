@@ -408,6 +408,14 @@ Entspricht TrickCams Sessions-Übersicht ([§10](../Claude%20Code%20TrickCam/spe
 je Zeile zum Festlegen der aktiven Sammlung, zweistufige Löschbestätigung, Mehrfachauswahl. Keine inhaltliche
 Änderung gegenüber TrickCam nötig — der Wegfall von Bail/Make betrifft diesen Bildschirm nicht.
 
+**Export (Nutzerwunsch, 2026-07-28):** Jede Zeile hat zusätzlich zur „Löschen"-Wisch-Aktion eine
+„Exportieren"-Wisch-Aktion; in der Mehrfachauswahl steht ebenso eine Sammelaktion „Exportieren (n)" neben
+„Löschen (n)" zur Verfügung. Beide öffnen `UIDocumentPickerViewController(forExporting:asCopy:)` — der native
+iOS-Dokumenten-Picker — und kopieren den/die gewählten Sammlung-Ordner vollständig an einen vom Nutzer
+bestimmten Ort (Dateien auf dem Gerät, iCloud Drive, oder ein Drittanbieter-Speicher wie Google Drive/Dropbox,
+falls installiert). Rein additiv: die Originaldaten in der App-Sandbox bleiben unverändert, es handelt sich um
+eine Sicherungskopie, kein Verschieben.
+
 ---
 
 ## 11. Bildschirm 3 — Sammlung-Galerie
@@ -422,6 +430,7 @@ Entspricht TrickCams Session-Galerie, mit folgenden Anpassungen:
 | **Korrektur (verschieben)** | „Verschieben nach…" listet jetzt **alle Tags der Sammlung** statt „Athlet oder Bail". |
 | **Teilen** | Unverändert, natives Share Sheet, funktioniert für Fotos und Videos gleichermaßen. |
 | **Dual-Modus-Anzeige** | Entfällt in v1 vollständig aus der Galerie-Darstellung, da der Modus nicht aktiv nutzbar ist (Code/Datenmodell-Unterstützung bleibt für die spätere Reaktivierung erhalten). |
+| **Export (Nutzerwunsch, 2026-07-28)** | Zusätzlicher Menüpunkt „Sammlung exportieren" im „⋯"-Menü — exportiert die gesamte, gerade geöffnete Sammlung über denselben `UIDocumentPickerViewController`-Weg wie in der Sammlungen-Übersicht ([§10](#10-bildschirm-2--sammlungen-übersicht)), ohne zurück navigieren zu müssen. |
 
 ---
 
@@ -457,6 +466,22 @@ Instagram-Account ist ersatzlos entfernt (Nutzerentscheidung, kein EveryCam-Prof
 `CLAUDE.md` §7.
 
 **Single/Dual:** Kein Eintrag in den Settings in v1 (siehe [§7.2](#72-singledual-in-v1-nicht-sichtbar)).
+
+#### Neuer Dauerhinweis im Abschnitt „Gerät" (Nutzerwunsch, 2026-07-28)
+
+Direkt unter Speicher/Version steht permanent ein unaufdringlicher Hinweistext: alle Sammlungen sind
+ausschließlich lokal gespeichert, es gibt keine Cloud-Sicherung, beim Löschen der App gehen sie unwiderruflich
+verloren — mit Verweis auf die Export-Funktion ([§10](#10-bildschirm-2--sammlungen-übersicht)). Kein eigenes
+Popup an dieser Stelle, nur sichtbar, sobald Einstellungen geöffnet wird.
+
+#### Neu: Datensicherheits-Hinweis beim App-Start (Nutzerwunsch, 2026-07-28)
+
+Ergänzend zum Dauerhinweis oben zeigt die App ein Sheet mit derselben Kernaussage (lokal-only, kein Cloud,
+unwiderruflicher Verlust bei App-Löschung, Verweis auf „Exportieren"): einmalig beim allerersten Start, danach
+alle 30 Tage erneut, bis der Nutzer „Nicht mehr anzeigen" wählt. Erscheint zeitlich leicht versetzt nach dem
+Ausblenden des Video-Splash-Screens (`RootView`/`LaunchScreenView`), nicht gleichzeitig damit, damit sich die
+beiden Übergänge nicht überlagern. Kein Warn-Rot/-Gelb — Dringlichkeit kommt über Text/Hierarchie, nicht über
+Farbe (siehe [§6](#6-style-guide)).
 
 ---
 

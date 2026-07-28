@@ -104,6 +104,12 @@ struct SettingsView: View {
                     LabeledContent("Speicher", value: DeviceStorage.formattedSummary(storageInfo, locale: settingsStore.effectiveLocale))
                 }
                 LabeledContent("Version", value: settingsStore.appVersion)
+                // Passiver Dauerhinweis (Nutzerwunsch, ergänzt den
+                // wiederkehrenden DataSafetyReminderView) — immer sichtbar,
+                // sobald Einstellungen geöffnet wird, ganz ohne eigenes Popup.
+                Text("Alle Sammlungen sind ausschließlich lokal gespeichert, es gibt keine Cloud-Sicherung. Beim Löschen der App gehen sie unwiderruflich verloren — regelmäßiges Exportieren in der Sammlungen-Übersicht schützt davor.")
+                    .font(Typography.caption)
+                    .foregroundStyle(Theme.textSecondary)
             }
             .listRowBackground(Theme.surfacePanel)
         }

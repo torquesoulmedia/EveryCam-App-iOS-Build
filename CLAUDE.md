@@ -235,6 +235,51 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
   `cityLineFR/IT/NL/PL` (gleiche Adresse, nur der Ländername übersetzt). Betroffene Dateien: `HandbuchContent.swift`,
   `HandbuchView.swift`, `HandbuchIconLegend.swift`, `TermsContent.swift`, `TermsView.swift`, `ImpressumView.swift`.
   Build + volle Testsuite (123/123) grün nach der Erweiterung.
+- **Katalog-Pollution durch Auto-Extraktion behoben (2026-07-28):** Bei der Sprach-Erweiterung fiel auf, dass
+  jeder `xcodebuild build`-Lauf `Localizable.xcstrings` stillschweigend um Dutzende leere Einträge ergänzte —
+  Xcodes projektweite Swift-String-Auto-Extraktion (`SWIFT_EMIT_LOC_STRINGS`) zog dabei auch die bewusst
+  katalogunabhängigen Handbuch-/Terms-/Impressum-Literale hinein (§5.1-Ausnahme), jeweils mit leerem
+  `localizations`-Dict und ohne echten Nutzen. Ursache behoben statt nur Symptom bereinigt: `project.pbxproj`s
+  `SWIFT_EMIT_LOC_STRINGS` für das Haupt-Target (Debug **und** Release) von `YES` auf `NO` gesetzt — der Katalog
+  wird in diesem Projekt ohnehin ausschließlich manuell gepflegt (siehe alle bisherigen Katalog-Updates), eine
+  automatische Extraktion lief dem nur zuwider. 85 bereits vorhandene Leer-Einträge (42 aus früheren Builds, 43
+  aus den Builds während dieser Änderung) entfernt, Katalog danach bei sauberen 180 Schlüsseln, ein erneuter
+  vollständiger Build bestätigt: keine neuen Leer-Einträge mehr.
+- **Sammlung-Export** (`CollectionExportPicker.swift`, Nutzerwunsch) — `UIDocumentPickerViewController(forExporting:asCopy:)`
+  als dokumentierte UIKit-Ausnahme (CLAUDE.md §3), kopiert eine oder mehrere Sammlung-Ordner systemseitig an
+  einen vom Nutzer gewählten Ort (Dateien auf dem Gerät, iCloud Drive, Drittanbieter) — genau der native Weg,
+  den auch die Dateien-App selbst für „Duplizieren nach…" nutzt. `asCopy: true` lässt die App-Sandbox-Kopie
+  unangetastet, es ist eine zusätzliche Sicherung, kein Verschieben. Erreichbar über: Wisch-Aktion "Exportieren"
+  pro Zeile in `CollectionListView` (neben „Löschen"), Sammelaktion "Exportieren (n)" im Mehrfachauswahl-Menü
+  derselben Ansicht, und "Sammlung exportieren" im „⋯"-Menü der geöffneten Galerie (`GalleryView`) für die
+  gerade betrachtete Sammlung. Nutzt die bereits vorhandene `MediaCollectionStore.collectionFolderURL(forCollectionId:)`,
+  kein neuer Service nötig. **Auf dem Simulator visuell verifiziert (2026-07-28):** Wisch-Aktion und
+  Überlaufmenü-Eintrag lösen den nativen Picker korrekt aus, ein Export in einen anderen Ordner erzeugt dort
+  nachweislich eine vollständige, unabhängige Kopie (`collection.json` + `Unsorted/`), das Original bleibt
+  unverändert.
+- **Datensicherheits-Hinweis** (`DataSafetyReminderView.swift`, Nutzerwunsch: sicherstellen, dass der Nutzer den
+  Lokal-only-Charakter der App wirklich registriert) — dreistufig:
+  1. Ein Sheet erklärt, dass alle Sammlungen ausschließlich lokal liegen (kein iCloud/Cloud, CLAUDE.md §8) und
+     beim Löschen der App unwiderruflich verloren sind, mit Verweis auf die neue Export-Funktion. Erscheint
+     einmalig beim allerersten Start und danach alle 30 Tage erneut (`SettingsStore.shouldShowDataSafetyReminder`,
+     zeitbasiert statt launch-gezählt, damit Vielnutzer nicht öfter genervt werden als Gelegenheitsnutzer),
+     jederzeit per "Nicht mehr anzeigen" dauerhaft abschaltbar. `nil` bei `lastDataSafetyReminderShownAt` deckt
+     den Erstlaunch-Fall automatisch mit ab, kein eigenes Flag nötig. Ausgelöst in `RootView` erst 0,6 s nach
+     dem Splash-Ausblenden, damit beide Animationen nicht kollidieren — `recordDataSafetyReminderShown()` wird
+     dabei sofort beim Anzeigen aufgerufen, nicht erst beim Schließen, damit auch ein Wegwischen ohne Button-Tap
+     als "gesehen" zählt.
+  2. Ein permanenter, unaufdringlicher Hinweistext (`Typography.caption`, `Theme.textSecondary`) im „Gerät"-
+     Abschnitt der Einstellungen, ganz ohne eigenes Popup — sichtbar, sobald der Nutzer Einstellungen öffnet.
+  3. Bewusst kein Warn-Rot/-Gelb an keiner der beiden Stellen (CLAUDE.md §6.2) — Dringlichkeit kommt über
+     Typografie/Hierarchie, nicht über Farbe.
+  Neue Tests in `SettingsStoreTests.swift` decken Erstlaunch, Cooldown direkt nach dem Anzeigen, Wiederauftauchen
+  nach 30 Tagen und den dauerhaften Opt-out ab.
+  **Bugfix bei der Simulator-Verifikation (2026-07-28):** Das ursprünglich gewählte SF Symbol
+  `externaldrive.badge.exclamationmark` rendert auf diesem SDK sichtbar falsch (ein Auto-Symbol statt einer
+  Festplatte) — genau das Risiko, vor dem CLAUDE.md bei unsicheren SF-Symbol-Namen bereits an anderer Stelle
+  warnt (siehe "ZL"-Textbadge-Präzedenzfall in `LensPickerPanel`). Durch das gebotene `.attach`+Screenshot vor
+  dem Abschluss gefunden, nicht durch Code-Review — Ersetzt durch `iphone`, ein garantiert vorhandenes,
+  eindeutiges Symbol; danach visuell erneut bestätigt.
 
 ---
 

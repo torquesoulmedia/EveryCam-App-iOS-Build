@@ -174,4 +174,55 @@ struct SettingsStoreTests {
         #expect(VideoFileFormat.mov.displayLabel == ".MOV")
         #expect(VideoFileFormat.mp4.displayLabel == ".MP4")
     }
+
+    // MARK: - Datensicherheits-Hinweis (Nutzerwunsch)
+
+    @Test func dataSafetyReminderShowsOnFirstLaunch() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(userDefaults: defaults)
+
+        // nil bei lastDataSafetyReminderShownAt deckt den Erstlaunch-Fall ab,
+        // ganz ohne eigenes "istErsterStart"-Flag.
+        #expect(store.shouldShowDataSafetyReminder)
+    }
+
+    @Test func dataSafetyReminderStaysHiddenRightAfterBeingShown() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(userDefaults: defaults)
+        store.recordDataSafetyReminderShown()
+
+        #expect(!store.shouldShowDataSafetyReminder)
+    }
+
+    @Test func dataSafetyReminderReappearsAfterThirtyDays() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(userDefaults: defaults)
+        store.recordDataSafetyReminderShown()
+
+        // Simuliert Zeitablauf, indem der gespeicherte Zeitstempel direkt auf
+        // vor 31 Tagen zurückgesetzt wird, statt tatsächlich zu warten.
+        defaults.set(Date().addingTimeInterval(-31 * 24 * 60 * 60), forKey: "settings.lastDataSafetyReminderShownAt")
+        let reloaded = SettingsStore(userDefaults: defaults)
+
+        #expect(reloaded.shouldShowDataSafetyReminder)
+    }
+
+    @Test func dataSafetyReminderPermanentDismissalPersistsAndOverridesInterval() {
+        let (defaults, suiteName) = makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = SettingsStore(userDefaults: defaults)
+        store.permanentlyDismissDataSafetyReminder()
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        // Auch ganz ohne je gezeigt worden zu sein (lastShown == nil) bleibt
+        // die Erinnerung nach explizitem Opt-out dauerhaft aus.
+        #expect(!reloaded.shouldShowDataSafetyReminder)
+    }
 }

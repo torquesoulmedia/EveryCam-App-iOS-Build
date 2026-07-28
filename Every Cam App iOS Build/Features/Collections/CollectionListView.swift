@@ -118,6 +118,14 @@ struct CollectionListView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
+            // Sammlung-Export (Nutzerwunsch) — derselbe Sheet-Binding-Aufbau
+            // wie shareURLs in GalleryView.
+            .sheet(isPresented: Binding(
+                get: { viewModel.exportURLs != nil },
+                set: { if !$0 { viewModel.exportURLs = nil } }
+            )) {
+                if let exportURLs = viewModel.exportURLs { CollectionExportPicker(urls: exportURLs) }
+            }
             .task {
                 await viewModel.loadCollections()
             }
@@ -186,6 +194,19 @@ struct CollectionListView: View {
             }
         }
         if viewModel.isSelectionMode {
+            // Export der Mehrfachauswahl (Nutzerwunsch) — sitzt vor Löschen im
+            // selben Überlaufmenü, analog zum Aufbau von Löschen/Verschieben
+            // in der Galerie.
+            ToolbarItem(placement: .secondaryAction) {
+                if viewModel.selectedCollectionIDs.isEmpty {
+                    Button("Exportieren") {}
+                        .disabled(true)
+                } else {
+                    Button("Exportieren (\(viewModel.selectedCollectionIDs.count))") {
+                        Task { await viewModel.exportSelectedCollections() }
+                    }
+                }
+            }
             ToolbarItem(placement: .secondaryAction) {
                 // Ohne Auswahl grau/deaktiviert statt rot, analog zur Galerie
                 // (aus TrickCam übernommen) — erst mit markierten Sammlungen
@@ -224,6 +245,13 @@ struct CollectionListView: View {
                             Button("Löschen", role: .destructive) {
                                 viewModel.confirmDelete(collection)
                             }
+                            // Grauton statt System-Blau (CLAUDE.md §6.2) — ohne
+                            // eigenes .tint würde diese nicht-destruktive
+                            // Swipe-Action in der Akzentfarbe erscheinen.
+                            Button("Exportieren") {
+                                Task { await viewModel.exportCollection(collection) }
+                            }
+                            .tint(Theme.textPrimary)
                         }
                 }
             }

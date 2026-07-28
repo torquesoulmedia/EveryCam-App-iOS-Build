@@ -28,6 +28,11 @@ final class CollectionListViewModel {
     var isShowingBulkDeleteConfirmation = false
     var isShowingFinalBulkDeleteConfirmation = false
 
+    // Sammlung-Export (Nutzerwunsch) — treibt CollectionExportPicker als Sheet
+    // an, analog zu shareURLs in GalleryView. `nil` = kein Export gerade
+    // aktiv; sobald befüllt, zeigt CollectionListView den Picker.
+    var exportURLs: [URL]?
+
     var errorMessage: String?
     var isShowingError = false
 
@@ -135,6 +140,32 @@ final class CollectionListViewModel {
         }
         isSelectionMode = false
         selectedCollectionIDs = []
+    }
+
+    // MARK: - Export (Nutzerwunsch)
+
+    /// Exportiert eine einzelne Sammlung — der Ordner selbst wird per
+    /// CollectionExportPicker an einen vom Nutzer gewählten Ort kopiert.
+    func exportCollection(_ collection: MediaCollection) async {
+        do {
+            exportURLs = [try await collectionStore.collectionFolderURL(forCollectionId: collection.id)]
+        } catch {
+            present(error)
+        }
+    }
+
+    /// Exportiert alle in der Mehrfachauswahl markierten Sammlungen in einem
+    /// Aufruf des Pickers — UIDocumentPickerViewController(forExporting:)
+    /// akzeptiert mehrere URLs gleichzeitig, kein eigener Batch-Code nötig.
+    func exportSelectedCollections() async {
+        var folders: [URL] = []
+        for id in selectedCollectionIDs {
+            if let folder = try? await collectionStore.collectionFolderURL(forCollectionId: id) {
+                folders.append(folder)
+            }
+        }
+        guard !folders.isEmpty else { return }
+        exportURLs = folders
     }
 
     private func present(_ error: Error) {

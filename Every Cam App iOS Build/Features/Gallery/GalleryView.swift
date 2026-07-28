@@ -14,6 +14,7 @@ struct GalleryView: View {
 
     @State private var playingItem: GalleryThumbnailItem?
     @State private var shareURLs: [URL]?
+    @State private var exportURLs: [URL]?
     @State private var isShowingTagManagement = false
 
     init(collectionId: UUID, collectionStore: MediaCollectionStore, settingsStore: SettingsStore) {
@@ -58,6 +59,15 @@ struct GalleryView: View {
                 set: { if !$0 { shareURLs = nil } }
             )) {
                 if let shareURLs { ShareSheet(items: shareURLs) }
+            }
+            // Sammlung-Export (Nutzerwunsch) — derselbe Ordner-URL, den auch
+            // die Video-/Foto-Wiedergabe schon aus viewModel.sessionFolder
+            // auflöst.
+            .sheet(isPresented: Binding(
+                get: { exportURLs != nil },
+                set: { if !$0 { exportURLs = nil } }
+            )) {
+                if let exportURLs { CollectionExportPicker(urls: exportURLs) }
             }
             .confirmationDialog(
                 "Aufnahme löschen?",
@@ -153,6 +163,17 @@ struct GalleryView: View {
             ToolbarItem(placement: .secondaryAction) {
                 Button("Als aktive Sammlung festlegen") {
                     appState.activeCollectionId = collectionId
+                }
+            }
+        }
+        // Export dieser einen Sammlung (Nutzerwunsch) — praktisch direkt beim
+        // Sichten, ohne zurück zur Sammlungen-Übersicht wechseln zu müssen.
+        if !viewModel.isSelectionMode {
+            ToolbarItem(placement: .secondaryAction) {
+                Button("Sammlung exportieren") {
+                    if let sessionFolder = viewModel.sessionFolder {
+                        exportURLs = [sessionFolder]
+                    }
                 }
             }
         }

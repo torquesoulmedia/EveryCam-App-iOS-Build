@@ -200,6 +200,8 @@ final class SettingsStore {
         static let audioCodec = "settings.audioCodec"
         static let appLanguage = "settings.appLanguage"
         static let photoFormat = "settings.photoFormat"
+        static let dataSafetyReminderDismissed = "settings.dataSafetyReminderDismissed"
+        static let lastDataSafetyReminderShownAt = "settings.lastDataSafetyReminderShownAt"
     }
 
     private let userDefaults: UserDefaults
@@ -279,6 +281,40 @@ final class SettingsStore {
     // eine konkrete Locale, auch bei appLanguage == .system.
     var effectiveLocale: Locale { appLanguage.locale ?? .autoupdatingCurrent }
 
+    // Datensicherheits-Hinweis (Nutzerwunsch) — die App speichert
+    // ausschließlich lokal in der App-Sandbox (CLAUDE.md §3/§8, kein
+    // Cloud/iCloud), ein gelöschtes App bedeutet also unwiderruflichen
+    // Datenverlust. `DataSafetyReminderView` wird über `shouldShowDataSafetyReminder`
+    // gesteuert: `nil` bei lastDataSafetyReminderShownAt heißt "noch nie
+    // gezeigt" und deckt damit zugleich den Erstlaunch-Fall ab, ganz ohne
+    // eigenes "istErsterStart"-Flag. Danach alle 30 Tage erneut, bis der
+    // Nutzer explizit "Nicht mehr anzeigen" wählt — bewusst zeitbasiert statt
+    // launch-gezählt, damit App-Vielnutzer nicht öfter genervt werden als
+    // Gelegenheitsnutzer.
+    private static let dataSafetyReminderInterval: TimeInterval = 30 * 24 * 60 * 60
+
+    var dataSafetyReminderPermanentlyDismissed: Bool {
+        didSet { userDefaults.set(dataSafetyReminderPermanentlyDismissed, forKey: Keys.dataSafetyReminderDismissed) }
+    }
+
+    private(set) var lastDataSafetyReminderShownAt: Date? {
+        didSet { userDefaults.set(lastDataSafetyReminderShownAt, forKey: Keys.lastDataSafetyReminderShownAt) }
+    }
+
+    var shouldShowDataSafetyReminder: Bool {
+        guard !dataSafetyReminderPermanentlyDismissed else { return false }
+        guard let lastShown = lastDataSafetyReminderShownAt else { return true }
+        return Date().timeIntervalSince(lastShown) >= Self.dataSafetyReminderInterval
+    }
+
+    func recordDataSafetyReminderShown() {
+        lastDataSafetyReminderShownAt = Date()
+    }
+
+    func permanentlyDismissDataSafetyReminder() {
+        dataSafetyReminderPermanentlyDismissed = true
+    }
+
     let appVersion: String
 
     init(userDefaults: UserDefaults = .standard) {
@@ -333,6 +369,9 @@ final class SettingsStore {
         } else {
             frameRate = .fps30
         }
+
+        dataSafetyReminderPermanentlyDismissed = userDefaults.bool(forKey: Keys.dataSafetyReminderDismissed)
+        lastDataSafetyReminderShownAt = userDefaults.object(forKey: Keys.lastDataSafetyReminderShownAt) as? Date
 
         let shortVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–"
         let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "–"
