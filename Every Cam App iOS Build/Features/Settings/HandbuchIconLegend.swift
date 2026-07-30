@@ -51,16 +51,16 @@ struct HandbuchIconLegend: View {
         }
     }
 
-    // Exakt dieselbe Modifier-Kette wie das private ContrastIconButtonStyle
-    // in CaptureControlsRow.swift (dort file-private, deshalb hier
-    // dupliziert statt importiert) — garantiert pixelgleiche Darstellung.
+    // Reines Icon ohne eigene Hinterlegung (Redesign, Nutzerwunsch, "Option
+    // 2", 2026-07-29) — Zahnrad/Plus/Tag-Verwalten haben seit dem
+    // Material-Redesign keinen eigenen Icon-Kreis mehr, die Hinterlegung
+    // gehört jetzt der gemeinsamen Gruppen-Kapsel in CaptureControlsRow, nicht
+    // mehr dem einzelnen Icon — hier bewusst ohne Kapsel gezeigt, damit die
+    // Legende nicht von der tatsächlichen Optik abweicht.
     private static func contrastIcon(_ systemName: String) -> some View {
         Image(systemName: systemName)
             .foregroundStyle(Theme.textPrimary)
             .frame(width: 44, height: 44)
-            .background(Theme.surfacePanel.opacity(0.6))
-            .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))
-            .clipShape(Circle())
     }
 
     private struct Item: Identifiable {
@@ -273,13 +273,16 @@ struct HandbuchIconLegend: View {
             meaningNL: "\"ZL\"-schakelaar naast 0,5x — vergrendelt de zoom in één richting, afhankelijk van vanaf welke lens deze wordt geactiveerd: geactiveerd op 0,5x blijft de zoom binnen het optische bereik van de ultragroothoeklens (geen wisseling naar 1x/tele); geactiveerd op 1x (omgekeerde richting) blijft naar boven (2x/5x/10x) alles vrij, alleen de terugweg naar 0,5x is vergrendeld. Activeren kan alleen vanaf 0,5x of 1x, standaard uitgeschakeld en moet elke keer handmatig worden geactiveerd — uitschakelen werkt daarentegen altijd.",
             meaningPL: "Przełącznik „ZL” obok 0,5x — blokuje zoom w jednym kierunku, w zależności od tego, z jakiego obiektywu został włączony: włączony na 0,5x pozostawia zoom w zakresie optycznym samego obiektywu ultraszerokokątnego (brak przełączania na 1x/tele); włączony na 1x (odwrotny kierunek) pozwala swobodnie zoomować w górę (2x/5x/10x), zablokowany jest tylko powrót do 0,5x. Można go włączyć tylko z poziomu 0,5x lub 1x, domyślnie jest wyłączony i trzeba go włączać ręcznie każdy raz — wyłączanie natomiast działa w każdej chwili."
         ) {
+            // Zeigt den aktiven Zustand (gefüllte Pille) — im inaktiven
+            // Zustand sitzt "ZL" als reiner Text auf der gemeinsamen
+            // Material-Kapsel der ganzen Objektivauswahl-Leiste (siehe
+            // LensPickerPanel) und wäre isoliert kaum erkennbar.
             Button("ZL", action: {})
                 .font(Typography.buttonLabel)
-                .foregroundStyle(Theme.textPrimary)
+                .foregroundStyle(Theme.backgroundPrimary)
                 .frame(minWidth: Layout.minTapTarget, minHeight: Layout.minTapTarget)
-                .background(Theme.surfacePanel)
-                .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1.5))
-                .clipShape(Circle())
+                .background(Theme.textPrimary)
+                .clipShape(Capsule())
         },
         Item(
             meaningDE: "Sortier-Menü in der Sammlungen-Übersicht",

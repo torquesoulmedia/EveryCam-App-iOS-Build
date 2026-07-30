@@ -12,9 +12,10 @@ struct RecordButton: View {
     let action: () -> Void
 
     // Um 9% vergrößert (Nutzerwunsch, nach Test auf physischem iPhone 16 Pro,
-    // 2026-07-28) — alle drei Maße bleiben zueinander proportional, damit der
+    // 2026-07-28), dann um weitere 9% vergrößert (Nutzerwunsch, 2026-07-30) —
+    // alle drei Maße bleiben zueinander proportional, damit der
     // Kreis-zu-Quadrat-Formwechsel exakt wie zuvor aussieht, nur größer.
-    private static let sizeScale: CGFloat = 1.09
+    private static let sizeScale: CGFloat = 1.09 * 1.09
     private let outerDiameter: CGFloat = 72 * sizeScale
     private let restDiameter: CGFloat = 60 * sizeScale
     private let squareSide: CGFloat = 32 * sizeScale

@@ -20,12 +20,12 @@ struct CropGuideToggle: View {
 }
 
 // Geteilt mit CompositionGridToggle (Update, Nutzerwunsch) — beide sind
-// funktional gleichartige Ein-/Ausklapp-Icons neben dem Zahnrad. Dieselbe
-// Kontrast-Hinterlegung wie Zahnrad/Plus/Athlet (Update, Nutzerwunsch,
-// Bugfix — zuvor nur eine Umrandung ohne Füllung im inaktiven Zustand,
-// dadurch optisch inkonsistent zu den übrigen Icons dieser Zeile). Aktiv/
-// inaktiv zeigt sich ausschließlich über die Icon-Farbe (weiß/grau), nicht
-// mehr über Hintergrund oder Randstärke.
+// funktional gleichartige Ein-/Ausklapp-Icons neben dem Zahnrad. Aktiv/
+// inaktiv zeigt sich ausschließlich über die Icon-Farbe (dunkel/grau), nicht
+// über Hintergrund oder Randstärke — kein eigener Icon-Kreis mehr (Redesign,
+// Nutzerwunsch, "Option 2", 2026-07-29): sitzt jetzt zusammen mit dem
+// Zahnrad in einer gemeinsamen Material-Kapsel (siehe CaptureControlsRow),
+// statt jedes Icon einzeln zu hinterlegen.
 struct RasterToggleButtonStyle: ButtonStyle {
     let isActive: Bool
     var size: CGFloat = Layout.minTapTarget
@@ -35,9 +35,6 @@ struct RasterToggleButtonStyle: ButtonStyle {
             .font(Typography.buttonLabel)
             .foregroundStyle(isActive ? Theme.textPrimary : Theme.textSecondary)
             .frame(width: size, height: size)
-            .background(Theme.surfacePanel.opacity(0.6))
-            .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))
-            .clipShape(Circle())
             .opacity(configuration.isPressed ? 0.85 : 1.0)
     }
 }

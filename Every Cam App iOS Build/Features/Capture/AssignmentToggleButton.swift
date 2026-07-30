@@ -25,22 +25,22 @@ import SwiftUI
 // Settings/Sessions, nur dieser eine Button bekommt eine dichtere
 // Hinterlegung.
 //
-// **Korrektur (Nutzerwunsch, nach mehrfachem Sichten auf dem physischen
-// Gerät, 2026-07-29):** Frühere Fassungen vergrößerten den ganzen Button über
-// den Ausgangswert hinaus (erst per `.scaleEffect`, dann direkt als größeres
-// Rahmenmaß) — dadurch war der Button zwar oben bündig mit Blitz/
-// Auflösungs-Anzeige in `CaptureTopBar`, aber spürbar höher als der Rest der
-// Reihe (die Reihe richtet sich an `Layout.minTapTarget` = 44pt aus). `diameter`
-// ist jetzt wieder exakt `Layout.minTapTarget`, identisch zur Höhe der
-// übrigen Reihen-Elemente — kein eigenständiges Vergrößern des Buttons mehr.
-// Die Marke bleibt trotzdem groß/kräftig: Innenabstand nur 2pt, nutzt damit
-// fast die komplette (jetzt wieder reihenkonforme) Kreisfläche aus.
+// **Korrektur (Nutzerwunsch, 2026-07-29):** jetzt fast so groß wie der
+// Aufnahmeknopf (RecordButton.outerDiameter ≈ 78.5pt) statt der
+// reihenkonformen 44pt — der Button soll als Marken-Element bewusst
+// herausstechen, nicht in der Reihe verschwinden. Die Oberkante bleibt trotz
+// der größeren Fläche bündig mit Blitz/Auflösungs-Anzeige, da `.overlay
+// (alignment: .top)` in CaptureView die Oberkante unabhängig von der
+// Elementhöhe verankert — nur nach unten hin ragt der Button jetzt weiter in
+// die Vorschau hinein. Marke füllt die Fläche fast vollständig aus (nur 3pt
+// Innenabstand), damit sie mit dem größeren Kreis mitwächst statt bei
+// gleichbleibendem Abstand nur klein in der Mitte zu sitzen.
 struct AssignmentToggleButton: View {
     let isExpanded: Bool
     let unsortedCount: Int
     let onToggle: () -> Void
 
-    private let diameter: CGFloat = Layout.minTapTarget
+    private let diameter: CGFloat = 76
     private let backgroundOpacity: CGFloat = 0.85
 
     var body: some View {
@@ -48,7 +48,7 @@ struct AssignmentToggleButton: View {
             Image("LogoMark")
                 .resizable()
                 .scaledToFit()
-                .padding(2)
+                .padding(3)
                 .frame(width: diameter, height: diameter)
                 .background(Theme.surfacePanel.opacity(backgroundOpacity))
                 .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))

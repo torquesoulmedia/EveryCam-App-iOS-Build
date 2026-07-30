@@ -5,6 +5,21 @@ import SwiftUI
 // — spec.md ist entsprechend aktualisiert). Das aktive Objektiv wird über
 // surface.panel + border.subtle hervorgehoben, nicht über Farbe (CLAUDE.md §6.2
 // — Rot/Grün bleiben ausschließlich Bail/Make/Aufnahmeknopf vorbehalten).
+//
+// **Redesign (Nutzerwunsch, "Option 2", 2026-07-29):** vorher hatte jedes
+// Objektiv (plus "ZL") seinen eigenen Icon-Kreis — bei 5 Objektiven plus
+// Zoom-Sperre bis zu 6 einzelne Kreise nebeneinander, genau die "Masse an
+// runden hell hinterlegten Kreisen", die nicht gefallen hat. Versuch: die
+// gesamte Leiste in EINER gemeinsamen `.ultraThinMaterial`-Kapsel.
+//
+// **Zurückgerollt (Nutzerwunsch, mit Referenz-Screenshot, 2026-07-30):**
+// die gemeinsame Kapsel doch wieder durch einzelne Kreis-Buttons ersetzt —
+// exakt wie die native iPhone-Kamera-App es zeigt. Unterschied zur alten
+// Vor-Option-2-Fassung: die einzelnen Kreise bekommen jetzt eine dezente,
+// leicht helle `.ultraThinMaterial`-Hinterlegung statt der vollflächigen
+// `surface.panel`-Füllung von vorher — das aktive Objektiv bleibt weiterhin
+// über eine volle `text.primary`-Füllung erkennbar (Segmented-Control-
+// Prinzip, unverändert).
 struct LensPickerPanel: View {
     let lenses: [LensOption]
     let activeLensId: String?
@@ -61,16 +76,21 @@ private struct LensButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Typography.buttonLabel)
-            .foregroundStyle(isActive ? Theme.textPrimary : Theme.textSecondary)
-            .frame(minWidth: Layout.minTapTarget, minHeight: Layout.minTapTarget)
-            // Kontrast-Hinterlegung jetzt auch im inaktiven Zustand (Update,
-            // Nutzerwunsch) — vorher Color.clear ohne Rahmen, dadurch auf
-            // hellem/unruhigem Vorschau-Untergrund kaum lesbar. Gleiches
-            // Prinzip wie ContrastCircleBackground, hier lokal statt über den
-            // gemeinsamen Modifier, da Objektiv-Label breiter als 44pt werden
-            // dürfen (z. B. "10x") — der Modifier erzwingt eine feste Breite.
-            .background(isActive ? Theme.surfacePanel : Theme.surfacePanel.opacity(0.6))
-            .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: isActive ? 1.5 : 1))
+            .foregroundStyle(isActive ? Theme.backgroundPrimary : Theme.textPrimary)
+            .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
+            // Aktives Objektiv: volle text.primary-Füllung (unverändert).
+            // Inaktive: eigener, leicht heller .ultraThinMaterial-Kreis statt
+            // der zuvor vollflächigen surface.panel-Füllung — dezenter, aber
+            // wieder als einzelner Kreis pro Objektiv statt Teil einer
+            // Sammel-Kapsel.
+            .background {
+                if isActive {
+                    Circle().fill(Theme.textPrimary)
+                } else {
+                    Circle().fill(.ultraThinMaterial)
+                }
+            }
+            .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))
             .clipShape(Circle())
             .opacity(configuration.isPressed ? 0.85 : 1.0)
     }

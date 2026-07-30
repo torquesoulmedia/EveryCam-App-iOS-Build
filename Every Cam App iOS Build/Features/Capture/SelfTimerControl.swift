@@ -37,16 +37,14 @@ struct SelfTimerControl: View {
             .foregroundStyle(isActive ? Theme.backgroundPrimary : Theme.textPrimary)
             .padding(.horizontal, isActive ? Layout.spacingS : 0)
             .frame(minWidth: Layout.minTapTarget, minHeight: Layout.minTapTarget)
-            .background(isActive ? Theme.textPrimary : Theme.surfacePanel.opacity(0.6))
-            // Dezenter Rand nur im inaktiven Zustand (Nutzerwunsch, nach Test
-            // auf physischem iPhone 16 Pro: reines Icon über der
-            // Kamera-Vorschau war schlecht erkennbar) — im aktiven Zustand
-            // sorgt die volle Kapsel-Füllung bereits für genug Kontrast.
-            .overlay {
-                if !isActive {
-                    Capsule().stroke(Theme.borderSubtle, lineWidth: 1)
-                }
-            }
+            // Nur im aktiven Zustand eine eigene Füllung (Redesign,
+            // Nutzerwunsch, "Option 2", 2026-07-29) — der inaktive Zustand
+            // sitzt jetzt auf der gemeinsamen Material-Kapsel von
+            // CaptureTopBar.leftControlsGroup statt einer eigenen
+            // Kreis-/Kapsel-Hinterlegung; die aktive Füllung bleibt bestehen,
+            // da sie eine echte Zustandsaussage ist (Timer läuft), keine
+            // reine Kontrast-Dekoration.
+            .background(isActive ? Theme.textPrimary : Color.clear)
             .clipShape(Capsule())
         }
         .disabled(!isEnabled)

@@ -40,7 +40,7 @@ enum TermsProvider {
     static let cityLineNL = "35614 Asslar, Duitsland"
     static let cityLinePL = "35614 Asslar, Niemcy"
     static let email = "torquesoul@icloud.com"
-    static let vatId = "USt-IdNr.: 039 801 31630"
+    static let vatId = "USt-IdNr.: 73018645281"
 }
 
 // Inhalt basiert auf der vom Nutzer bereitgestellten Rechtsvorlage

@@ -73,8 +73,8 @@ struct CaptureControlsRow: View {
                             Button(action: onOpenSettings) {
                                 Image(systemName: "gearshape")
                                     .foregroundStyle(Theme.textPrimary)
+                                    .frame(width: iconSize, height: iconSize)
                             }
-                            .buttonStyle(ContrastIconButtonStyle(size: iconSize))
                             .accessibilityLabel("Einstellungen öffnen")
 
                             // Nur im Dual-Video-Modus — zeigt den konkreten
@@ -92,6 +92,10 @@ struct CaptureControlsRow: View {
                             // unabhängig vom Crop-Ausschnitt.
                             CompositionGridToggle(isActive: isCompositionGridVisible, size: iconSize, onToggle: onToggleCompositionGrid)
                         }
+                        .padding(.horizontal, Layout.spacingS)
+                        .frame(minHeight: Layout.minTapTarget)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .overlay(Capsule().stroke(Theme.borderSubtle, lineWidth: 1))
 
                         Spacer()
 
@@ -99,19 +103,23 @@ struct CaptureControlsRow: View {
                             Button(action: onNewCollection) {
                                 Image(systemName: "plus")
                                     .foregroundStyle(Theme.textPrimary)
+                                    .frame(width: iconSize, height: iconSize)
                             }
-                            .buttonStyle(ContrastIconButtonStyle(size: iconSize))
                             .accessibilityLabel("Neue Sammlung anlegen")
 
                             if hasActiveCollection {
                                 Button(action: onManageTags) {
                                     Image(systemName: "person.badge.plus")
                                         .foregroundStyle(Theme.textPrimary)
+                                        .frame(width: iconSize, height: iconSize)
                                 }
-                                .buttonStyle(ContrastIconButtonStyle(size: iconSize))
                                 .accessibilityLabel("Tags verwalten")
                             }
                         }
+                        .padding(.horizontal, Layout.spacingS)
+                        .frame(minHeight: Layout.minTapTarget)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .overlay(Capsule().stroke(Theme.borderSubtle, lineWidth: 1))
                     }
 
                     HStack {
@@ -145,21 +153,6 @@ struct CaptureControlsRow: View {
                 .padding(.trailing, Layout.spacingM)
             }
         }
-    }
-}
-
-// Dezente Umrandung für frei auf der Vorschau schwebende Icon-Buttons —
-// reine Kontrastverstärkung gegen helle Untergründe, keine Funktionsänderung.
-private struct ContrastIconButtonStyle: ButtonStyle {
-    let size: CGFloat
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .frame(width: size, height: size)
-            .background(Theme.surfacePanel.opacity(0.6))
-            .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))
-            .clipShape(Circle())
-            .opacity(configuration.isPressed ? 0.85 : 1.0)
     }
 }
 

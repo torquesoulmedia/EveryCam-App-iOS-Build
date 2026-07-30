@@ -383,6 +383,45 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
      strukturelle `.top`-Ausrichtungsansatz allein reichte am Gerät wiederholt nicht aus, um die vom Nutzer
      markierte Ziel-Oberkante exakt zu treffen. Der `8`-Wert ist eine Schätzung auf Basis des Screenshots, noch
      nicht am Gerät nachbestätigt — bei Abweichung mit neuem Screenshot nachjustieren.
+- **Icon-/Button-Redesign auf dem Aufnahme-Bildschirm, "Option 2"** (Nutzerwunsch, 2026-07-29) — vollständiges
+  Überdenken aller Icons/Buttons außer dem Aufnahmeknopf, siehe `SPEC.md` §6.3 für die vollständige Begründung
+  und Regeln. Kurzfassung: verwandte Icons teilen sich jetzt eine `.ultraThinMaterial`-Kapsel statt je eines
+  eigenen Icon-Kreises (`CaptureTopBar.leftControlsGroup`, die beiden Icon-Gruppen in `CaptureControlsRow`, die
+  gesamte `LensPickerPanel`-Leiste), `CaptureKindToggle` bekam ein deutlich kontrastreicheres Segmented-
+  Control-Muster (volle `text.primary`-Füllung fürs aktive Segment statt eines dezenten Farbtons).
+  `AssignmentToggleButton` bewusst **nicht** angepasst — soll als Marken-Element auffällig bleiben, nicht in
+  der neuen ruhigeren Optik untergehen. Entfernte, jetzt tote Styles: `ContrastIconButtonStyle`
+  (CaptureControlsRow.swift), die Kreis-Hinterlegung in `RasterToggleButtonStyle`/`LensButtonStyle`.
+  `HandbuchIconLegend.swift`s `contrastIcon(...)`-Helfer und die freistehende "ZL"-Beispieldarstellung
+  entsprechend nachgezogen (CLAUDE.md-Grundsatz: die Legende zeigt immer die echte aktuelle Optik, nie ein
+  veraltetes Abbild). Betrifft laut Nutzerentscheidung ausschließlich den Aufnahme-Bildschirm — Sammlungen-
+  Übersicht/Einstellungen bleiben bei ihrer bisherigen, bereits gruppierten Kapsel-Optik. Wie immer bei
+  Aufnahme-Bildschirm-Änderungen: nur auf dem physischen Gerät wirklich zu beurteilen, hier nur per Build
+  + Code-Review geprüft.
+- **Drei kleinere Korrekturen** (Nutzerwunsch, 2026-07-30):
+  1. USt-IdNr. in `TermsContent.vatId` geändert (039 801 31630 → 73018645281) — einzige Fundstelle im
+     gesamten Code, wirkt sowohl in `TermsView` als auch `ImpressumView`.
+  2. `AssignmentToggleButton.diameter` von `Layout.minTapTarget` (44pt) auf `76` vergrößert — fast so groß wie
+     der Aufnahmeknopf (`RecordButton.outerDiameter ≈ 78.5pt`), Marke mit nur noch 3pt statt 2pt Innenabstand.
+     Die Oberkante bleibt dabei bündig mit Blitz/Auflösungs-Anzeige, weil `.overlay(alignment: .top)` in
+     `CaptureView` die Oberkante unabhängig von der Elementhöhe verankert — nur nach unten hin ragt der Button
+     jetzt weiter in die Vorschau. Noch nicht auf physischem Gerät nachverifiziert (kamera-abhängiger
+     Bildschirm, nur per Build geprüft).
+  3. `CollectionListView` fehlte als einziger Screen `.navigationBarTitleDisplayMode(.inline)` — der Titel
+     "Sammlungen" erschien dadurch als linksbündiger Large Title statt zentriert wie überall sonst
+     (Settings/Handbuch/Impressum/Terms/Galerie/Neue Sammlung). Jetzt ergänzt. Betrifft ausdrücklich nur die
+     Sammlungen-Übersichtsseite selbst — der `CollectionAccessButton` auf dem Aufnahme-Bildschirm bleibt
+     unverändert.
+- **Zwei weitere Korrekturen an der "Option 2"-Optik** (Nutzerwunsch, 2026-07-30):
+  1. `RecordButton.sizeScale` von `1.09` auf `1.09 * 1.09` (~1,19×) — nochmals um 9% vergrößert, zusätzlich zur
+     Vergrößerung vom 2026-07-28.
+  2. `LensPickerPanel`: die gemeinsame `.ultraThinMaterial`-Sammel-Kapsel aus dem Option-2-Redesign wieder
+     zurückgerollt, mit Referenz-Screenshot der nativen iPhone-Kamera-App belegt (dort: einzelne separate
+     Kreis-Buttons, kein gemeinsamer Streifen). Jetzt wieder ein eigener Kreis pro Objektiv/ZL, aber mit einer
+     dezenten, leicht hellen `.ultraThinMaterial`-Füllung statt der alten vollflächigen `surface.panel`-Füllung
+     von vor Option 2 — das aktive Objektiv bleibt weiterhin über eine volle `text.primary`-Füllung erkennbar.
+     Betrifft ausschließlich die Objektivauswahl; die übrigen Option-2-Gruppen (CaptureTopBar,
+     CaptureControlsRow, CaptureKindToggle) bleiben bei der gemeinsamen Kapsel.
 
 ---
 

@@ -7,6 +7,16 @@ import SwiftUI
 // Video behält den einfachen Dauerlicht-Toggle, Foto zeigt stattdessen den
 // echten Blitz-Dropdown (PhotoFlashControl) plus den Timer-Auslöser
 // (SelfTimerControl) direkt daneben.
+//
+// **Redesign auf System-Material (Nutzerwunsch, 2026-07-29, "Option 2"):**
+// vorher hatte jedes Icon seine eigene helle Kreis-Hinterlegung — wirkte als
+// "Masse an runden hell hinterlegten Kreisen". Jetzt teilen sich Blitz und
+// Timer-Auslöser (Foto-Modus) bzw. der Blitz allein (Video-Modus) EINE
+// gemeinsame `.ultraThinMaterial`-Kapsel (echtes System-Blur statt der
+// bisherigen flachen `surfacePanel`-Füllung) — analog zu System-Werkzeugleisten
+// wie Control Center statt vieler einzelner Icon-Kreise. Dieselbe
+// Material-Kapsel jetzt auch rechts bei Bildrate/Auflösung, für ein
+// einheitliches Bild der ganzen Reihe.
 struct CaptureTopBar: View {
     let captureKind: CaptureKind
     let isTorchOn: Bool
@@ -28,11 +38,7 @@ struct CaptureTopBar: View {
         // beide exakt an derselben Stelle, unabhängig von ihrer jeweiligen
         // Höhe.
         HStack(alignment: .top) {
-            flashControl
-
-            if captureKind == .photo {
-                SelfTimerControl(duration: selfTimerDuration, isEnabled: isSelfTimerControlEnabled, onSelect: onSelectSelfTimer)
-            }
+            leftControlsGroup
 
             Spacer()
 
@@ -41,11 +47,22 @@ struct CaptureTopBar: View {
         .padding(.horizontal, Layout.spacingS)
     }
 
-    // Bildrate + Auflösung jetzt als ein gemeinsam hinterlegtes Info-Feld
-    // (Nutzerwunsch, nach Test auf physischem iPhone 16 Pro) statt reiner
-    // Text-Ausgabe direkt über der Kamera-Vorschau — dieselbe
-    // surfacePanel/borderSubtle-Optik wie die Icon-Hinterlegung daneben, damit
-    // die ganze obere Reihe einheitlich wirkt.
+    // Blitz (+ Timer-Auslöser im Foto-Modus) in einer gemeinsamen
+    // Material-Kapsel statt je eines eigenen Icon-Kreises.
+    private var leftControlsGroup: some View {
+        HStack(spacing: Layout.spacingS) {
+            flashControl
+
+            if captureKind == .photo {
+                SelfTimerControl(duration: selfTimerDuration, isEnabled: isSelfTimerControlEnabled, onSelect: onSelectSelfTimer)
+            }
+        }
+        .padding(.horizontal, Layout.spacingS)
+        .frame(minHeight: Layout.minTapTarget)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().stroke(Theme.borderSubtle, lineWidth: 1))
+    }
+
     private var frameRateAndResolutionInfo: some View {
         HStack(spacing: 0) {
             Text(frameRateLabel)
@@ -56,28 +73,8 @@ struct CaptureTopBar: View {
         .foregroundStyle(Theme.textPrimary)
         .padding(.horizontal, Layout.spacingM)
         .frame(minHeight: Layout.minTapTarget)
-        .background(Theme.surfacePanel.opacity(0.6))
+        .background(.ultraThinMaterial, in: Capsule())
         .overlay(Capsule().stroke(Theme.borderSubtle, lineWidth: 1))
-        .clipShape(Capsule())
-    }
-
-    // Dezente Kreis-Hinterlegung für den Blitz-Button (Nutzerwunsch, nach Test
-    // auf physischem iPhone 16 Pro: ein reines Icon direkt über der
-    // Kamera-Vorschau ist gegen helle/wechselnde Hintergründe schlecht
-    // erkennbar). Exakt dieselbe Optik wie ContrastIconButtonStyle in
-    // CaptureControlsRow.swift, dort aber file-private — deshalb hier
-    // dupliziert statt importiert (gleiches Muster wie HandbuchIconLegend).
-    // SelfTimerControl/PhotoFlashControl bekommen dieselbe Hinterlegung direkt
-    // in ihrem eigenen inaktiven Zustand (dort schon eine Capsule-Fläche
-    // vorhanden, kein zusätzlicher ButtonStyle nötig).
-    private struct TopBarContrastIconButtonStyle: ButtonStyle {
-        func makeBody(configuration: Configuration) -> some View {
-            configuration.label
-                .background(Theme.surfacePanel.opacity(0.6))
-                .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))
-                .clipShape(Circle())
-                .opacity(configuration.isPressed ? 0.85 : 1.0)
-        }
     }
 
     @ViewBuilder
@@ -89,7 +86,6 @@ struct CaptureTopBar: View {
                     .foregroundStyle(Theme.textPrimary)
                     .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
             }
-            .buttonStyle(TopBarContrastIconButtonStyle())
             .accessibilityLabel(isTorchOn ? "Blitz ausschalten" : "Blitz einschalten")
         case .photo:
             // Ausgeblendet statt permanent deaktiviert (Feature-Detection,

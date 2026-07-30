@@ -275,6 +275,30 @@ EveryCam/                              (= Documents/, App-Anzeigename in der Dat
 4. SF Pro als einzige Schrift, Dynamic Type für Listen-/Settings-Texte, Tap-Ziele ≥ 44×44 pt,
    `accessibilityLabel` in Klartext für jeden Button — alles unverändert aus TrickCam übernommen.
 
+### 6.3 Icon-/Button-Hinterlegung auf dem Aufnahme-Bildschirm (Redesign, Nutzerwunsch, 2026-07-29)
+
+Vorher hatte praktisch jedes frei auf der Kamera-Vorschau schwebende Icon (Blitz, Zahnrad, Raster-Umschalter,
+Plus, Tag-Verwalten, jedes einzelne Objektiv) seinen eigenen hell hinterlegten Icon-Kreis — wirkte als "Masse
+an runden hell hinterlegten Kreisen" und ließ nicht klar genug erkennen, ob Foto- oder Video-Modus aktiv ist.
+Neues Prinzip, angelehnt an native System-Werkzeugleisten (Control Center) statt der bisherigen Einzel-Kreise:
+
+- **Verwandte Icons teilen sich eine gemeinsame `.ultraThinMaterial`-Kapsel** (echtes System-Blur statt
+  flacher `surfacePanel`-Füllung) statt je einen eigenen Kreis zu bekommen — z. B. Blitz + Timer-Auslöser oben
+  links, Zahnrad + Raster-Umschalter unten links, Plus + Tag-Verwalten unten rechts, die gesamte
+  Objektivauswahl-Leiste (inkl. „ZL") in einer einzigen Kapsel statt bis zu sechs Einzel-Kreisen.
+- **Aktiv-/Auswahlzustand** innerhalb einer Gruppe zeigt sich über eine kleine gefüllte Pille um das
+  betroffene Element (`text.primary`-Füllung, heller Text) statt eines eigenen Rahmens — dasselbe Prinzip wie
+  ein natives Segmented Control. Reine Ein-/Aus-Umschalter ohne mehrere Optionen (Komposition-Raster,
+  Crop-Hilfsraster) zeigen ihren Zustand stattdessen nur über die Icon-Farbe (dunkel/grau), ohne eigene Füllung.
+- **Foto-/Video-Umschalter** (`CaptureKindToggle`) folgt demselben Segmented-Control-Prinzip: das aktive
+  Segment ist vollständig `text.primary`-gefüllt mit hellem Text, das inaktive reiner Text ohne Füllung — ein
+  deutlich unverwechselbarerer Kontrast als der vorherige dezente Farbton-Unterschied.
+- **Ausnahme, bewusst nicht angepasst:** Der Zuordnungs-Panel-Button (`AssignmentToggleButton`, zeigt die
+  EveryCam-Marke) bleibt ein eigenständiger, auffälliger Kreis — er soll gerade **nicht** in der Masse
+  untergehen, sondern als Marken-Element jederzeit gut sichtbar bleiben (Nutzerwunsch).
+- Betrifft ausschließlich den Aufnahme-Bildschirm. Sammlungen-Übersicht und Einstellungen behalten ihre
+  bisherige, bereits gruppierte Kapsel-Optik mit flacher Füllung.
+
 ---
 
 ## 7. Bildschirm 1 — Aufnahme-Hauptbildschirm

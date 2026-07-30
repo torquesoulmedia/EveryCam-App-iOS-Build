@@ -35,6 +35,12 @@ struct CollectionListView: View {
             // übernommen): der CAM-Button im Toolbar deckt den Direktzugriff
             // bereits ab.
             .navigationTitle("Sammlungen")
+            // Inline statt Large Title (Nutzerwunsch, 2026-07-30) — analog zu
+            // allen anderen Screens (Settings, Handbuch, Impressum, Terms,
+            // Galerie, Neue Sammlung), die alle bereits .inline setzen. Ohne
+            // diesen Modifier blieb "Sammlungen" als einziger Titel im
+            // Large-Title-Stil linksbündig statt zentriert.
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             // Ohne dieses Tint würden Zahnrad/Sortierung/Plus/CAM in der
             // System-Standardfarbe (Blau) erscheinen, da AccentColor im
