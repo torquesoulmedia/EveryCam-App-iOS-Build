@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 
 // Aufnahmeknopf mittig (SPEC.md §7.1/§7.2, aus TrickCam übernommen —
@@ -32,6 +33,21 @@ struct CaptureControlsRow: View {
     let hasActiveCollection: Bool
     let isCropGuideVisible: Bool
     let isCompositionGridVisible: Bool
+    // Selfie-Kamera-Umschaltung (Nutzerwunsch). **Zwei gescheiterte Anläufe
+    // zur Platzierung** (Nutzerwunsch, per Screenshots belegt, 2026-07-30) —
+    // nicht erneut versuchen:
+    //   1. In CaptureTopBars linker Kapsel: überschnitt sich mit dem auf
+    //      76pt vergrößerten AssignmentToggleButton.
+    //   2. In der linken Icon-Kapsel dieser Zeile (mit Zahnrad + Komposition-
+    //      Raster): ein `Spacer()` zwischen linker/rechter Kapsel reserviert
+    //      keinen Mindest-Abstand zum mittig sitzenden Aufnahmeknopf, drei
+    //      Icons in einer Kapsel reichten aus, um ihn zu berühren/überlappen.
+    // Jetzt in der Foto/Video-/Sammlungen-Zeile darunter, mittig zwischen
+    // beiden platziert (zwei Spacer()) — dort konkurriert nichts um Platz mit
+    // dem Aufnahmeknopf, da der in der Zeile darüber sitzt.
+    let cameraPosition: AVCaptureDevice.Position
+    let isFrontCameraAvailable: Bool
+    let isCameraSwitchEnabled: Bool
     let onRecordTap: () -> Void
     let onSelectCaptureKind: (CaptureKind) -> Void
     let onNewCollection: () -> Void
@@ -40,6 +56,7 @@ struct CaptureControlsRow: View {
     let onOpenCollections: () -> Void
     let onToggleCropGuide: () -> Void
     let onToggleCompositionGrid: () -> Void
+    let onToggleCameraPosition: () -> Void
 
     // Alle runden Icon-Buttons dieser Zeile insgesamt rund 3,5% größer als
     // ursprünglich (aus TrickCam übernommen: erst 9% größer für bessere
@@ -47,24 +64,20 @@ struct CaptureControlsRow: View {
     // Sammlungen und der Aufnahmeknopf bleiben unverändert.
     private let iconSize: CGFloat = Layout.minTapTarget * 1.09 * 0.95
 
-    // Enger als Layout.spacingS (aus TrickCam übernommen, Bugfix): Der
-    // sichtbare Aufnahmeknopf-Kreis (72pt, RecordButton.outerDiameter) ist
-    // optisch größer als sein eigener 44pt-Layout-Rahmen und ragt deshalb
-    // beidseitig darüber hinaus. Eine vorherige Fassung reservierte dafür
-    // per GeometryReader eine feste Restbreite — das verhindert eine
-    // Überlappung aber nicht wirklich, da `.frame(width:)` überschüssigen
-    // Inhalt nicht abschneidet, sondern einfach darüber hinaus rendert
-    // (auf einem breiteren Testgerät unbemerkt, auf einem schmaleren
-    // iPhone weiterhin sichtbar überlappend — der eigentliche Bug). Fix:
-    // die linke Gruppe (3 Icons im Dual-Modus) muss durch ihre eigene,
-    // tatsächliche Breite plus Rand-Abstand innerhalb der halben
-    // Zeilenbreite bleiben, rechnerisch geprüft für 390pt (iPhone 14, die
-    // schmalste unterstützte Breite, CLAUDE.md §3).
     private let iconSpacing: CGFloat = 4
 
     var body: some View {
         ZStack(alignment: .top) {
+            // Nach oben versetzt (Nutzerwunsch, per Screenshot auf
+            // physischem Gerät, 2026-07-30) — der sichtbare Ring
+            // (RecordButton.outerDiameter, ~86pt) ragt weit über seinen
+            // eigenen 44pt-Layout-Rahmen hinaus und reichte bis in die
+            // Foto/Video-/Sammlungen-Zeile darunter, wo jetzt der
+            // Kamera-Flip-Button sitzt. Erste Schätzung anhand des
+            // Screenshots, nicht am Gerät nachgemessen — bei Bedarf mit
+            // neuem Screenshot nachjustieren.
             RecordButton(captureKind: captureKind, isRecording: isRecording, isEnabled: canRecord, action: onRecordTap)
+                .offset(y: -16)
 
             if isCameraReady {
                 VStack(spacing: Layout.spacingM) {
@@ -137,6 +150,26 @@ struct CaptureControlsRow: View {
 
                         Spacer()
 
+                        // Selfie-Kamera-Umschaltung (Nutzerwunsch) — mittig
+                        // zwischen Foto/Video und Sammlungen, siehe
+                        // Platzierungs-Historie am cameraPosition-Property
+                        // oben. Kein Aufnahmeknopf in dieser Zeile, der um
+                        // Platz konkurrieren könnte.
+                        if isFrontCameraAvailable {
+                            Button(action: onToggleCameraPosition) {
+                                Image(systemName: "camera.rotate.fill")
+                                    .foregroundStyle(Theme.textPrimary)
+                                    .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
+                            }
+                            .background(.ultraThinMaterial, in: Circle())
+                            .overlay(Circle().stroke(Theme.borderSubtle, lineWidth: 1))
+                            .accessibilityLabel(cameraPosition == .back ? "Zur Frontkamera wechseln" : "Zur Rückkamera wechseln")
+                            .disabled(!isCameraSwitchEnabled)
+                            .opacity(isCameraSwitchEnabled ? 1.0 : 0.4)
+                        }
+
+                        Spacer()
+
                         // Auf gleicher Höhe, spiegelbildlich rechts (aus
                         // TrickCam übernommen) — Direktzugriff auf die
                         // Sammlungen-Übersicht zusätzlich zur Wisch-Geste. Im
@@ -164,9 +197,10 @@ struct CaptureControlsRow: View {
             recordingMode: .single, captureKind: .video, isCapturingPhoto: false,
             isSelfTimerCountingDown: false, hasActiveCollection: true,
             isCropGuideVisible: true, isCompositionGridVisible: false,
+            cameraPosition: .back, isFrontCameraAvailable: true, isCameraSwitchEnabled: true,
             onRecordTap: {}, onSelectCaptureKind: { _ in }, onNewCollection: {}, onManageTags: {},
             onOpenSettings: {}, onOpenCollections: {},
-            onToggleCropGuide: {}, onToggleCompositionGrid: {}
+            onToggleCropGuide: {}, onToggleCompositionGrid: {}, onToggleCameraPosition: {}
         )
     }
 }

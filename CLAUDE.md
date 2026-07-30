@@ -422,6 +422,37 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
      von vor Option 2 — das aktive Objektiv bleibt weiterhin über eine volle `text.primary`-Füllung erkennbar.
      Betrifft ausschließlich die Objektivauswahl; die übrigen Option-2-Gruppen (CaptureTopBar,
      CaptureControlsRow, CaptureKindToggle) bleiben bei der gemeinsamen Kapsel.
+- **Drei funktionale Ergänzungen** (Nutzerwunsch, 2026-07-30):
+  1. `CaptureViewModel.captureKind`-Default von `.video` auf `.photo` — captureKind wird nirgends persistiert,
+     jeder App-Start beginnt also ohnehin frisch im hier gesetzten Default.
+  2. `CaptureHints` unterscheidet jetzt "keine Sammlung ausgewählt" von "es existiert noch gar keine Sammlung"
+     (`CaptureViewModel.hasAnyCollections`, per `collectionStore.listCollections()` befüllt) — nur Letzteres
+     zeigt den ausführlicheren Hinweis "Zuerst Sammlung erstellen und Tags hinzufügen" statt des bisherigen
+     "Zuerst Sammlung anlegen".
+  3. Selfie-Kamera-Umschaltung: neuer Button (`camera.rotate.fill`, Feature-Detection über
+     `CameraService.isFrontCameraAvailable`). `CameraService.toggleCameraPosition(isRecording:)` tauscht den
+     Video-Input aus (echter Geräte-Swap, kein Zoom-Sprung wie bei den Objektiven), setzt Blitz/Zoom-Sperre
+     zurück und baut RotationCoordinator + Startzoom für das neue Gerät neu auf. **Drei Anläufe zur Platzierung**
+     (Nutzerwunsch, jeweils per Screenshot belegt, 2026-07-30) — die ersten beiden nicht erneut versuchen:
+     1. In CaptureTopBars linker Kapsel (bei Blitz/Timer): überschnitt sich mit dem auf 76pt vergrößerten
+        `AssignmentToggleButton`, der in derselben Zeile per `.overlay(alignment: .top)` zentriert sitzt.
+     2. In `CaptureControlsRow`s linker Icon-Kapsel (bei Zahnrad/Komposition-Raster): der `Spacer()` zwischen
+        linker/rechter Kapsel reserviert keinen Mindest-Abstand zum mittig sitzenden Aufnahmeknopf — drei Icons
+        in einer Kapsel reichten, um ihn zu berühren/überlappen. Ein Fixversuch über einen echten reservierten
+        Mittel-Bereich (`RecordButton.outerDiameter`) wurde vom Nutzer als "Layout zerstört, gefällt so nicht
+        mehr" verworfen, nicht nur als technisch fehlerhaft — **diese ganze Zeile (Zahnrad-Kapsel/Plus-Kapsel)
+        bekommt kein drittes Icon mehr, auch nicht mit korrekter Abstandsrechnung.**
+     3. **Aktueller Stand:** in der Foto/Video-/Sammlungen-Zeile darunter, mittig zwischen beiden platziert
+        (zwei `Spacer()`) — dort sitzt kein Aufnahmeknopf und nichts konkurriert um Platz, ein einfaches
+        `HStack` mit zwei `Spacer()` kann sich intern nie überlappen (sequentielles Layout, kein ZStack-Element
+        von außen). Eigene kleine `.ultraThinMaterial`-Kreis-Hinterlegung statt Teil einer Kapsel.
+  4. `AssignmentToggleButton` (76pt) überschnitt sich mit `AssignmentPanel` darunter (unabhängig von der
+     Kamera-Flip-Platzierung, per Screenshot belegt): `.overlay(alignment: .top)` auf `CaptureTopBar` vergrößert
+     dessen Layout-Höhe nicht, obwohl der Button visuell weit darüber hinausragt — `AssignmentPanel` begann
+     deshalb bereits im überhängenden Bereich. Fix (weiterhin aktuell): `ZStack(alignment: .top)` statt
+     `.overlay`, meldet die tatsächliche Höhe des größeren Kindes nach außen.
+
+  Kamerabildschirm ist im Simulator nicht testbar (keine Kamera) — auf physischem Gerät verifizieren.
 
 ---
 

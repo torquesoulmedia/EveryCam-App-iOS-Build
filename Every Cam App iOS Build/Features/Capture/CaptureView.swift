@@ -118,48 +118,61 @@ struct CaptureView: View {
 
             VStack {
                 if viewModel.cameraStatus == .ready {
-                    CaptureTopBar(
-                        captureKind: viewModel.captureKind,
-                        isTorchOn: viewModel.cameraService.isTorchOn,
-                        isPhotoFlashAvailable: viewModel.cameraService.isPhotoFlashAvailable,
-                        photoFlashMode: viewModel.cameraService.photoFlashMode,
-                        selfTimerDuration: viewModel.selfTimerDuration,
-                        isSelfTimerControlEnabled: !viewModel.isRecording && !viewModel.isCapturingPhoto && viewModel.countdownRemaining == nil,
-                        frameRateLabel: settingsStore.frameRate.displayLabel,
-                        resolutionLabel: settingsStore.resolution.displayLabel,
-                        onToggleTorch: { viewModel.cameraService.toggleTorch() },
-                        onSelectPhotoFlashMode: { viewModel.cameraService.setPhotoFlashMode($0) },
-                        onSelectSelfTimer: { viewModel.setSelfTimer($0) }
-                    )
-                    // Etwas Abstand zur Bildschirmoberkante (Bugfix,
-                    // Nutzerwunsch, 2026-07-29) — zuvor saß die obere Reihe
-                    // direkt an der oberen Sicherheitszone, während die
-                    // untere Reihe durch CaptureBottomAccessoryRows
-                    // `.padding(.bottom, Layout.spacingM)` spürbar mehr Luft
-                    // zur unteren Bildschirmkante hatte. Derselbe
-                    // Abstandswert hier sorgt für ein symmetrisches Bild oben
-                    // wie unten.
-                    .padding(.top, Layout.spacingM)
-                    // Mittig oben, in einer Flucht mit Blitz und
-                    // Auflösungs-Anzeige statt als Teil des Panels darunter.
-                    // **Korrektur (Nutzerwunsch, per annotiertem
-                    // Geräte-Screenshot, 2026-07-29):** CaptureTopBar richtet
-                    // seine Icons/Info-Kapsel zwar per `.top` aus, aber am
-                    // Gerät saß AssignmentToggleButton dadurch spürbar höher
-                    // als Blitz/Auflösungs-Anzeige, nicht auf derselben Höhe.
-                    // Der rein strukturelle Ansatz (kein Zahlenwert) reichte
-                    // also nicht — hier wieder ein von Hand austarierter
-                    // Top-Versatz, diesmal auf Basis der vom Nutzer im
-                    // Screenshot markierten Ziel-Oberkante. Bei Bedarf anhand
-                    // eines neuen Screenshots weiter nachjustieren.
-                    .overlay(alignment: .top) {
+                    // ZStack statt .overlay (Bugfix, 2026-07-30): .overlay
+                    // vergrößert die Layout-Höhe des Trägers NICHT, egal wie
+                    // groß sein Inhalt ist — CaptureTopBar selbst ist nur
+                    // ~52pt hoch, der seit 2026-07-30 auf 76pt vergrößerte
+                    // AssignmentToggleButton ragte deshalb visuell weit über
+                    // das von der VStack gemessene Ende von CaptureTopBar
+                    // hinaus. Das nächste VStack-Element (AssignmentPanel)
+                    // begann dadurch bereits innerhalb dieses überhängenden
+                    // Bereichs und überzeichnete die untere Hälfte des
+                    // Tag-Buttons (per Screenshot belegt — der vorherige
+                    // .overlay-Fix behob nur die horizontale Kapsel-
+                    // Überlappung, nicht dieses Höhenproblem). Ein ZStack
+                    // meldet dagegen die tatsächliche Höhe des größten Kindes
+                    // nach außen, wodurch AssignmentPanel jetzt korrekt erst
+                    // unterhalb des kompletten Tag-Buttons beginnt.
+                    ZStack(alignment: .top) {
+                        CaptureTopBar(
+                            captureKind: viewModel.captureKind,
+                            isTorchOn: viewModel.cameraService.isTorchOn,
+                            isPhotoFlashAvailable: viewModel.cameraService.isPhotoFlashAvailable,
+                            photoFlashMode: viewModel.cameraService.photoFlashMode,
+                            selfTimerDuration: viewModel.selfTimerDuration,
+                            isSelfTimerControlEnabled: !viewModel.isRecording && !viewModel.isCapturingPhoto && viewModel.countdownRemaining == nil,
+                            frameRateLabel: settingsStore.frameRate.displayLabel,
+                            resolutionLabel: settingsStore.resolution.displayLabel,
+                            onToggleTorch: { viewModel.cameraService.toggleTorch() },
+                            onSelectPhotoFlashMode: { viewModel.cameraService.setPhotoFlashMode($0) },
+                            onSelectSelfTimer: { viewModel.setSelfTimer($0) }
+                        )
+                        // Etwas Abstand zur Bildschirmoberkante (Bugfix,
+                        // Nutzerwunsch, 2026-07-29) — zuvor saß die obere Reihe
+                        // direkt an der oberen Sicherheitszone, während die
+                        // untere Reihe durch CaptureBottomAccessoryRows
+                        // `.padding(.bottom, Layout.spacingM)` spürbar mehr Luft
+                        // zur unteren Bildschirmkante hatte. Derselbe
+                        // Abstandswert hier sorgt für ein symmetrisches Bild oben
+                        // wie unten.
+                        .padding(.top, Layout.spacingM)
+
+                        // Mittig oben, in einer Flucht mit Blitz und
+                        // Auflösungs-Anzeige statt als Teil des Panels darunter.
+                        // Beide ZStack-Kinder sind relativ zum selben Ursprung
+                        // (.top des ZStack) ausgerichtet — der Top-Versatz hier
+                        // muss deshalb CaptureTopBars eigenen spacingM-Versatz
+                        // MIT enthalten, um exakt auf derselben Höhe wie zuvor
+                        // zu landen (per annotiertem Geräte-Screenshot,
+                        // 2026-07-29, austariert). Bei Bedarf anhand eines
+                        // neuen Screenshots weiter nachjustieren.
                         if appState.activeCollectionId != nil {
                             AssignmentToggleButton(
                                 isExpanded: viewModel.isAssignmentPanelExpanded,
                                 unsortedCount: viewModel.unsortedCount,
                                 onToggle: { viewModel.toggleAssignmentPanel() }
                             )
-                            .padding(.top, 8)
+                            .padding(.top, Layout.spacingM + 8)
                         }
                     }
                 }
@@ -186,6 +199,7 @@ struct CaptureView: View {
 
                 CaptureHints(
                     hasActiveCollection: appState.activeCollectionId != nil,
+                    hasAnyCollections: viewModel.hasAnyCollections,
                     isProcessingCrop: viewModel.isProcessingCrop,
                     isLowOnStorage: viewModel.lowStorageHint
                 )
@@ -216,6 +230,11 @@ struct CaptureView: View {
                     // Mehr Luft zum Aufnahmeknopf darunter (aus TrickCam
                     // übernommen).
                     .padding(.bottom, Layout.spacingM)
+                    // 15pt nach oben versetzt (Nutzerwunsch, 2026-07-30) —
+                    // reiner Versatz wie beim Foto/Video-/Sammlungen-Offset
+                    // in CaptureControlsRow, beeinflusst den Layout-Fluss der
+                    // übrigen Reihen nicht.
+                    .offset(y: -15)
                 }
 
                 CaptureControlsRow(
@@ -229,6 +248,9 @@ struct CaptureView: View {
                     hasActiveCollection: appState.activeCollectionId != nil,
                     isCropGuideVisible: viewModel.isCropGuideVisible,
                     isCompositionGridVisible: viewModel.isCompositionGridVisible,
+                    cameraPosition: viewModel.cameraService.cameraPosition,
+                    isFrontCameraAvailable: viewModel.cameraService.isFrontCameraAvailable,
+                    isCameraSwitchEnabled: !viewModel.isRecording,
                     onRecordTap: { Task { await viewModel.toggleRecording(activeCollectionId: appState.activeCollectionId) } },
                     onSelectCaptureKind: { viewModel.setCaptureKind($0) },
                     onNewCollection: { isShowingNewCollectionSheet = true },
@@ -236,7 +258,8 @@ struct CaptureView: View {
                     onOpenSettings: { isShowingSettings = true },
                     onOpenCollections: { appState.activeTab = .collections },
                     onToggleCropGuide: { viewModel.toggleCropGuide() },
-                    onToggleCompositionGrid: { viewModel.toggleCompositionGrid() }
+                    onToggleCompositionGrid: { viewModel.toggleCompositionGrid() },
+                    onToggleCameraPosition: { viewModel.toggleCameraPosition() }
                 )
             }
         }
@@ -254,6 +277,7 @@ struct CaptureView: View {
             if !stillExists {
                 appState.activeCollectionId = nil
             }
+            await viewModel.refreshCollectionsExistence()
         }
         .task(id: settingsStore.resolution) {
             guard viewModel.cameraStatus == .ready else { return }
@@ -281,7 +305,9 @@ struct CaptureView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .sheet(isPresented: $isShowingNewCollectionSheet) {
+        .sheet(isPresented: $isShowingNewCollectionSheet, onDismiss: {
+            Task { await viewModel.refreshCollectionsExistence() }
+        }) {
             NewCollectionSheet(collectionStore: collectionStore, settingsStore: settingsStore, onCollectionCreated: { _ in })
         }
         // Direktzugriff auf die Settings vom Aufnahme-Bildschirm aus (aus

@@ -26,8 +26,10 @@ final class CaptureViewModel {
     private(set) var recordingMode: RecordingMode = .single
     // Foto-/Video-Umschalter (SPEC.md §7.1, neu) — bestimmt, was ein Tap auf
     // den Aufnahmeknopf auslöst. Nutzt Capture.CaptureKind direkt statt eines
-    // eigenen Typs.
-    private(set) var captureKind: CaptureKind = .video
+    // eigenen Typs. Standard .photo statt .video (Nutzerwunsch, 2026-07-30) —
+    // captureKind wird nirgends persistiert, jeder App-Start beginnt also
+    // ohnehin frisch hier.
+    private(set) var captureKind: CaptureKind = .photo
     // Verhindert einen zweiten Foto-Tap, während die aktuelle Aufnahme noch
     // geschrieben wird — es gibt hier keinen "isRecording"-Zustand wie beim
     // Video, der Button wäre sonst zwischen Tap und Fertigstellung sofort
@@ -58,6 +60,12 @@ final class CaptureViewModel {
     // mitgeführt statt bei jedem Schritt neu vom Dateisystem zu lesen (effizient
     // für den kritischen Aufnahme-Zyklus, SPEC.md §13).
     private(set) var activeCollection: MediaCollection?
+    // Unterscheidet "keine Sammlung ausgewählt" von "es existiert noch gar
+    // keine Sammlung" (Nutzerwunsch) — nur Letzteres zeigt den
+    // Erstbenutzungs-Hinweis in CaptureHints. Default true, damit der Hinweis
+    // nicht kurz aufblitzt, bevor refreshCollectionsExistence() das erste Mal
+    // gelaufen ist.
+    private(set) var hasAnyCollections = true
     private(set) var isAssignmentPanelExpanded = false
     private(set) var pendingAssignmentCapture: Capture?
     // Hilfsraster im Dual-Modus, zeigt den späteren 16:9-Ausschnitt schon
@@ -126,6 +134,15 @@ final class CaptureViewModel {
             present(error)
             return true
         }
+    }
+
+    /// Prüft, ob überhaupt schon eine Sammlung existiert (Nutzerwunsch) —
+    /// unabhängig von activeCollection, das nur die AUSGEWÄHLTE Sammlung
+    /// kennt. Kein Fehlerdialog bei Fehlschlag (CLAUDE.md §8), der bisherige
+    /// Wert bleibt einfach stehen.
+    func refreshCollectionsExistence() async {
+        guard let collections = try? await collectionStore.listCollections() else { return }
+        hasAnyCollections = !collections.isEmpty
     }
 
     /// Single/Dual-Umschalter. Wechsel während laufender Aufnahme ist gesperrt.
@@ -398,6 +415,12 @@ final class CaptureViewModel {
 
     func selectLens(_ lens: LensOption) {
         cameraService.switchLens(to: lens, isRecording: isRecording)
+    }
+
+    // Selfie-Kamera-Umschaltung (Nutzerwunsch) — reine Weiterleitung, analog
+    // zu selectLens/toggleZoomLock; die Guards leben in CameraService.
+    func toggleCameraPosition() {
+        cameraService.toggleCameraPosition(isRecording: isRecording)
     }
 
     // "ZL"-Zoom-Sperre — reine Weiterleitung, die Funktion selbst lebt in

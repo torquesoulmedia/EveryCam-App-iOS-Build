@@ -89,6 +89,14 @@ final class CameraService: NSObject {
     private(set) var activeLensId: String?
     private(set) var availableLenses: [LensOption] = []
 
+    // Selfie-Kamera-Umschaltung (Nutzerwunsch) — in Foto **und** Video-Modus
+    // verfügbar, da CaptureTopBar (dort verankert) in beiden Modi sichtbar ist.
+    // Feature-Detection statt Annahme (CLAUDE.md §3): auch wenn praktisch jedes
+    // iPhone eine Frontkamera hat, wird sie zur Laufzeit über
+    // preferredVideoDevice geprüft statt vorausgesetzt.
+    private(set) var cameraPosition: AVCaptureDevice.Position = .back
+    let isFrontCameraAvailable: Bool
+
     // Echter Foto-Blitz (Nutzerwunsch) — unabhängig vom Dauerlicht-Blitz
     // (isTorchOn) oben: löst nur im Aufnahmemoment selbst aus, per
     // AVCapturePhotoSettings.flashMode statt device.torchMode. Nur im
@@ -137,6 +145,7 @@ final class CameraService: NSObject {
 
     init(settingsStore: SettingsStore) {
         self.settingsStore = settingsStore
+        self.isFrontCameraAvailable = Self.preferredVideoDevice(position: .front) != nil
         super.init()
     }
 
@@ -873,6 +882,76 @@ final class CameraService: NSObject {
             .sorted { $0.zoomFactor < $1.zoomFactor }
             .last { $0.zoomFactor <= zoom + 0.001 }?.id
             ?? availableLenses.first?.id
+    }
+
+    // MARK: - Selfie-Kamera-Umschaltung (Nutzerwunsch)
+
+    /// Tauscht den Video-Input gegen das Gerät der jeweils anderen Position
+    /// aus (Nutzerwunsch) — kein Geräte-Swap innerhalb eines virtuellen
+    /// Multi-Kamera-Geräts wie beim Objektivwechsel, sondern ein echter
+    /// Input-Austausch, da Front- und Rückkamera getrennte Geräte sind.
+    /// Während einer laufenden Aufnahme gesperrt, analog zu switchLens.
+    func toggleCameraPosition(isRecording: Bool) {
+        guard !isRecording, isFrontCameraAvailable else { return }
+        let newPosition: AVCaptureDevice.Position = cameraPosition == .back ? .front : .back
+        cameraPosition = newPosition
+        availableLenses = LensDiscovery.availableLenses(position: newPosition)
+        // Dauerlicht-Blitz existiert an der Frontkamera nicht — Zustand hier
+        // zurücksetzen statt auf die (dann wirkungslose) Hardware-Antwort zu
+        // warten, damit die UI nicht fälschlich "an" anzeigt.
+        isTorchOn = false
+        // Die 0.5x/1x-Zoom-Sperre bezieht sich auf Objektivgrenzen der
+        // Rückkamera-Konstellation und hat an der Frontkamera keine Bedeutung.
+        isZoomLocked = false
+        zoomLockOrigin = nil
+        let fps = settingsStore.frameRate.rawValue
+        dispatchCameraPositionSwitch(to: newPosition, fps: fps)
+    }
+
+    nonisolated private func dispatchCameraPositionSwitch(to position: AVCaptureDevice.Position, fps: Int) {
+        sessionQueue.async {
+            guard let newDevice = Self.preferredVideoDevice(position: position),
+                  let newInput = try? AVCaptureDeviceInput(device: newDevice) else { return }
+            let previousInput = self.activeVideoInput
+            self.session.beginConfiguration()
+            if let previousInput { self.session.removeInput(previousInput) }
+            guard self.session.canAddInput(newInput) else {
+                // Rollback, damit die Session nicht ohne Video-Input hängen
+                // bleibt, falls das neue Gerät wider Erwarten nicht
+                // hinzugefügt werden kann.
+                if let previousInput, self.session.canAddInput(previousInput) {
+                    self.session.addInput(previousInput)
+                }
+                self.session.commitConfiguration()
+                return
+            }
+            self.session.addInput(newInput)
+            self.activeVideoInput = newInput
+            self.session.commitConfiguration()
+            self.applyFrameRate(fps)
+            self.publishPhotoFlashAvailability()
+
+            Task { @MainActor in
+                self.refreshAfterCameraPositionSwitch()
+            }
+        }
+    }
+
+    /// Der RotationCoordinator hängt am alten Gerät (setPreviewLayer bindet
+    /// ihn fest an ein AVCaptureDevice) und der zuvor gültige Zoomfaktor
+    /// bezog sich auf das alte Gerät — beides muss nach einem
+    /// Positionswechsel für das neue Gerät neu aufgesetzt werden.
+    private func refreshAfterCameraPositionSwitch() {
+        if let layer = previewLayer {
+            setPreviewLayer(layer)
+        }
+        if let halfX = availableLenses.first(where: { $0.id == "0.5x" }) {
+            setZoomFactor(halfX.zoomFactor)
+        } else if let oneX = availableLenses.first(where: { $0.id == "1x" }) {
+            setZoomFactor(oneX.zoomFactor)
+        } else {
+            activeLensId = lensId(forZoomFactor: currentZoomFactor)
+        }
     }
 
     // MARK: - Tap-to-Focus (spec.md §7.2, natives Standardverhalten)

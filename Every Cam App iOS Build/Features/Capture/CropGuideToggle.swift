@@ -21,11 +21,17 @@ struct CropGuideToggle: View {
 
 // Geteilt mit CompositionGridToggle (Update, Nutzerwunsch) — beide sind
 // funktional gleichartige Ein-/Ausklapp-Icons neben dem Zahnrad. Aktiv/
-// inaktiv zeigt sich ausschließlich über die Icon-Farbe (dunkel/grau), nicht
-// über Hintergrund oder Randstärke — kein eigener Icon-Kreis mehr (Redesign,
+// inaktiv zeigt sich ausschließlich über die Icon-Opazität, nicht über
+// Hintergrund oder Randstärke — kein eigener Icon-Kreis mehr (Redesign,
 // Nutzerwunsch, "Option 2", 2026-07-29): sitzt jetzt zusammen mit dem
 // Zahnrad in einer gemeinsamen Material-Kapsel (siehe CaptureControlsRow),
 // statt jedes Icon einzeln zu hinterlegen.
+// **Korrektur (Nutzerwunsch, per Screenshot auf physischem Gerät,
+// 2026-07-30):** `Theme.textSecondary` für den Ruhezustand war gegen die
+// `.ultraThinMaterial`-Kapsel praktisch unsichtbar (anders als das Zahnrad
+// daneben, das durchgehend textPrimary nutzt). Beide Zustände laufen jetzt
+// über textPrimary (dieselbe Farbe wie das Zahnrad), aktiv/inaktiv
+// unterscheidet sich stattdessen über die Opazität.
 struct RasterToggleButtonStyle: ButtonStyle {
     let isActive: Bool
     var size: CGFloat = Layout.minTapTarget
@@ -33,9 +39,9 @@ struct RasterToggleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Typography.buttonLabel)
-            .foregroundStyle(isActive ? Theme.textPrimary : Theme.textSecondary)
+            .foregroundStyle(Theme.textPrimary)
             .frame(width: size, height: size)
-            .opacity(configuration.isPressed ? 0.85 : 1.0)
+            .opacity(configuration.isPressed ? 0.85 : (isActive ? 1.0 : 0.55))
     }
 }
 

@@ -4,13 +4,17 @@ import SwiftUI
 // text.secondary (CLAUDE.md §6.2). Ausgelagert aus CaptureView (§5.4).
 struct CaptureHints: View {
     let hasActiveCollection: Bool
+    // Unterscheidet "keine Sammlung ausgewählt" (es gibt welche, aber keine
+    // ist aktiv) von "es existiert noch gar keine Sammlung" (Nutzerwunsch) —
+    // nur Letzteres bekommt den ausführlicheren Erstbenutzungs-Hinweis.
+    let hasAnyCollections: Bool
     let isProcessingCrop: Bool
     let isLowOnStorage: Bool
 
     var body: some View {
         VStack(spacing: Layout.spacingS) {
             if !hasActiveCollection {
-                Text("Zuerst Sammlung anlegen")
+                Text(hasAnyCollections ? "Zuerst Sammlung anlegen" : "Zuerst Sammlung erstellen und Tags hinzufügen")
             }
             // Dezenter Hinweis während der 16:9-Crop exportiert wird (spec.md §7.4).
             if isProcessingCrop {
@@ -33,6 +37,6 @@ struct CaptureHints: View {
 #Preview {
     ZStack {
         Theme.backgroundPrimary.ignoresSafeArea()
-        CaptureHints(hasActiveCollection: false, isProcessingCrop: true, isLowOnStorage: true)
+        CaptureHints(hasActiveCollection: false, hasAnyCollections: false, isProcessingCrop: true, isLowOnStorage: true)
     }
 }
