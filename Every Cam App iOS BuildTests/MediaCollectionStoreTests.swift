@@ -395,6 +395,59 @@ struct MediaCollectionStoreTests {
         }
     }
 
+    // MARK: - Favoriten (Nutzerwunsch, 2026-07-31)
+
+    @Test func toggleFavoriteFlipsStateBothWays() async throws {
+        let (store, _, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let collection = try await store.createCollection(name: "Contest Bowl")
+        let (captureId, _) = try await makeUnsortedCapture(store: store, collectionId: collection.id)
+
+        let firstToggle = try await store.toggleFavorite(captureId: captureId, collectionId: collection.id)
+        #expect(firstToggle.isFavorite == true)
+        let fetchedAfterFirst = try await store.collection(withId: collection.id)
+        #expect(fetchedAfterFirst.captures.first?.isFavorite == true)
+
+        let secondToggle = try await store.toggleFavorite(captureId: captureId, collectionId: collection.id)
+        #expect(secondToggle.isFavorite == false)
+        let fetchedAfterSecond = try await store.collection(withId: collection.id)
+        #expect(fetchedAfterSecond.captures.first?.isFavorite == false)
+    }
+
+    // Bestehende collection.json-Dateien aus vor dieser Ergänzung haben den
+    // Schlüssel "isFavorite" gar nicht — decodeIfPresent-Semantik bei
+    // optionalen Properties muss das als nil statt als Decoding-Fehler
+    // behandeln (SPEC.md §4.2).
+    @Test func captureWithoutFavoriteKeyDecodesAsNil() throws {
+        let json = """
+        {
+          "captureId": "\(UUID().uuidString)",
+          "recordedAt": "2026-07-27T15:32:10Z",
+          "kind": "video",
+          "mode": "single",
+          "orientation": "portrait",
+          "lens": "1x",
+          "tagId": null,
+          "files": { "primary": "Unsorted/x.mov" }
+        }
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let capture = try decoder.decode(Capture.self, from: Data(json.utf8))
+        #expect(capture.isFavorite == nil)
+    }
+
+    @Test func toggleFavoriteOnUnknownCaptureThrows() async throws {
+        let (store, _, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+        let collection = try await store.createCollection(name: "Contest Bowl")
+
+        await #expect(throws: EveryCamError.self) {
+            try await store.toggleFavorite(captureId: UUID(), collectionId: collection.id)
+        }
+    }
+
     @Test func collectionFolderURLResolvesCreatedCollection() async throws {
         let (store, root, cleanupRoot) = makeStore()
         defer { try? FileManager.default.removeItem(at: cleanupRoot) }

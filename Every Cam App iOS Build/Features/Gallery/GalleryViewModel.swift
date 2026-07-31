@@ -211,6 +211,24 @@ final class GalleryViewModel {
         session?.captures.first { $0.id == item.captureId }
     }
 
+    // MARK: - Favoriten (Nutzerwunsch)
+
+    func isFavorite(_ item: GalleryThumbnailItem) -> Bool {
+        capture(for: item)?.isFavorite ?? false
+    }
+
+    func toggleFavorite(_ item: GalleryThumbnailItem) async {
+        guard let capture = capture(for: item) else { return }
+        do {
+            let updated = try await sessionStore.toggleFavorite(captureId: capture.id, collectionId: sessionId)
+            if let index = session?.captures.firstIndex(where: { $0.id == capture.id }) {
+                session?.captures[index] = updated
+            }
+        } catch {
+            present(error)
+        }
+    }
+
     private func present(_ error: Error) {
         let locale = settingsStore.effectiveLocale
         errorMessage = (error as? EveryCamError)?.userMessage(locale: locale) ?? LocalizedStringResolver.string("Ein unerwarteter Fehler ist aufgetreten.", locale: locale)

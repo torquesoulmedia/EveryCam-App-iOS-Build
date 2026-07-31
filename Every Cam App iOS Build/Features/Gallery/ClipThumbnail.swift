@@ -11,6 +11,7 @@ struct ClipThumbnail: View {
     @Environment(\.locale) private var locale
 
     let item: GalleryThumbnailItem
+    let isFavorite: Bool
     let isSelectionMode: Bool
     let isSelected: Bool
     let moveDestinations: [Tag]
@@ -86,6 +87,22 @@ struct ClipThumbnail: View {
                     .padding(6)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
 
+                // Favorit-Kennzeichen (Nutzerwunsch) — oben links, der einzige
+                // noch freie Eck (unten links: Format-Label, unten rechts:
+                // Foto/Video-Kennzeichen, oben rechts: Auswahl-Häkchen). Nur
+                // sichtbar, wenn tatsächlich favorisiert — kein leerer
+                // Platzhalter-Kreis für nicht-favorisierte Kacheln.
+                if isFavorite {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.textPrimary)
+                        .padding(4)
+                        .background(Theme.backgroundPrimary.opacity(0.8))
+                        .clipShape(Circle())
+                        .padding(6)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                }
+
                 if isSelectionMode {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(Theme.textPrimary)
@@ -118,7 +135,10 @@ struct ClipThumbnail: View {
     }
 
     private var accessibilityLabel: String {
-        let base = item.formatLabel.map { LocalizedStringResolver.string("Aufnahme, \($0)", locale: locale) } ?? LocalizedStringResolver.string("Aufnahme", locale: locale)
+        var base = item.formatLabel.map { LocalizedStringResolver.string("Aufnahme, \($0)", locale: locale) } ?? LocalizedStringResolver.string("Aufnahme", locale: locale)
+        if isFavorite {
+            base = "\(base), \(LocalizedStringResolver.string("Favorit", locale: locale))"
+        }
         guard isSelectionMode else { return base }
         let state = isSelected ? LocalizedStringResolver.string("ausgewählt", locale: locale) : LocalizedStringResolver.string("nicht ausgewählt", locale: locale)
         // Reine Verkettung zweier bereits übersetzter Bausteine statt eines
@@ -136,12 +156,12 @@ struct ClipThumbnail: View {
         HStack {
             ClipThumbnail(
                 item: GalleryThumbnailItem(captureId: UUID(), kind: .video, variant: .single, relativeVideoPath: "x.mov", formatLabel: "9:16"),
-                isSelectionMode: false, isSelected: false, moveDestinations: [],
+                isFavorite: true, isSelectionMode: false, isSelected: false, moveDestinations: [],
                 loadThumbnail: { nil }, onTap: {}, onMove: { _ in }, onDelete: {}
             )
             ClipThumbnail(
                 item: GalleryThumbnailItem(captureId: UUID(), kind: .video, variant: .dualCrop, relativeVideoPath: "x.mov", formatLabel: "16:9"),
-                isSelectionMode: true, isSelected: true, moveDestinations: [],
+                isFavorite: false, isSelectionMode: true, isSelected: true, moveDestinations: [],
                 loadThumbnail: { nil }, onTap: {}, onMove: { _ in }, onDelete: {}
             )
         }

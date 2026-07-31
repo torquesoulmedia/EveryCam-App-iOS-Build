@@ -220,8 +220,18 @@ struct CollectionListView: View {
                     Button("Exportieren") {}
                         .disabled(true)
                 } else {
-                    Button("Exportieren (\(viewModel.selectedCollectionIDs.count))") {
-                        Task { await viewModel.exportSelectedCollections() }
+                    // Menü statt Direkt-Button (Nutzerwunsch) — "auch als
+                    // Favoriten-Export wählbar", analog zum Kontextmenü der
+                    // Einzelzeile.
+                    Menu {
+                        Button("Alles exportieren") {
+                            Task { await viewModel.exportSelectedCollections() }
+                        }
+                        Button("Nur Favoriten exportieren") {
+                            Task { await viewModel.exportFavoritesForSelectedCollections() }
+                        }
+                    } label: {
+                        Text("Exportieren (\(viewModel.selectedCollectionIDs.count))")
                     }
                 }
             }
@@ -280,10 +290,26 @@ struct CollectionListView: View {
                             // Grauton statt System-Blau (CLAUDE.md §6.2) — ohne
                             // eigenes .tint würde diese nicht-destruktive
                             // Swipe-Action in der Akzentfarbe erscheinen.
+                            // Bleibt bewusst der schnelle Ein-Tap-Weg für
+                            // "alles exportieren" (Nutzerwunsch) — die
+                            // Favoriten-Variante sitzt zusätzlich im
+                            // Kontextmenü (langes Tippen), siehe unten.
                             Button("Exportieren") {
                                 Task { await viewModel.exportCollection(collection) }
                             }
                             .tint(Theme.textPrimary)
+                        }
+                        // "Auch als Favoriten-Export wählbar" (Nutzerwunsch) —
+                        // langes Tippen bietet beide Export-Varianten explizit
+                        // nebeneinander an, ohne die schnelle Swipe-Geste oben
+                        // (weiterhin nur "alles") zu verändern.
+                        .contextMenu {
+                            Button("Alles exportieren") {
+                                Task { await viewModel.exportCollection(collection) }
+                            }
+                            Button("Nur Favoriten exportieren") {
+                                Task { await viewModel.exportFavorites(of: collection) }
+                            }
                         }
                 }
             }

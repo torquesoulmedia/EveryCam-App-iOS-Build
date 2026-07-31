@@ -453,6 +453,56 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
      `.overlay`, meldet die tatsächliche Höhe des größeren Kindes nach außen.
 
   Kamerabildschirm ist im Simulator nicht testbar (keine Kamera) — auf physischem Gerät verifizieren.
+- **Teilen aus der Galerie-Vorschau: zwei Bugs gemeinsam behoben** (Nutzerwunsch, 2026-07-31):
+  1. Tap auf "Teilen" öffnete das Share-Sheet nicht sofort, sondern erst nachdem die Vorschau geschlossen wurde.
+     Ursache: `GalleryView` reichte das Sheet über ein hochgereichtes `onShare(URL)` als ZWEITES, gleichrangiges
+     `.sheet` auf sich selbst herein, während bereits das Vorschau-Sheet (`.sheet(item: $playingItem)`) offen
+     war — SwiftUI stellt ein zweites Sheet auf derselben Präsentationsebene erst zurück, bis das erste
+     geschlossen wird, statt es sofort zu zeigen. Fix: `GalleryItemPagerView` präsentiert das Teilen-Sheet jetzt
+     direkt an sich selbst (verschachtelt innerhalb des bereits offenen Vorschau-Sheets) statt es nach oben an
+     `GalleryView` durchzureichen — ein Sheet-im-Sheet funktioniert zuverlässig, ein zweites gleichrangiges
+     Sheet nicht. `GalleryItemPagerView.init` hat deshalb kein `onShare`-Callback mehr.
+  2. "In Fotos speichern" erschien im Share-Sheet überhaupt nicht: `NSPhotoLibraryAddUsageDescription` fehlte
+     komplett in den Projekteinstellungen — ohne diesen Info.plist-Schlüssel blendet iOS den
+     "Save to Photos"-Eintrag aus JEDEM Share-Sheet der App stillschweigend aus, unabhängig vom Bug oben. Jetzt
+     als `INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription` in beiden Build-Konfigurationen ergänzt — bewusst die
+     "Add"-only-Variante (Schreibzugriff ohne Lesezugriff auf die Mediathek), passend zur in §4/§7 Phase 8
+     dokumentierten Ausnahme "eine opt-in Zusatzkopie ist erlaubt", nicht die volle
+     `NSPhotoLibraryUsageDescription`.
+- **Favorit-Markierung + Favoriten-Export** (Nutzerwunsch, 2026-07-31): `Capture.isFavorite: Bool? = nil` (wie
+  `cropped169`/`cropped916` optional statt Bool mit Default, damit bestehende `collection.json`-Dateien ohne
+  diesen Schlüssel weiter dekodieren, siehe SPEC.md §4.2). Umschalt-Button (Stern, gefüllt/umrandet, keine
+  eigene Farbe) direkt neben Teilen in `ClipPlayerView`/`PhotoPreviewView`, über
+  `MediaCollectionStore.toggleFavorite(captureId:collectionId:)`. Export-Menü in `CollectionListView` (Zeilen-
+  Kontextmenü per langem Tippen + Mehrfachauswahl-Menü) bietet jetzt "Alles exportieren" (unverändert, Ordner-
+  Kopie) neben "Nur Favoriten exportieren" (gezielt nur die Mediendateien favorisierter Captures, kein ganzer
+  Ordner) — die schnelle Wisch-Aktion bleibt bewusst bei "alles" für den bestehenden Ein-Tap-Weg.
+  **Ergänzung (Nutzerwunsch, direkt im Anschluss):** `ClipThumbnail` im Galerie-Raster zeigt zusätzlich ein
+  kleines Stern-Abzeichen oben links (der einzige noch freie Eck neben Format-Label/Foto-Video-Kennzeichen/
+  Auswahl-Häkchen) für favorisierte Kacheln — sonst wäre der Favorit-Status nur beim einzelnen Öffnen jeder
+  Aufnahme sichtbar gewesen, nicht auf einen Blick im Raster.
+- **CameraService: zwei zusammenhängende Autofokus-Bugs behoben** (auf physischem Gerät diagnostiziert und
+  zuerst in TrickCam gefixt, EveryCam hatte denselben Code geerbt, 2026-07-31):
+  1. Tap-to-Focus (`dispatchFocus`) fror nach dem ersten Tap ein statt weiter nachzuführen: `.autoFocus`/
+     `.autoExpose` sind Einmal-Modi, fokussieren genau einmal am Tap-Punkt und stoppen dann. Fix: `focusMode`/
+     `exposureMode` auf `.continuousAutoFocus`/`.continuousAutoExposure` (mit Fallback auf die alten
+     Einmal-Modi, falls ein Gerät sie nicht unterstützt). Tippen-und-Halten
+     (`dispatchLockFocusAndExposure`/`waitForSettleThenLock`/`applyLock`) bleibt bewusst unverändert — dort ist
+     Einmal-Fokus-dann-Sperren das gewünschte Verhalten.
+  2. Nach Fix #1 sah ein Fokus-Rack aus wie ein echter Objektivwechsel (sichtbarer Bildsprung): das virtuelle
+     Mehrlinsen-Rückkamera-Gerät (Triple/DualWide) darf die aktive physische Linse standardmäßig automatisch
+     wechseln, wenn Fokus/Belichtung das nahelegen (z. B. Makro-Fallback auf die Ultraweitwinkel-Linse) — das
+     war vorher selten sichtbar, weil Einmal-Fokus kaum erneut "nachjagte"; kontinuierliche Nachführung löst es
+     deutlich häufiger aus. Fix: neue Helper-Methode `restrictAutomaticLensSwitching(for:)`, ruft
+     `device.setPrimaryConstituentDeviceSwitchingBehavior(.restricted, restrictedSwitchingBehaviorConditions: [])`
+     einmal direkt nach jedem `session.addInput(...)` für ein virtuelles Gerät (`device.isVirtualDevice`) auf —
+     sowohl in der Erstkonfiguration (`dispatchConfiguration`) als auch beim Kamera-Positionswechsel
+     (`dispatchCameraPositionSwitch`, gilt pro `AVCaptureDeviceInput`, muss beim Zurückwechseln zur Rückkamera
+     erneut gesetzt werden). Laut AVFoundation-Doku blockiert das ausschließlich automatische Wechsel — vom
+     Nutzer über Zoom/Pinch/Objektivauswahl ausgelöste Wechsel bleiben uneingeschränkt möglich.
+
+  Beides reines Geräte-Konfigurationsverhalten (iOS 17+), kein UI-/Datenmodell-Eingriff. Wie jede
+  Fokus/Objektiv-Änderung nur auf physischem Gerät wirklich beurteilbar (Simulator hat keine Kamera).
 
 ---
 

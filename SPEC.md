@@ -164,7 +164,8 @@ TrickCam übernommen.
       "files": {
         "primary": "relativer/Pfad/zur/Datei.mov | .jpg",
         "cropped169": "relativer/Pfad/zur/Datei_crop.mov | null"
-      }
+      },
+      "isFavorite": "true | null (Nutzerwunsch, 2026-07-31)"
     }
   ]
 }
@@ -186,6 +187,7 @@ bestimmten Tag — jeder Tag in `tags` ist gleichwertig.
 | `tags[].name` | Innerhalb einer Sammlung **eindeutig** (case-insensitiv geprüft). Wird als Ordnername verwendet → muss dateisystemsicher sein (`NameSanitizer`, unverändert aus TrickCam). |
 | `date` | `YYYY-MM-DD`, lokales Datum bei Sammlung-Anlage, danach unveränderlich. |
 | `recordedAt` | ISO-8601 UTC mit `Z`. |
+| `isFavorite` | Fehlt der Schlüssel oder ist er `null`/`false`, gilt die Aufnahme als nicht favorisiert — kein separates Migrations-Feld nötig, bereits bestehende `collection.json`-Dateien ohne diesen Schlüssel dekodieren unverändert (Nutzerwunsch, 2026-07-31). Rein lokal, wirkt sich nicht auf Dateipfade aus. |
 
 ### 4.3 Tags zur Laufzeit hinzufügen
 
@@ -440,6 +442,13 @@ bestimmten Ort (Dateien auf dem Gerät, iCloud Drive, oder ein Drittanbieter-Spe
 falls installiert). Rein additiv: die Originaldaten in der App-Sandbox bleiben unverändert, es handelt sich um
 eine Sicherungskopie, kein Verschieben.
 
+**Nur Favoriten exportieren (Nutzerwunsch, 2026-07-31):** Beide Export-Wege bieten zusätzlich eine
+Favoriten-Variante — beim langen Tippen auf eine Zeile (Kontextmenü: „Alles exportieren" / „Nur Favoriten
+exportieren") bzw. als Menü statt Direkt-Button bei der Mehrfachauswahl. Anders als der vollständige
+Ordner-Export werden hier gezielt nur die Mediendateien der als Favorit markierten Aufnahmen kopiert (Original
++ Crop, falls vorhanden), nicht der ganze Sammlung-Ordner. Enthält die Auswahl keine Favoriten, erscheint ein
+Hinweis statt eines leeren Picker-Aufrufs.
+
 ---
 
 ## 11. Bildschirm 3 — Sammlung-Galerie
@@ -453,6 +462,7 @@ Entspricht TrickCams Session-Galerie, mit folgenden Anpassungen:
 | **Tap auf ein Thumbnail** | Öffnet eine Vollbild-Vorschau (Foto: Zoom/Pan; Video: Player) und erlaubt per Wisch, direkt zur nächsten/vorherigen Aufnahme **desselben Abschnitts** (Tag oder Unsorted) zu blättern, ohne zurück zum Raster zu müssen (Nutzerwunsch, 2026-07-28). Foto- und Video-Seiten können sich dabei abwechseln, je nachdem, was der Abschnitt enthält. |
 | **Korrektur (verschieben)** | „Verschieben nach…" listet jetzt **alle Tags der Sammlung** statt „Athlet oder Bail". |
 | **Teilen** | Unverändert, natives Share Sheet, funktioniert für Fotos und Videos gleichermaßen. |
+| **Favorit (Nutzerwunsch, 2026-07-31)** | In der geöffneten Vollbild-Vorschau (Foto und Video) sitzt direkt neben dem Teilen-Symbol ein Favorit-Umschalter (Stern, gefüllt/umrandet — keine eigene Farbe, CLAUDE.md §6.2). Rein lokale Markierung in `collection.json` (`isFavorite`), wirkt sich nicht auf Ordner/Zuordnung aus. Grundlage für den Favoriten-Export in [§10](#10-bildschirm-2--sammlungen-übersicht). |
 | **Dual-Modus-Anzeige** | Entfällt in v1 vollständig aus der Galerie-Darstellung, da der Modus nicht aktiv nutzbar ist (Code/Datenmodell-Unterstützung bleibt für die spätere Reaktivierung erhalten). |
 | **Export (Nutzerwunsch, 2026-07-28)** | Zusätzlicher Menüpunkt „Sammlung exportieren" im „⋯"-Menü — exportiert die gesamte, gerade geöffnete Sammlung über denselben `UIDocumentPickerViewController`-Weg wie in der Sammlungen-Übersicht ([§10](#10-bildschirm-2--sammlungen-übersicht)), ohne zurück navigieren zu müssen. |
 

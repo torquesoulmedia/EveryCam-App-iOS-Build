@@ -229,6 +229,7 @@ final class CameraService: NSObject {
             }
             self.session.addInput(videoInput)
             self.activeVideoInput = videoInput
+            self.restrictAutomaticLensSwitching(for: videoDevice)
             self.applyFrameRate(fps)
 
             self.addAudioInput(preferredUID: audioInputUID)
@@ -257,6 +258,28 @@ final class CameraService: NSObject {
             self.publishPhotoFlashAvailability()
             completion(true)
         }
+    }
+
+    /// Virtuelle Mehrlinsen-Geräte dürfen die aktive physische Linse
+    /// standardmäßig auch automatisch wechseln, wenn Fokus oder Belichtung
+    /// das erfordern (z. B. Makro-Fallback auf die Ultraweitwinkel-Linse) —
+    /// das verursacht einen sichtbaren Bildsprung. `.restricted` mit leeren
+    /// Bedingungen unterbindet genau diese automatischen Wechsel, erlaubt
+    /// aber weiterhin die vom Nutzer über Zoom/Pinch/Objektivauswahl
+    /// ausgelösten Wechsel (laut AVFoundation-Doku für den Zoomfaktor immer
+    /// uneingeschränkt erlaubt). Bugfix (2026-07-31, auf physischem Gerät
+    /// diagnostiziert): erst nach dem Fokus-Bugfix oben (kontinuierliche
+    /// Nachführung statt Einmal-Fokus) fiel auf, dass ein Fokus-Rack
+    /// zwischendurch wie ein echter Objektivwechsel aussah — genau das war es
+    /// auch, nur automatisch statt vom Nutzer ausgelöst.
+    /// Läuft ausschließlich auf der sessionQueue, muss von dort aufgerufen werden.
+    nonisolated private func restrictAutomaticLensSwitching(for device: AVCaptureDevice) {
+        guard device.isVirtualDevice else { return }
+        do {
+            try device.lockForConfiguration()
+            device.setPrimaryConstituentDeviceSwitchingBehavior(.restricted, restrictedSwitchingBehaviorConditions: [])
+            device.unlockForConfiguration()
+        } catch {}
     }
 
     /// Prüft, ob dieses Gerät ProRes 422 über den AVAssetWriter-Weg aufnehmen
@@ -927,6 +950,12 @@ final class CameraService: NSObject {
             }
             self.session.addInput(newInput)
             self.activeVideoInput = newInput
+            // Gilt pro AVCaptureDeviceInput, nicht pro Session — beim
+            // Zurückwechseln auf die Rückkamera muss die Einschränkung am
+            // neuen Geräte-Objekt erneut gesetzt werden (siehe
+            // restrictAutomaticLensSwitching oben, dort für die
+            // Erstkonfiguration).
+            self.restrictAutomaticLensSwitching(for: newDevice)
             self.session.commitConfiguration()
             self.applyFrameRate(fps)
             self.publishPhotoFlashAvailability()
@@ -970,13 +999,21 @@ final class CameraService: NSObject {
             guard let device = self.activeVideoInput?.device else { return }
             do {
                 try device.lockForConfiguration()
+                // Bugfix (2026-07-31, auf physischem Gerät diagnostiziert):
+                // .autoFocus/.autoExpose sind Einmal-Modi — sie fokussieren
+                // einmal am Tap-Punkt und stoppen danach jede weitere
+                // Anpassung, die Linse blieb faktisch auf die getappte
+                // Distanz eingefroren. Die native Kamera-App verfolgt den
+                // getappten Punkt dagegen kontinuierlich weiter, nur
+                // Tippen-und-Halten (dispatchLockFocusAndExposure unten,
+                // bewusst unverändert) friert wirklich ein.
                 if device.isFocusPointOfInterestSupported {
                     device.focusPointOfInterest = devicePoint
-                    device.focusMode = .autoFocus
+                    device.focusMode = device.isFocusModeSupported(.continuousAutoFocus) ? .continuousAutoFocus : .autoFocus
                 }
                 if device.isExposurePointOfInterestSupported {
                     device.exposurePointOfInterest = devicePoint
-                    device.exposureMode = .autoExpose
+                    device.exposureMode = device.isExposureModeSupported(.continuousAutoExposure) ? .continuousAutoExposure : .autoExpose
                 }
                 device.unlockForConfiguration()
             } catch {}

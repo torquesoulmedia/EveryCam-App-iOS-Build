@@ -168,6 +168,57 @@ final class CollectionListViewModel {
         exportURLs = folders
     }
 
+    /// Exportiert nur die als Favorit markierten Aufnahmen dieser Sammlung
+    /// (Nutzerwunsch) — anders als exportCollection(_:) nicht der ganze
+    /// Ordner, sondern gezielt die Mediendateien jeder favorisierten Capture
+    /// (Original + Crop, falls vorhanden).
+    func exportFavorites(of collection: MediaCollection) async {
+        do {
+            let urls = try await favoriteFileURLs(in: collection.id)
+            guard !urls.isEmpty else {
+                present(EveryCamError.noFavoritesToExport)
+                return
+            }
+            exportURLs = urls
+        } catch {
+            present(error)
+        }
+    }
+
+    /// Analog zu exportSelectedCollections(), aber auf die favorisierten
+    /// Aufnahmen jeder markierten Sammlung beschränkt — sammelt über alle
+    /// Sammlungen hinweg in einem gemeinsamen Picker-Aufruf.
+    func exportFavoritesForSelectedCollections() async {
+        var urls: [URL] = []
+        for id in selectedCollectionIDs {
+            if let collectionURLs = try? await favoriteFileURLs(in: id) {
+                urls.append(contentsOf: collectionURLs)
+            }
+        }
+        guard !urls.isEmpty else {
+            present(EveryCamError.noFavoritesToExport)
+            return
+        }
+        exportURLs = urls
+    }
+
+    /// Absolute Datei-URLs aller favorisierten Captures einer Sammlung
+    /// (Original + ggf. Crop) — dieselbe relative-Pfad-Auflösung wie
+    /// GalleryViewModel.videoURL(for:), hier direkt auf Capture-Ebene statt
+    /// über GalleryThumbnailItem, da kein Gallery-Kontext vorliegt.
+    private func favoriteFileURLs(in collectionId: UUID) async throws -> [URL] {
+        let collection = try await collectionStore.collection(withId: collectionId)
+        let folder = try await collectionStore.collectionFolderURL(forCollectionId: collectionId)
+        var urls: [URL] = []
+        for capture in collection.captures where capture.isFavorite == true {
+            urls.append(folder.appendingPathComponent(capture.files.primary))
+            if let cropped = capture.files.cropped169 ?? capture.files.cropped916 {
+                urls.append(folder.appendingPathComponent(cropped))
+            }
+        }
+        return urls
+    }
+
     private func present(_ error: Error) {
         let locale = settingsStore.effectiveLocale
         errorMessage = (error as? EveryCamError)?.userMessage(locale: locale) ?? LocalizedStringResolver.string("Ein unerwarteter Fehler ist aufgetreten.", locale: locale)

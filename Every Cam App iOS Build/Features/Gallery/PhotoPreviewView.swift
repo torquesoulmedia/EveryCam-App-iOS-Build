@@ -9,7 +9,9 @@ import SwiftUI
 // nur im gezoomten Zustand Vorrang vor dem Seitenwechsel (siehe body).
 struct PhotoPreviewView: View {
     let imageURL: URL
+    let isFavorite: Bool
     let onShare: () -> Void
+    let onToggleFavorite: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var image: UIImage?
@@ -49,6 +51,18 @@ struct PhotoPreviewView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Schließen") { dismiss() }
+                }
+                // Favorit direkt neben Teilen (Nutzerwunsch) — Zustand
+                // ausschließlich über das Symbol (gefüllt/umrandet), keine
+                // eigene Farbe (CLAUDE.md §6.2), analog zu den übrigen
+                // Toggle-Icons der App.
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        onToggleFavorite()
+                    } label: {
+                        Image(systemName: isFavorite ? "star.fill" : "star")
+                    }
+                    .accessibilityLabel(isFavorite ? "Favorit entfernen" : "Zu Favoriten hinzufügen")
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {

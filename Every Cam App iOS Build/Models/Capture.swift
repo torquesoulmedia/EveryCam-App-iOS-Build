@@ -31,9 +31,15 @@ nonisolated struct Capture: Codable, Identifiable, Equatable, Sendable {
     var lens: String
     var tagId: UUID?
     var files: CaptureFiles
+    // Favorit-Markierung (Nutzerwunsch) — rein lokal, wirkt sich nicht auf
+    // Dateipfade aus. Optional statt Bool mit Default (wie cropped169/916 in
+    // CaptureFiles): synthetisiertes Decodable behandelt einen fehlenden
+    // Schlüssel bei optionalen Properties automatisch als nil, damit bereits
+    // bestehende collection.json-Dateien ohne dieses Feld weiterhin dekodieren.
+    var isFavorite: Bool? = nil
 
     private enum CodingKeys: String, CodingKey {
         case id = "captureId"
-        case recordedAt, kind, mode, orientation, lens, tagId, files
+        case recordedAt, kind, mode, orientation, lens, tagId, files, isFavorite
     }
 }

@@ -20,6 +20,9 @@ nonisolated enum EveryCamError: Error, @unchecked Sendable {
     // Nur der ProRes-Aufnahmeweg (AVAssetWriter, SPEC.md §3) kann so
     // fehlschlagen — der MovieFileOutput-Weg meldet Fehler über sein Delegate.
     case recordingFailed(underlying: Error?)
+    // Export-Menü "Nur Favoriten exportieren" (Nutzerwunsch) — die Sammlung
+    // existiert, enthält aber keine als Favorit markierten Aufnahmen.
+    case noFavoritesToExport
 
     // `locale`: die erzwungene App-Sprache (SettingsView "Sprache") wirkt nur
     // über `.environment(\.locale, ...)` auf Text/LocalizedStringKey im
@@ -52,6 +55,8 @@ nonisolated enum EveryCamError: Error, @unchecked Sendable {
             return LocalizedStringResolver.string("Dieser Tag-Name ist bereits vergeben.", locale: locale)
         case .recordingFailed:
             return LocalizedStringResolver.string("Die Aufnahme konnte nicht abgeschlossen werden.", locale: locale)
+        case .noFavoritesToExport:
+            return LocalizedStringResolver.string("Diese Sammlung enthält keine Favoriten.", locale: locale)
         }
     }
 }

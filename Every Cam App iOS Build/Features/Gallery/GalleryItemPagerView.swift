@@ -15,14 +15,33 @@ import SwiftUI
 struct GalleryItemPagerView: View {
     let items: [GalleryThumbnailItem]
     let videoURL: (GalleryThumbnailItem) -> URL?
-    let onShare: (URL) -> Void
+    // Favorit-Markierung (Nutzerwunsch) — als Closures statt des ganzen
+    // GalleryViewModel durchgereicht, analog zu videoURL oben.
+    let isFavorite: (GalleryThumbnailItem) -> Bool
+    let onToggleFavorite: (GalleryThumbnailItem) -> Void
 
     @State private var currentItem: GalleryThumbnailItem
+    // Bugfix (Nutzerwunsch, 2026-07-31): das Teilen-Sheet lief zuvor über ein
+    // an GalleryView hochgereichtes onShare(URL), das dort ein ZWEITES,
+    // gleichrangiges .sheet auf demselben View auslöste — SwiftUI stellt ein
+    // zweites Sheet auf derselben Präsentationsebene aber erst zurück, sobald
+    // das erste (dieser Vorschau-Sheet) geschlossen wird, statt es sofort
+    // anzuzeigen. Fix: das Teilen-Sheet hängt jetzt direkt an dieser bereits
+    // präsentierten View — ein verschachteltes Sheet innerhalb eines Sheets
+    // funktioniert in SwiftUI zuverlässig, ein zweites GLEICHRANGIGES nicht.
+    @State private var shareURL: URL?
 
-    init(items: [GalleryThumbnailItem], initialItem: GalleryThumbnailItem, videoURL: @escaping (GalleryThumbnailItem) -> URL?, onShare: @escaping (URL) -> Void) {
+    init(
+        items: [GalleryThumbnailItem],
+        initialItem: GalleryThumbnailItem,
+        videoURL: @escaping (GalleryThumbnailItem) -> URL?,
+        isFavorite: @escaping (GalleryThumbnailItem) -> Bool,
+        onToggleFavorite: @escaping (GalleryThumbnailItem) -> Void
+    ) {
         self.items = items
         self.videoURL = videoURL
-        self.onShare = onShare
+        self.isFavorite = isFavorite
+        self.onToggleFavorite = onToggleFavorite
         _currentItem = State(initialValue: initialItem)
     }
 
@@ -33,9 +52,9 @@ struct GalleryItemPagerView: View {
                     Group {
                         switch item.kind {
                         case .video:
-                            ClipPlayerView(videoURL: url, onShare: { onShare(url) })
+                            ClipPlayerView(videoURL: url, isFavorite: isFavorite(item), onShare: { shareURL = url }, onToggleFavorite: { onToggleFavorite(item) })
                         case .photo:
-                            PhotoPreviewView(imageURL: url, onShare: { onShare(url) })
+                            PhotoPreviewView(imageURL: url, isFavorite: isFavorite(item), onShare: { shareURL = url }, onToggleFavorite: { onToggleFavorite(item) })
                         }
                     }
                     .tag(item)
@@ -44,5 +63,13 @@ struct GalleryItemPagerView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .ignoresSafeArea()
+        // URL ist nicht Identifiable, daher .sheet(isPresented:) statt
+        // .sheet(item:) — derselbe Binding-Aufbau wie in GalleryView.
+        .sheet(isPresented: Binding(
+            get: { shareURL != nil },
+            set: { if !$0 { shareURL = nil } }
+        )) {
+            if let shareURL { ShareSheet(items: [shareURL]) }
+        }
     }
 }

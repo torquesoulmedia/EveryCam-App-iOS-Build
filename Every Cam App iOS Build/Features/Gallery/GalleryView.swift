@@ -52,9 +52,14 @@ struct GalleryView: View {
                     items: siblingItems(for: item),
                     initialItem: item,
                     videoURL: { viewModel.videoURL(for: $0) },
-                    onShare: { url in shareURLs = [url] }
+                    isFavorite: { viewModel.isFavorite($0) },
+                    onToggleFavorite: { item in Task { await viewModel.toggleFavorite(item) } }
                 )
             }
+            // Weiterhin nötig für den Mehrfachauswahl-Teilen-Weg unten (Zeile
+            // ~152) — dort ist kein anderes Sheet offen, also ungefährdet vom
+            // Bugfix in GalleryItemPagerView (das Teilen-Sheet AUS der
+            // Einzel-Vorschau heraus hängt jetzt dort direkt).
             .sheet(isPresented: Binding(
                 get: { shareURLs != nil },
                 set: { if !$0 { shareURLs = nil } }
@@ -118,6 +123,7 @@ struct GalleryView: View {
                     sections: viewModel.sections,
                     isSelectionMode: viewModel.isSelectionMode,
                     selectedItemIds: viewModel.selectedItemIds,
+                    isFavorite: { item in viewModel.isFavorite(item) },
                     moveDestinations: { item in viewModel.moveDestinations(for: item) },
                     loadThumbnail: { item in await viewModel.thumbnailURL(for: item) },
                     onSelectItem: { item in handleTap(item) },

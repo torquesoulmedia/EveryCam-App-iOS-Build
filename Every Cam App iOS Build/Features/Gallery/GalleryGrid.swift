@@ -13,6 +13,7 @@ struct GalleryGrid: View {
     let sections: [GallerySection]
     let isSelectionMode: Bool
     let selectedItemIds: Set<String>
+    let isFavorite: (GalleryThumbnailItem) -> Bool
     let moveDestinations: (GalleryThumbnailItem) -> [Tag]
     let loadThumbnail: (GalleryThumbnailItem) async -> URL?
     let onSelectItem: (GalleryThumbnailItem) -> Void
@@ -29,6 +30,7 @@ struct GalleryGrid: View {
                         ForEach(section.items) { item in
                             ClipThumbnail(
                                 item: item,
+                                isFavorite: isFavorite(item),
                                 isSelectionMode: isSelectionMode,
                                 isSelected: selectedItemIds.contains(item.id),
                                 moveDestinations: moveDestinations(item),

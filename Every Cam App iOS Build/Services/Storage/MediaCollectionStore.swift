@@ -282,6 +282,22 @@ actor MediaCollectionStore {
         }
     }
 
+    /// Favorit-Markierung umschalten (Nutzerwunsch) — rein lokal, kein
+    /// Datei-Verschieben nötig, anders als assignCapture.
+    @discardableResult
+    func toggleFavorite(captureId: UUID, collectionId: UUID) async throws -> Capture {
+        guard let folder = try await folderURL(forCollectionId: collectionId) else {
+            throw EveryCamError.collectionNotFound
+        }
+        var collection = try await read(from: folder)
+        guard let index = collection.captures.firstIndex(where: { $0.id == captureId }) else {
+            throw EveryCamError.captureNotFound
+        }
+        collection.captures[index].isFavorite = !(collection.captures[index].isFavorite ?? false)
+        try await write(collection, to: folder)
+        return collection.captures[index]
+    }
+
     /// Löscht eine Capture endgültig: beide Mediendateien (bei Dual auch den
     /// Crop, falls vorhanden), beide Thumbnails, danach der Eintrag aus
     /// collection.json.
