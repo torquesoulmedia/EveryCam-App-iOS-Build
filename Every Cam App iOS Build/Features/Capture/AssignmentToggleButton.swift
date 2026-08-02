@@ -1,8 +1,11 @@
 import SwiftUI
 
-// Ausklapp-Button des Zuordnungs-Panels (spec.md §9.2) — sitzt bewusst oben in
-// einer Flucht mit Blitz und Auflösungs-Anzeige (Nutzerwunsch), statt wie
-// zuvor als Teil des Panels selbst darunter. Kein sichtbarer Zahlen-Badge mehr
+// Ausklapp-Button des Zuordnungs-Panels (spec.md §9.2) — sitzt bewusst oben,
+// statt wie zuvor als Teil des Panels selbst darunter. **Position (Nutzerwunsch,
+// 2026-08-02):** obere rechte Ecke statt oben mittig — die frühere
+// Bildrate-/Auflösungs-Anzeige, an der sich die Position ursprünglich
+// orientierte, ist inzwischen ersatzlos entfernt (siehe CaptureTopBar), der
+// Platz dort war frei. Kein sichtbarer Zahlen-Badge mehr
 // (Nutzerwunsch, abweichend von spec.md §9.4) — die Anzahl bleibt nur noch
 // für VoiceOver im accessibilityLabel erhalten.
 //
@@ -40,7 +43,9 @@ struct AssignmentToggleButton: View {
     let unsortedCount: Int
     let onToggle: () -> Void
 
-    private let diameter: CGFloat = 76
+    // 9% kleiner als zuvor (Nutzerwunsch, 2026-08-02), im Zuge des Umzugs von
+    // der oberen Mitte in die obere rechte Ecke (siehe CaptureView).
+    private let diameter: CGFloat = 76 * 0.91
     private let backgroundOpacity: CGFloat = 0.85
 
     var body: some View {

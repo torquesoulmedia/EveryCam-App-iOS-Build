@@ -222,7 +222,7 @@ EveryCam/                              (= Documents/, App-Anzeigename in der Dat
     Unsorted/
       <capture-id>.mov | .mp4 | .jpg | .heic
     <TagName>/
-      <capture-id>.mov | .mp4 | .jpg | .heic
+      <TagName>-<YYYY-MM-DD>_<Sammlungsname>.mov | .mp4 | .jpg | .heic
     .thumbs/
       <capture-id>.jpg
 ```
@@ -237,8 +237,22 @@ EveryCam/                              (= Documents/, App-Anzeigename in der Dat
 | `<TagName>` | **Ersetzt** die frühere feste Struktur `Bail/` + `Make/<Kürzel>/`. Jeder Tag ist ein ganz normaler, gleichwertiger Ordner — kein Tag hat eine Sonderstellung, keine Unterstrich-Präfixe, keine reservierten Namen. |
 | Tag-Namenskollision | Case-insensitiv geprüft, siehe [§14.1](#141-tag-namenskollision). |
 | Dateiendung | Video: `.mov`/`.mp4` je nach Einstellung (unverändert). Foto: `.heic`/`.jpg` je nach Einstellung (neu, siehe [§12](#12-bildschirm-4--globale-settings)). |
-| `Unsorted/` | Zwischenspeicher für nicht zugeordnete Aufnahmen, Foto und Video gemischt. |
-| `.thumbs/` | Thumbnail-Cache, unverändert aus TrickCam übernommen — für Fotos direkt aus der Bilddatei erzeugt (kein `AVAssetImageGenerator` nötig), für Videos wie gehabt per Frame-Extraktion. |
+| `Unsorted/` | Zwischenspeicher für nicht zugeordnete Aufnahmen, Foto und Video gemischt — Dateiname bleibt die interne `<capture-id>` (UUID), da hier noch kein sinnvoller lesbarer Name existiert. |
+| `.thumbs/` | Thumbnail-Cache, unverändert aus TrickCam übernommen — für Fotos direkt aus der Bilddatei erzeugt (kein `AVAssetImageGenerator` nötig), für Videos wie gehabt per Frame-Extraktion. Bleibt UUID-benannt (`<capture-id>.jpg`), unabhängig von der zugehörigen Mediendatei — reiner Cache, nie in der Dateien-App direkt betrachtet. |
+
+**Menschenlesbare Dateinamen ab Zuordnung (Nutzerwunsch, 2026-08-01, zuerst in TrickCam eingeführt):** Sobald eine
+Aufnahme einem Tag zugeordnet wird, heißt die Datei nicht mehr nach ihrer internen `<capture-id>`, sondern
+`<TagName>-<Sammlung-Ordnername>.ext` — der Sammlung-Ordnername wird dabei unverändert übernommen (er ist
+bereits dateisystemsicher und enthält bereits Datum + eigenen Kollisions-Suffix). **Abweichung von TrickCams
+Schema:** TrickCam benennt `<Athlet>-<Session>-<Ergebnis>` (drei Bestandteile, Ergebnis = Bail/Make); EveryCam
+hat seit dem Wegfall von Bail/Make ([§4.1](#41-collectionjson--schema)) kein separates Ergebnis-Feld mehr —
+`tagId` deckt beide TrickCam-Achsen (Person **und** Ergebnis) bereits gemeinsam ab, deshalb nur zwei
+Bestandteile. Kollidiert der resultierende Dateiname mit einer bereits vorhandenen Datei im selben Tag-Ordner
+(z. B. zwei Zuordnungen zu demselben Tag derselben Sammlung), wird ` (2)`, ` (3)` … angehängt — derselbe
+Mechanismus wie bei Sammlung-Ordnernamen. Gilt **nur** für Single-Aufnahmen; der (in der UI seit Phase 4 ohnehin
+nicht mehr erreichbare) Dual-Modus behält seinen UUID-basierten Dateinamen unverändert bei, kein
+Migrationsbedarf dort. Bereits zugeordnete Aufnahmen mit dem alten UUID-Namen werden beim Öffnen der
+Sammlung-Galerie automatisch (Best-Effort, pro Aufnahme unabhängig) auf das neue Schema migriert.
 
 ---
 

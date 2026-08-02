@@ -74,6 +74,11 @@ final class GalleryViewModel {
 
     func load() async {
         do {
+            // Menschenlesbare Dateinamen für bereits zugeordnete Aufnahmen,
+            // die noch auf dem alten UUID-Namen stehen (Nutzerwunsch,
+            // 2026-08-01) — läuft vor dem eigentlichen Laden, damit die
+            // Sections sofort die migrierten Pfade zeigen.
+            await sessionStore.migrateTagCaptureFileNamesIfNeeded(collectionId: sessionId)
             let loadedSession = try await sessionStore.collection(withId: sessionId)
             session = loadedSession
             sessionFolder = try await sessionStore.collectionFolderURL(forCollectionId: sessionId)

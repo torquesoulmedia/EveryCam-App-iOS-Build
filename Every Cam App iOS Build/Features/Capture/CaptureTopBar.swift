@@ -1,12 +1,12 @@
 import AVFoundation
 import SwiftUI
 
-// Blitz oben links, Bildrate + Auflösungs-Anzeige oben rechts (spec.md §7.2)
-// — reine Kontrollanzeige, nicht antippbar. Ausgelagert aus CaptureView
-// (CLAUDE.md §5.4). Der Blitz-Bereich ist modusabhängig (Nutzerwunsch):
-// Video behält den einfachen Dauerlicht-Toggle, Foto zeigt stattdessen den
-// echten Blitz-Dropdown (PhotoFlashControl) plus den Timer-Auslöser
-// (SelfTimerControl) direkt daneben.
+// Blitz oben links (spec.md §7.2) — reine Kontrollanzeige, nicht antippbar.
+// Ausgelagert aus CaptureView (CLAUDE.md §5.4). Der Blitz-Bereich ist
+// modusabhängig (Nutzerwunsch): Video behält den einfachen
+// Dauerlicht-Toggle, Foto zeigt stattdessen den echten Blitz-Dropdown
+// (PhotoFlashControl) plus den Timer-Auslöser (SelfTimerControl) direkt
+// daneben.
 //
 // **Redesign auf System-Material (Nutzerwunsch, 2026-07-29, "Option 2"):**
 // vorher hatte jedes Icon seine eigene helle Kreis-Hinterlegung — wirkte als
@@ -14,9 +14,12 @@ import SwiftUI
 // Timer-Auslöser (Foto-Modus) bzw. der Blitz allein (Video-Modus) EINE
 // gemeinsame `.ultraThinMaterial`-Kapsel (echtes System-Blur statt der
 // bisherigen flachen `surfacePanel`-Füllung) — analog zu System-Werkzeugleisten
-// wie Control Center statt vieler einzelner Icon-Kreise. Dieselbe
-// Material-Kapsel jetzt auch rechts bei Bildrate/Auflösung, für ein
-// einheitliches Bild der ganzen Reihe.
+// wie Control Center statt vieler einzelner Icon-Kreise.
+//
+// **Bildrate-/Auflösungs-Anzeige entfernt (Nutzerwunsch, 2026-08-02):** saß
+// vorher rechts daneben, spiegelbildlich zur linken Kapsel — ersatzlos
+// gestrichen, keine reine Infoanzeige mehr auf dem Aufnahme-Bildschirm nötig.
+// Auflösung/Bildrate bleiben weiterhin in den Settings einstellbar/sichtbar.
 struct CaptureTopBar: View {
     let captureKind: CaptureKind
     let isTorchOn: Bool
@@ -24,25 +27,14 @@ struct CaptureTopBar: View {
     let photoFlashMode: AVCaptureDevice.FlashMode
     let selfTimerDuration: SelfTimerDuration
     let isSelfTimerControlEnabled: Bool
-    let frameRateLabel: String
-    let resolutionLabel: String
     let onToggleTorch: () -> Void
     let onSelectPhotoFlashMode: (AVCaptureDevice.FlashMode) -> Void
     let onSelectSelfTimer: (SelfTimerDuration) -> Void
 
     var body: some View {
-        // .top statt des HStack-Standards .center (Bugfix, Nutzerwunsch): die
-        // Icon-Kontrollen sind seit ihrer Kontrast-Hinterlegung 44pt hoch, die
-        // reine Info-Kapsel rechts ist niedriger — mit .center saßen beide auf
-        // unterschiedlicher Höhe zur Bildschirmoberkante. Mit .top beginnen
-        // beide exakt an derselben Stelle, unabhängig von ihrer jeweiligen
-        // Höhe.
-        HStack(alignment: .top) {
+        HStack {
             leftControlsGroup
-
             Spacer()
-
-            frameRateAndResolutionInfo
         }
         .padding(.horizontal, Layout.spacingS)
     }
@@ -58,20 +50,6 @@ struct CaptureTopBar: View {
             }
         }
         .padding(.horizontal, Layout.spacingS)
-        .frame(minHeight: Layout.minTapTarget)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().stroke(Theme.borderSubtle, lineWidth: 1))
-    }
-
-    private var frameRateAndResolutionInfo: some View {
-        HStack(spacing: 0) {
-            Text(frameRateLabel)
-                .padding(.trailing, Layout.spacingS)
-            Text(resolutionLabel)
-        }
-        .font(Typography.overlayLabel)
-        .foregroundStyle(Theme.textPrimary)
-        .padding(.horizontal, Layout.spacingM)
         .frame(minHeight: Layout.minTapTarget)
         .background(.ultraThinMaterial, in: Capsule())
         .overlay(Capsule().stroke(Theme.borderSubtle, lineWidth: 1))
@@ -109,8 +87,6 @@ struct CaptureTopBar: View {
                 photoFlashMode: .auto,
                 selfTimerDuration: .tenSeconds,
                 isSelfTimerControlEnabled: true,
-                frameRateLabel: "30 fps",
-                resolutionLabel: "Full HD",
                 onToggleTorch: {},
                 onSelectPhotoFlashMode: { _ in },
                 onSelectSelfTimer: { _ in }

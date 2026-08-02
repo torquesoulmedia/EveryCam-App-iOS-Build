@@ -241,6 +241,8 @@ struct MediaCollectionStoreTests {
         return (captureId, destination.fileURL)
     }
 
+    // Menschenlesbarer Dateiname statt UUID seit dem Zuordnen (Nutzerwunsch,
+    // 2026-08-01): <Tag>-<Sammlung-Ordnername>.ext.
     @Test func assignCaptureMovesFileAndUpdatesJSON() async throws {
         let (store, root, cleanupRoot) = makeStore()
         defer { try? FileManager.default.removeItem(at: cleanupRoot) }
@@ -248,20 +250,131 @@ struct MediaCollectionStoreTests {
         let tag = Tag(id: UUID(), name: "MM")
         let collection = try await store.createCollection(name: "Contest Bowl", tags: [tag])
         let (captureId, fileURL) = try await makeUnsortedCapture(store: store, collectionId: collection.id)
+        let collectionFolderName = "\(collection.date)_Contest Bowl"
 
         let updated = try await store.assignCapture(captureId: captureId, collectionId: collection.id, toTagId: tag.id)
 
         #expect(updated.tagId == tag.id)
-        #expect(updated.files.primary == "MM/\(captureId.uuidString).mov")
+        #expect(updated.files.primary == "MM/MM-\(collectionFolderName).mov")
         #expect(!FileManager.default.fileExists(atPath: fileURL.path))
 
         let tagFile = root
-            .appendingPathComponent("\(collection.date)_Contest Bowl", isDirectory: true)
-            .appendingPathComponent("MM/\(captureId.uuidString).mov")
+            .appendingPathComponent(collectionFolderName, isDirectory: true)
+            .appendingPathComponent("MM/MM-\(collectionFolderName).mov")
         #expect(FileManager.default.fileExists(atPath: tagFile.path))
 
         let fetched = try await store.collection(withId: collection.id)
         #expect(fetched.captures.first?.tagId == tag.id)
+    }
+
+    // Zweite Zuordnung auf denselben Tag derselben Sammlung würde ohne
+    // Kollisions-Suffix denselben Dateinamen ergeben wie die erste — muss
+    // stattdessen " (2)" bekommen, analog zum Sammlung-Ordnernamen-Suffix.
+    @Test func assignCaptureResolvesFileNameCollisionWithNumberedSuffix() async throws {
+        let (store, root, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let tag = Tag(id: UUID(), name: "MM")
+        let collection = try await store.createCollection(name: "Contest Bowl", tags: [tag])
+        let collectionFolderName = "\(collection.date)_Contest Bowl"
+
+        let (firstId, _) = try await makeUnsortedCapture(store: store, collectionId: collection.id)
+        let first = try await store.assignCapture(captureId: firstId, collectionId: collection.id, toTagId: tag.id)
+        #expect(first.files.primary == "MM/MM-\(collectionFolderName).mov")
+
+        let (secondId, _) = try await makeUnsortedCapture(store: store, collectionId: collection.id)
+        let second = try await store.assignCapture(captureId: secondId, collectionId: collection.id, toTagId: tag.id)
+        #expect(second.files.primary == "MM/MM-\(collectionFolderName) (2).mov")
+
+        let firstFile = root.appendingPathComponent(collectionFolderName).appendingPathComponent("MM/MM-\(collectionFolderName).mov")
+        let secondFile = root.appendingPathComponent(collectionFolderName).appendingPathComponent("MM/MM-\(collectionFolderName) (2).mov")
+        #expect(FileManager.default.fileExists(atPath: firstFile.path))
+        #expect(FileManager.default.fileExists(atPath: secondFile.path))
+    }
+
+    // MARK: - Migration alter UUID-Dateinamen (Nutzerwunsch, 2026-08-01)
+
+    @Test func migrateRenamesTaggedCaptureStillOnOldUUIDName() async throws {
+        let (store, root, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let tag = Tag(id: UUID(), name: "MM")
+        let created = try await store.createCollection(name: "Contest Bowl", tags: [tag])
+        let collectionFolderName = "\(created.date)_Contest Bowl"
+        let collectionFolder = root.appendingPathComponent(collectionFolderName, isDirectory: true)
+
+        // Simuliert eine Aufnahme, wie sie vor dieser Änderung zugeordnet
+        // worden wäre: bereits im Tag-Ordner, aber noch mit UUID-Namen.
+        let captureId = UUID()
+        let tagFolder = collectionFolder.appendingPathComponent("MM", isDirectory: true)
+        try FileManager.default.createDirectory(at: tagFolder, withIntermediateDirectories: true)
+        let oldFile = tagFolder.appendingPathComponent("\(captureId.uuidString).mov")
+        try Data("x".utf8).write(to: oldFile)
+
+        var collection = try await store.collection(withId: created.id)
+        collection.captures.append(Capture(
+            id: captureId, recordedAt: Date(), kind: .video, mode: .single, orientation: .portrait, lens: "1x",
+            tagId: tag.id,
+            files: CaptureFiles(primary: "MM/\(captureId.uuidString).mov", cropped169: nil)
+        ))
+        try await store.update(collection)
+
+        await store.migrateTagCaptureFileNamesIfNeeded(collectionId: created.id)
+
+        let fetched = try await store.collection(withId: created.id)
+        #expect(fetched.captures.first?.files.primary == "MM/MM-\(collectionFolderName).mov")
+        #expect(!FileManager.default.fileExists(atPath: oldFile.path))
+        #expect(FileManager.default.fileExists(atPath: tagFolder.appendingPathComponent("MM-\(collectionFolderName).mov").path))
+    }
+
+    // Bereits migrierte (oder sonst schon menschenlesbar benannte) Captures
+    // dürfen von einem erneuten Migrationslauf nicht nochmal angefasst werden.
+    @Test func migrateSkipsCaptureAlreadyOnNewName() async throws {
+        let (store, _, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let tag = Tag(id: UUID(), name: "MM")
+        let collection = try await store.createCollection(name: "Contest Bowl", tags: [tag])
+        let (captureId, _) = try await makeUnsortedCapture(store: store, collectionId: collection.id)
+        let assigned = try await store.assignCapture(captureId: captureId, collectionId: collection.id, toTagId: tag.id)
+
+        await store.migrateTagCaptureFileNamesIfNeeded(collectionId: collection.id)
+
+        let fetched = try await store.collection(withId: collection.id)
+        #expect(fetched.captures.first?.files.primary == assigned.files.primary)
+    }
+
+    // Unsorted-Aufnahmen (kein tagId) bleiben von der Migration unberührt —
+    // für sie gibt es noch keinen sinnvollen menschenlesbaren Namen.
+    @Test func migrateSkipsUnsortedCapture() async throws {
+        let (store, _, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let collection = try await store.createCollection(name: "Contest Bowl")
+        let (captureId, _) = try await makeUnsortedCapture(store: store, collectionId: collection.id)
+
+        await store.migrateTagCaptureFileNamesIfNeeded(collectionId: collection.id)
+
+        let fetched = try await store.collection(withId: collection.id)
+        #expect(fetched.captures.first?.files.primary == "Unsorted/\(captureId.uuidString).mov")
+    }
+
+    // Dual-Captures bleiben von der Migration unberührt (Nutzerwunsch: kein
+    // Dual-Äquivalent für dieses Feature).
+    @Test func migrateSkipsDualCapture() async throws {
+        let (store, _, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let tag = Tag(id: UUID(), name: "JS")
+        let collection = try await store.createCollection(name: "Contest Bowl", tags: [tag])
+        let (captureId, _, _) = try await makeUnsortedDualCapture(store: store, collectionId: collection.id)
+        let assigned = try await store.assignCapture(captureId: captureId, collectionId: collection.id, toTagId: tag.id)
+
+        await store.migrateTagCaptureFileNamesIfNeeded(collectionId: collection.id)
+
+        let fetched = try await store.collection(withId: collection.id)
+        #expect(fetched.captures.first?.files.primary == assigned.files.primary)
+        #expect(assigned.files.primary.hasSuffix("\(captureId.uuidString).mov"))
     }
 
     @Test func assignCaptureToUnknownTagThrows() async throws {

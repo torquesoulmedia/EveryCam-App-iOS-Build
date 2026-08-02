@@ -82,6 +82,25 @@ actor FileStore {
         try ensureDirectoryExists(pathBuilder.unsortedFolderURL(collectionFolder: collectionFolder))
     }
 
+    /// Findet den ersten kollisionsfreien menschenlesbaren Dateinamen für eine
+    /// zugeordnete Single-Aufnahme (Nutzerwunsch, 2026-08-01) — derselbe
+    /// " (2)", " (3)", ...-Suffix wie bei Sammlung-Ordnernamen
+    /// (createCollectionFolder oben), hier auf Dateiebene. Reiner
+    /// Lese-Check (`fileExists`), das eigentliche Verschieben übernimmt
+    /// weiterhin moveCaptureFile — Kollisionsprüfung lebt hier statt in
+    /// PathBuilder, da dieser bewusst zustandslos/ohne Dateisystemzugriff
+    /// bleibt (siehe PathBuilder.swift).
+    func resolveTagCaptureDestination(folder: URL, sanitizedTagName: String, collectionFolderName: String, fileExtension: String) -> (url: URL, relativePath: String) {
+        var suffix = 1
+        var candidate = pathBuilder.tagCaptureFileURL(in: folder, sanitizedTagName: sanitizedTagName, collectionFolderName: collectionFolderName, fileExtension: fileExtension, suffix: suffix)
+        while fileManager.fileExists(atPath: candidate.path) {
+            suffix += 1
+            candidate = pathBuilder.tagCaptureFileURL(in: folder, sanitizedTagName: sanitizedTagName, collectionFolderName: collectionFolderName, fileExtension: fileExtension, suffix: suffix)
+        }
+        let relativePath = pathBuilder.tagCaptureRelativePath(sanitizedTagName: sanitizedTagName, collectionFolderName: collectionFolderName, fileExtension: fileExtension, suffix: suffix)
+        return (candidate, relativePath)
+    }
+
     /// Verschiebt eine Capture-Datei in ihren Zielordner (`<TagName>/`) und legt
     /// diesen bei Bedarf an — z. B. wenn ein Tag erst nach der Sammlung-Anlage
     /// hinzugefügt wurde und sein Ordner noch nicht existiert.

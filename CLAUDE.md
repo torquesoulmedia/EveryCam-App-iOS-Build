@@ -503,6 +503,34 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
 
   Beides reines Geräte-Konfigurationsverhalten (iOS 17+), kein UI-/Datenmodell-Eingriff. Wie jede
   Fokus/Objektiv-Änderung nur auf physischem Gerät wirklich beurteilbar (Simulator hat keine Kamera).
+- **Menschenlesbare Dateinamen ab Zuordnung** (Nutzerwunsch, 2026-08-01, zuerst in TrickCam eingeführt, dort ans
+  eigene Datenmodell angepasst — siehe SPEC.md §5 für die vollständige Begründung/den Vergleich mit TrickCams
+  Schema): `<TagName>-<Sammlung-Ordnername>[ (n)].ext` statt der bisherigen `<capture-id>.ext`, sobald eine
+  Aufnahme einem Tag zugeordnet wird. `PathBuilder.tagCaptureFileName`/`tagCaptureFileURL`/
+  `tagCaptureRelativePath` bauen den Namen (rein funktional, kein Dateisystemzugriff, wie der Rest von
+  PathBuilder); die eigentliche Kollisionsprüfung (` (2)`, ` (3)` …, wie bei Sammlung-Ordnernamen) lebt in
+  `FileStore.resolveTagCaptureDestination`, nicht in PathBuilder. `MediaCollectionStore.migrateTagCaptureFileNamesIfNeeded(collectionId:)`
+  migriert bereits zugeordnete Aufnahmen mit noch altem UUID-Namen beim Öffnen der Galerie
+  (`GalleryViewModel.load()`), pro Aufnahme unabhängig/best-effort. Gilt **nur** für Single-Captures — Dual
+  bleibt beim UUID-Namen (kein Migrationsbedarf, Dual ist seit Phase 4 ohnehin nicht mehr über die UI
+  erreichbar), Unsorted-Aufnahmen ebenfalls unverändert (noch kein sinnvoller lesbarer Name vorhanden).
+- **Bildrate-/Auflösungs-Anzeige entfernt** (Nutzerwunsch, 2026-08-02) — saß zuvor oben rechts in
+  `CaptureTopBar`, spiegelbildlich zur Blitz-Kapsel links; ersatzlos gestrichen. `frameRateLabel`/
+  `resolutionLabel` sind aus `CaptureTopBar`s Init verschwunden. Auflösung/Bildrate bleiben weiterhin in den
+  Settings einstellbar.
+- **Zuordnungs-Panel-Button in die obere rechte Ecke verschoben + 9% kleiner** (Nutzerwunsch, 2026-08-02) — der
+  durch den vorigen Punkt frei gewordene Platz. `AssignmentToggleButton.diameter` jetzt `76 * 0.91`. Der exakte
+  Top-Versatz in `CaptureView.swift` ist unverändert vom alten mittigen Layout übernommen, noch nicht am Gerät
+  für die neue Position/Größe nachjustiert — bei Bedarf per Screenshot nachschärfen.
+- **Videostabilisierung aktiviert** (auf physischem Gerät diagnostiziert und zuerst in TrickCam gefixt,
+  EveryCam hatte denselben Code geerbt, 2026-08-02): `AVCaptureConnection.preferredVideoStabilizationMode` wurde
+  nirgends gesetzt — Apples Default dafür ist `.off`, die App nahm dadurch komplett unstabilisiert auf (Treppen-
+  Testclip im Seitenvergleich mit der nativen Kamera-App deutlich sichtbar). Fix: `connection.preferredVideoStabilizationMode = .auto`
+  (nicht fest `.cinematicExtended`, damit das System je Gerät/Format selbst wählt, CLAUDE.md §3), hinter
+  `connection.isVideoStabilizationSupported` geprüft, an derselben Stelle gesetzt wie die bereits bestehende
+  Rotationswinkel-Zuweisung pro Take — sowohl im normalen `movieOutput`-Weg (`dispatchStart`) als auch im
+  ProRes-`videoDataOutput`-Weg (`startProResRecording`), da beide unabhängige Connections sind. Reines
+  Geräte-Konfigurationsverhalten, nur auf physischem Gerät beurteilbar.
 
 ---
 

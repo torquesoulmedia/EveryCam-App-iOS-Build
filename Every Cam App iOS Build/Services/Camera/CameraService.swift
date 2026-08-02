@@ -547,6 +547,17 @@ final class CameraService: NSObject {
                 if connection.isVideoRotationAngleSupported(angle) {
                     connection.videoRotationAngle = angle
                 }
+                // Bugfix (2026-08-02, auf physischem Gerät im Seitenvergleich
+                // mit der nativen Kamera-App diagnostiziert): Apples Default
+                // für preferredVideoStabilizationMode ist .off — ohne diese
+                // Zeile nahm die App komplett unstabilisiert auf. .auto statt
+                // eines fest verdrahteten Modus wie .cinematicExtended, damit
+                // das System je nach Gerät/Format selbst den besten
+                // verfügbaren Modus wählt (CLAUDE.md §3, keine
+                // Geräte-Whitelist).
+                if connection.isVideoStabilizationSupported {
+                    connection.preferredVideoStabilizationMode = .auto
+                }
                 // Nur setzen, wenn das Gerät den Codec für die aktuelle
                 // Session-Konfiguration tatsächlich anbietet — sonst würde
                 // setOutputSettings eine Exception werfen. Fällt andernfalls
@@ -570,9 +581,15 @@ final class CameraService: NSObject {
     /// liefert dann einen Fehler an die UI, statt eine leere Datei zu erzeugen.
     /// Läuft ausschließlich auf der sessionQueue.
     nonisolated private func startProResRecording(to url: URL, angle: CGFloat) {
-        if let connection = videoDataOutput.connection(with: .video),
-           connection.isVideoRotationAngleSupported(angle) {
-            connection.videoRotationAngle = angle
+        if let connection = videoDataOutput.connection(with: .video) {
+            if connection.isVideoRotationAngleSupported(angle) {
+                connection.videoRotationAngle = angle
+            }
+            // Derselbe Stabilisierungs-Bugfix wie im movieOutput-Weg oben —
+            // eigener Data-Output, muss unabhängig gesetzt werden.
+            if connection.isVideoStabilizationSupported {
+                connection.preferredVideoStabilizationMode = .auto
+            }
         }
         guard videoDataOutput.availableVideoCodecTypesForAssetWriter(writingTo: .mov).contains(.proRes422),
               let videoSettings = videoDataOutput.recommendedVideoSettings(

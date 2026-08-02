@@ -67,10 +67,37 @@ struct PathBuilderTests {
         #expect(path == "Unsorted/\(captureId.uuidString).mov")
     }
 
+    // MARK: - Menschenlesbare Dateinamen für zugeordnete Aufnahmen
+    // (Nutzerwunsch, 2026-08-01) — <Tag>-<Sammlung-Ordnername>[ (n)].ext statt
+    // der bisherigen UUID. Kein separates "Ergebnis" wie in TrickCam (Bail/
+    // Make): EveryCams tagId deckt beide TrickCam-Achsen bereits ab.
+
+    @Test func tagCaptureFileNameWithoutSuffix() {
+        let name = pathBuilder.tagCaptureFileName(sanitizedTagName: "Oma", collectionFolderName: "2026-07-14_Contest", fileExtension: "mov")
+        #expect(name == "Oma-2026-07-14_Contest.mov")
+    }
+
+    @Test func tagCaptureFileNameWithSuffix() {
+        let name = pathBuilder.tagCaptureFileName(sanitizedTagName: "Oma", collectionFolderName: "2026-07-14_Contest", fileExtension: "mov", suffix: 2)
+        #expect(name == "Oma-2026-07-14_Contest (2).mov")
+    }
+
+    @Test func tagCaptureFileURLSitsInTagFolder() {
+        let collection = pathBuilder.collectionFolderURL(date: "2026-07-14", sanitizedName: "Contest")
+        let tagFolder = pathBuilder.tagFolderURL(collectionFolder: collection, sanitizedTagName: "Oma")
+        let url = pathBuilder.tagCaptureFileURL(in: tagFolder, sanitizedTagName: "Oma", collectionFolderName: collection.lastPathComponent, fileExtension: "mov")
+        #expect(url.lastPathComponent == "Oma-2026-07-14_Contest.mov")
+        #expect(url.deletingLastPathComponent() == tagFolder)
+    }
+
     @Test func tagCaptureRelativePathFormat() {
-        let captureId = UUID()
-        let path = pathBuilder.tagCaptureRelativePath(sanitizedTagName: "Oma", captureId: captureId, fileExtension: "mov")
-        #expect(path == "Oma/\(captureId.uuidString).mov")
+        let path = pathBuilder.tagCaptureRelativePath(sanitizedTagName: "Oma", collectionFolderName: "2026-07-14_Contest", fileExtension: "mov")
+        #expect(path == "Oma/Oma-2026-07-14_Contest.mov")
+    }
+
+    @Test func tagCaptureRelativePathWithSuffix() {
+        let path = pathBuilder.tagCaptureRelativePath(sanitizedTagName: "Oma", collectionFolderName: "2026-07-14_Contest", fileExtension: "mov", suffix: 3)
+        #expect(path == "Oma/Oma-2026-07-14_Contest (3).mov")
     }
 
     // MARK: - Dual-Pfade (SPEC.md §5/§7.4-Herkunft aus TrickCam)

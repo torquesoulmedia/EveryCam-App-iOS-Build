@@ -97,8 +97,33 @@ nonisolated struct PathBuilder: Sendable {
         "Unsorted/\(captureId.uuidString).\(fileExtension)"
     }
 
-    func tagCaptureRelativePath(sanitizedTagName: String, captureId: UUID, fileExtension: String) -> String {
-        "\(sanitizedTagName)/\(captureId.uuidString).\(fileExtension)"
+    // Menschenlesbarer Dateiname für eine zugeordnete Single-Aufnahme
+    // (Nutzerwunsch, 2026-08-01, aus TrickCam übernommen und ans eigene
+    // Datenmodell angepasst) — TrickCam benannte nach `<Athlet>-<Session>-
+    // <Ergebnis>`; EveryCam hat seit dem Wegfall von Bail/Make (SPEC.md §4.1)
+    // kein separates Ergebnis-Feld mehr, `tagId` deckt beide TrickCam-Achsen
+    // (Person + Ergebnis) bereits gemeinsam ab — deshalb nur `<Tag>-
+    // <Sammlung-Ordnername>`. Der Sammlung-Ordnername (inkl. Datum und
+    // eigenem Kollisions-Suffix) wird unverändert übernommen, nicht erneut
+    // hergeleitet — er ist bereits dateisystemsicher (siehe
+    // FileStore.createCollectionFolder). Gilt nur für Single-Captures —
+    // Dual bleibt beim bisherigen UUID-Namen (kein Migrationsbedarf, SPEC.md
+    // §7.4-Herkunft, Dual ist seit Phase 4 ohnehin nicht mehr über die UI
+    // erreichbar).
+    func tagCaptureFileName(sanitizedTagName: String, collectionFolderName: String, fileExtension: String, suffix: Int = 1) -> String {
+        let base = "\(sanitizedTagName)-\(collectionFolderName)"
+        return suffix <= 1 ? "\(base).\(fileExtension)" : "\(base) (\(suffix)).\(fileExtension)"
+    }
+
+    func tagCaptureFileURL(in folder: URL, sanitizedTagName: String, collectionFolderName: String, fileExtension: String, suffix: Int = 1) -> URL {
+        folder.appendingPathComponent(
+            tagCaptureFileName(sanitizedTagName: sanitizedTagName, collectionFolderName: collectionFolderName, fileExtension: fileExtension, suffix: suffix),
+            isDirectory: false
+        )
+    }
+
+    func tagCaptureRelativePath(sanitizedTagName: String, collectionFolderName: String, fileExtension: String, suffix: Int = 1) -> String {
+        "\(sanitizedTagName)/\(tagCaptureFileName(sanitizedTagName: sanitizedTagName, collectionFolderName: collectionFolderName, fileExtension: fileExtension, suffix: suffix))"
     }
 
     // Der 16:9-Crop entsteht erst nach dem Stopp und liegt bis zur Zuordnung

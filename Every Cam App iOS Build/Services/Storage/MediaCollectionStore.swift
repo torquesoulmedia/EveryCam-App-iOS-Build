@@ -224,17 +224,67 @@ actor MediaCollectionStore {
         return updatedCapture
     }
 
-    private func moveSingleFile(capture: Capture, collectionFolder folder: URL, sanitizedTagName: String) async throws -> CaptureFiles {
-        let captureId = capture.id
-        let fileExtension = (capture.files.primary as NSString).pathExtension
+    /// Migriert bereits zugeordnete Single-Captures, deren Datei noch den
+    /// alten UUID-Namen trägt, auf das neue menschenlesbare Schema
+    /// (Nutzerwunsch, 2026-08-01) — läuft beim Öffnen der Galerie
+    /// (GalleryViewModel.load()). Pro Aufnahme unabhängig/best-effort: eine
+    /// nicht umbenennbare Aufnahme (Datei fehlt, Zielname belegt trotz
+    /// Kollisions-Suffix o. ä.) blockiert die übrigen nicht und bleibt
+    /// einfach beim alten Namen stehen, bis der nächste Öffnen-Versuch es
+    /// erneut probiert. Dual-Captures bleiben unangetastet — kein
+    /// Migrationsbedarf dort (siehe PathBuilder.tagCaptureFileName).
+    func migrateTagCaptureFileNamesIfNeeded(collectionId: UUID) async {
+        guard let folder = try? await folderURL(forCollectionId: collectionId),
+              var collection = try? await read(from: folder) else { return }
 
+        var didChange = false
+        for index in collection.captures.indices {
+            let capture = collection.captures[index]
+            guard capture.mode == .single,
+                  let tagId = capture.tagId,
+                  let tag = collection.tags.first(where: { $0.id == tagId }) else { continue }
+
+            let currentURL = folder.appendingPathComponent(capture.files.primary)
+            // Nur, wenn der Dateiname noch exakt der alten UUID entspricht —
+            // ein bereits migrierter oder anderweitig benannter Dateiname
+            // wird nicht angetastet.
+            guard currentURL.deletingPathExtension().lastPathComponent == capture.id.uuidString else { continue }
+
+            let sanitizedTagName = NameSanitizer.sanitizeForFilesystem(tag.name)
+            let destinationFolder = pathBuilder.tagFolderURL(collectionFolder: folder, sanitizedTagName: sanitizedTagName)
+            let destination = await fileStore.resolveTagCaptureDestination(
+                folder: destinationFolder,
+                sanitizedTagName: sanitizedTagName,
+                collectionFolderName: folder.lastPathComponent,
+                fileExtension: currentURL.pathExtension
+            )
+            guard (try? await fileStore.moveCaptureFile(from: currentURL, to: destination.url)) != nil else { continue }
+
+            collection.captures[index].files.primary = destination.relativePath
+            didChange = true
+        }
+
+        if didChange {
+            try? await write(collection, to: folder)
+        }
+    }
+
+    private func moveSingleFile(capture: Capture, collectionFolder folder: URL, sanitizedTagName: String) async throws -> CaptureFiles {
+        let fileExtension = (capture.files.primary as NSString).pathExtension
         let destinationFolder = pathBuilder.tagFolderURL(collectionFolder: folder, sanitizedTagName: sanitizedTagName)
-        let relativePath = pathBuilder.tagCaptureRelativePath(sanitizedTagName: sanitizedTagName, captureId: captureId, fileExtension: fileExtension)
+
+        // Menschenlesbarer Dateiname statt UUID (Nutzerwunsch, 2026-08-01) —
+        // <Tag>-<Sammlung-Ordnername>[ (n)].ext, siehe PathBuilder.tagCaptureFileName.
+        let destination = await fileStore.resolveTagCaptureDestination(
+            folder: destinationFolder,
+            sanitizedTagName: sanitizedTagName,
+            collectionFolderName: folder.lastPathComponent,
+            fileExtension: fileExtension
+        )
 
         let sourceURL = folder.appendingPathComponent(capture.files.primary)
-        let destinationURL = pathBuilder.captureFileURL(in: destinationFolder, captureId: captureId, fileExtension: fileExtension)
-        try await fileStore.moveCaptureFile(from: sourceURL, to: destinationURL)
-        return CaptureFiles(primary: relativePath, cropped169: nil)
+        try await fileStore.moveCaptureFile(from: sourceURL, to: destination.url)
+        return CaptureFiles(primary: destination.relativePath, cropped169: nil)
     }
 
     /// Eine Dual-Capture liegt ausschließlich unter Dual/<TagName>/ — keine

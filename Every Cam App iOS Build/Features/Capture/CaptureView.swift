@@ -141,8 +141,6 @@ struct CaptureView: View {
                             photoFlashMode: viewModel.cameraService.photoFlashMode,
                             selfTimerDuration: viewModel.selfTimerDuration,
                             isSelfTimerControlEnabled: !viewModel.isRecording && !viewModel.isCapturingPhoto && viewModel.countdownRemaining == nil,
-                            frameRateLabel: settingsStore.frameRate.displayLabel,
-                            resolutionLabel: settingsStore.resolution.displayLabel,
                             onToggleTorch: { viewModel.cameraService.toggleTorch() },
                             onSelectPhotoFlashMode: { viewModel.cameraService.setPhotoFlashMode($0) },
                             onSelectSelfTimer: { viewModel.setSelfTimer($0) }
@@ -157,21 +155,27 @@ struct CaptureView: View {
                         // wie unten.
                         .padding(.top, Layout.spacingM)
 
-                        // Mittig oben, in einer Flucht mit Blitz und
-                        // Auflösungs-Anzeige statt als Teil des Panels darunter.
-                        // Beide ZStack-Kinder sind relativ zum selben Ursprung
-                        // (.top des ZStack) ausgerichtet — der Top-Versatz hier
-                        // muss deshalb CaptureTopBars eigenen spacingM-Versatz
-                        // MIT enthalten, um exakt auf derselben Höhe wie zuvor
-                        // zu landen (per annotiertem Geräte-Screenshot,
-                        // 2026-07-29, austariert). Bei Bedarf anhand eines
-                        // neuen Screenshots weiter nachjustieren.
+                        // Obere rechte Ecke statt oben mittig (Nutzerwunsch,
+                        // 2026-08-02) — der Platz dort ist seit dem Wegfall der
+                        // Bildrate-/Auflösungs-Anzeige frei. `.frame(maxWidth:
+                        // .infinity, alignment: .trailing)` schiebt den Button
+                        // an die rechte Kante des ZStack, `.padding(.trailing,
+                        // spacingS)` gleicht CaptureTopBars eigenes
+                        // Innen-Padding aus, damit beide Kapseln bündig mit
+                        // derselben Kante abschließen. Der Top-Versatz ist
+                        // relativ zum selben ZStack-Ursprung wie CaptureTopBars
+                        // eigener spacingM-Versatz, exakter Wert seit der
+                        // Positions-/Größenänderung noch nicht am Gerät
+                        // nachjustiert (vorheriger Wert von der alten mittigen
+                        // Position übernommen, siehe Git-Historie).
                         if appState.activeCollectionId != nil {
                             AssignmentToggleButton(
                                 isExpanded: viewModel.isAssignmentPanelExpanded,
                                 unsortedCount: viewModel.unsortedCount,
                                 onToggle: { viewModel.toggleAssignmentPanel() }
                             )
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .padding(.trailing, Layout.spacingS)
                             .padding(.top, Layout.spacingM + 8)
                         }
                     }
