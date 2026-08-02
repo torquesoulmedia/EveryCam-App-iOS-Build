@@ -6,6 +6,10 @@ import SwiftUI
 // den Inhalt laufend.
 struct GalleryView: View {
     @Environment(AppState.self) private var appState
+    // "Ordner in Dateien-App öffnen" (Nutzerwunsch) — SwiftUIs openURL-Action
+    // statt UIApplication.shared.open, um kein UIKit-Interop einzuführen, wo
+    // es nicht zwingend nötig ist (CLAUDE.md §3).
+    @Environment(\.openURL) private var openURL
 
     let collectionId: UUID
     let collectionStore: MediaCollectionStore
@@ -134,6 +138,17 @@ struct GalleryView: View {
         }
     }
 
+    // "In Dateien-App öffnen" (Nutzerwunsch) — file:// durch das dedizierte
+    // shareddocuments://-Schema ersetzen öffnet die Dateien-App direkt an
+    // diesem Ordner, statt nur die App selbst in den Vordergrund zu holen.
+    private func openCollectionFolderInFilesApp() {
+        guard let sessionFolder = viewModel.sessionFolder,
+              var components = URLComponents(url: sessionFolder, resolvingAgainstBaseURL: false) else { return }
+        components.scheme = "shareddocuments"
+        guard let url = components.url else { return }
+        openURL(url)
+    }
+
     private func handleTap(_ item: GalleryThumbnailItem) {
         if viewModel.isSelectionMode {
             viewModel.toggleSelection(item)
@@ -190,6 +205,19 @@ struct GalleryView: View {
                     if let sessionFolder = viewModel.sessionFolder {
                         exportURLs = [sessionFolder]
                     }
+                }
+            }
+            // "In Dateien-App öffnen" (Nutzerwunsch) — springt direkt zum
+            // Sammlung-Ordner in der Dateien-App, statt dort erst manuell
+            // durch "Auf meinem iPhone" → "EveryCam" navigieren zu müssen.
+            // Funktioniert, weil UIFileSharingEnabled +
+            // LSSupportsOpeningDocumentsInPlace bereits gesetzt sind (siehe
+            // PathBuilder.swift) — die shareddocuments://-URL ist der
+            // dafür vorgesehene Weg, in-app URLs an die Dateien-App
+            // weiterzureichen.
+            ToolbarItem(placement: .secondaryAction) {
+                Button("Ordner in Dateien-App öffnen") {
+                    openCollectionFolderInFilesApp()
                 }
             }
         }

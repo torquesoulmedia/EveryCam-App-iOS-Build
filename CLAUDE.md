@@ -531,6 +531,13 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
   Rotationswinkel-Zuweisung pro Take — sowohl im normalen `movieOutput`-Weg (`dispatchStart`) als auch im
   ProRes-`videoDataOutput`-Weg (`startProResRecording`), da beide unabhängige Connections sind. Reines
   Geräte-Konfigurationsverhalten, nur auf physischem Gerät beurteilbar.
+- **"Ordner in Dateien-App öffnen" in der Galerie** (Nutzerwunsch, 2026-08-03) — neuer Eintrag im
+  Überlaufmenü ("...") neben "Sammlung exportieren", springt direkt zum Sammlung-Ordner in der Dateien-App.
+  Technik: `viewModel.sessionFolder`s `file://`-URL wird per `URLComponents` aufs `shareddocuments://`-Schema
+  umgeschrieben und über SwiftUIs `@Environment(\.openURL)` geöffnet (kein `UIApplication.shared.open`, um kein
+  zusätzliches UIKit-Interop einzuführen). Funktioniert nur, weil `UIFileSharingEnabled` +
+  `LSSupportsOpeningDocumentsInPlace` bereits gesetzt sind (siehe PathBuilder.swift/SPEC.md §3) — ohne diese
+  beiden Info.plist-Keys wäre der Sammlung-Ordner in der Dateien-App gar nicht sichtbar/adressierbar.
 
 ---
 

@@ -479,6 +479,7 @@ Entspricht TrickCams Session-Galerie, mit folgenden Anpassungen:
 | **Favorit (Nutzerwunsch, 2026-07-31)** | In der geöffneten Vollbild-Vorschau (Foto und Video) sitzt direkt neben dem Teilen-Symbol ein Favorit-Umschalter (Stern, gefüllt/umrandet — keine eigene Farbe, CLAUDE.md §6.2). Rein lokale Markierung in `collection.json` (`isFavorite`), wirkt sich nicht auf Ordner/Zuordnung aus. Grundlage für den Favoriten-Export in [§10](#10-bildschirm-2--sammlungen-übersicht). |
 | **Dual-Modus-Anzeige** | Entfällt in v1 vollständig aus der Galerie-Darstellung, da der Modus nicht aktiv nutzbar ist (Code/Datenmodell-Unterstützung bleibt für die spätere Reaktivierung erhalten). |
 | **Export (Nutzerwunsch, 2026-07-28)** | Zusätzlicher Menüpunkt „Sammlung exportieren" im „⋯"-Menü — exportiert die gesamte, gerade geöffnete Sammlung über denselben `UIDocumentPickerViewController`-Weg wie in der Sammlungen-Übersicht ([§10](#10-bildschirm-2--sammlungen-übersicht)), ohne zurück navigieren zu müssen. |
+| **Ordner in Dateien-App öffnen (Nutzerwunsch, 2026-08-03)** | Weiterer Menüpunkt im „⋯"-Menü, direkt neben „Sammlung exportieren" — öffnet den Sammlung-Ordner direkt in der Dateien-App (`shareddocuments://`-URL statt eines eigenen In-App-Browsers), spart das manuelle Navigieren über „Auf meinem iPhone" → „EveryCam". |
 
 ---
 
