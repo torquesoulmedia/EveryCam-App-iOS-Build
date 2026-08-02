@@ -103,9 +103,20 @@ struct ClipThumbnail: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
 
+                // Bugfix (Nutzerwunsch, 2026-08-03): anders als Favorit- und
+                // Foto/Video-Kennzeichen hatte das Auswahl-Häkchen keine
+                // eigene Hinterlegung — auf hellen Bildinhalten kaum bis gar
+                // nicht zu erkennen, ob eine Kachel gerade (nicht) ausgewählt
+                // ist. Dieselbe dunkle Kreis-Hinterlegung wie bei den anderen
+                // beiden Kennzeichen sorgt jetzt für Kontrast unabhängig vom
+                // darunterliegenden Bild.
                 if isSelectionMode {
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 10))
                         .foregroundStyle(Theme.textPrimary)
+                        .padding(4)
+                        .background(Theme.backgroundPrimary.opacity(0.8))
+                        .clipShape(Circle())
                         .padding(6)
                         .frame(maxWidth: .infinity, alignment: .topTrailing)
                 }

@@ -19,16 +19,41 @@ struct LaunchScreenView: View {
     }
 
     var body: some View {
-        ZStack {
-            Theme.backgroundPrimary.ignoresSafeArea()
+        ZStack(alignment: .bottom) {
+            // Eigene Gruppe für Hintergrund + Video, damit sich der neue
+            // Überspringen-Button unten NICHT mit in dieses eine, rein
+            // dekorative Accessibility-Element einreiht (sonst wäre er für
+            // VoiceOver nicht mehr eigenständig antippbar).
+            Group {
+                Theme.backgroundPrimary.ignoresSafeArea()
 
-            if let videoURL {
-                SplashVideoPlayerView(url: videoURL, onFinished: onVideoFinished)
-                    .ignoresSafeArea()
+                if let videoURL {
+                    SplashVideoPlayerView(url: videoURL, onFinished: onVideoFinished)
+                        .ignoresSafeArea()
+                }
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("EveryCam wird gestartet")
+
+            // Überspringen-Button (Nutzerwunsch, 2026-08-03) — falls das
+            // Gerät schneller startbereit ist als das Splash-Video
+            // durchläuft, muss die volle Videolänge nicht abgewartet werden.
+            // Löst exakt dasselbe onVideoFinished-Signal wie das natürliche
+            // Video-Ende aus — RootView.dismissLaunchScreenIfReady()
+            // entscheidet unverändert selbst, ob zusätzlich noch auf die
+            // Kamera gewartet werden muss, hier wird nichts dupliziert.
+            Button(action: onVideoFinished) {
+                Text("Überspringen")
+                    .font(Typography.buttonLabel)
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(.horizontal, Layout.spacingM)
+                    .padding(.vertical, Layout.spacingS)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .overlay(Capsule().stroke(Theme.borderSubtle, lineWidth: 1))
+            }
+            .padding(.bottom, Layout.spacingL)
+            .accessibilityLabel("Startvideo überspringen")
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("EveryCam wird gestartet")
     }
 }
 

@@ -538,6 +538,13 @@ Stellen wieder ergänzen (`SettingsView.swift`, `ImpressumView.swift`, `Handbuch
   zusätzliches UIKit-Interop einzuführen). Funktioniert nur, weil `UIFileSharingEnabled` +
   `LSSupportsOpeningDocumentsInPlace` bereits gesetzt sind (siehe PathBuilder.swift/SPEC.md §3) — ohne diese
   beiden Info.plist-Keys wäre der Sammlung-Ordner in der Dateien-App gar nicht sichtbar/adressierbar.
+- **Überspringen-Button auf dem Splash-Screen** (Nutzerwunsch, 2026-08-03) — unten in `LaunchScreenView`, falls
+  das Gerät schneller startbereit ist als das Splash-Video durchläuft. Ruft exakt dasselbe `onVideoFinished`-
+  Signal wie das natürliche Video-Ende auf; `RootView.dismissLaunchScreenIfReady()` bleibt unverändert die
+  einzige Stelle, die endgültig entscheidet, ob zusätzlich noch auf die Kamera gewartet werden muss — der
+  Button dupliziert diese Logik nicht, er triggert nur denselben bereits vorhandenen Eingang. Hintergrund/Video
+  bleiben als ein rein dekoratives, kombiniertes Accessibility-Element ("EveryCam wird gestartet"); der Button
+  sitzt bewusst außerhalb dieser Gruppe, sonst wäre er für VoiceOver nicht mehr eigenständig antippbar.
 
 ---
 
