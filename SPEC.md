@@ -1,6 +1,6 @@
 # EveryCam — Funktionsspezifikation (v1)
 
-> **Status:** Konzept, verbindlich für die Umsetzung · **Version:** 0.1 · **Stand:** 2026-07-27
+> **Status:** In aktiver Umsetzung, Phasen 1–9 gebaut · **Version:** 0.2 · **Stand:** 2026-08-03
 > **Zielplattform:** iOS 17+, iPhone 14 und neuer · **Stack:** Swift / SwiftUI / AVFoundation
 >
 > Dieses Dokument ist die **einzige Quelle der Wahrheit** für den Funktionsumfang von EveryCam.
@@ -114,7 +114,7 @@ Kamera-Detaileinstellungen. Siehe [§15](#15-explizit-nicht-umzusetzen).
 | **Deployment Target** | iOS 17.0 |
 | **Geräte** | iPhone 14 und neuer |
 | **Geräte-Kompatibilität** | **Feature-Detection statt Whitelist**, unverändert aus TrickCam: Objektive/Zoomstufen zur Laufzeit über `AVCaptureDevice.DiscoverySession`. Feste Zoom-Sprungmarken (0.5x/1x/2x/5x/10x, `LensDiscovery.swift`) bleiben als dokumentierte Ausnahme bestehen, gekoppelt an den echten, laufzeitermittelten Zoombereich. |
-| **Speicher** | App-Sandbox über `FileManager`, `Documents/Sammlungen/`, sichtbar unter „Auf diesem iPhone" in der Dateien-App, bleibt die **alleinige Quelle der Wahrheit** für Sammlungen/Tags/`collection.json`. **Keine** Photos-Library/`PHPhotoLibrary` als primäre Speicherung — auch nicht für Fotos. **Neu (Nutzerentscheidung, 2026-07-27):** optional, per Settings-Schalter, wird zusätzlich eine unveränderte Kopie jeder Aufnahme in die System-Fotomediathek (Kamerarolle) geschrieben — reiner Fire-and-Forget-Export nach Abschluss der Aufnahme, unabhängig von Sammlung/Tag/Zuordnung. Ändert nichts an der Zuordnungs-Transaktion oder am Datenmodell; die Kamerarolle wird nirgends gelesen oder als Quelle behandelt. Siehe [§12](#12-bildschirm-4--globale-settings). |
+| **Speicher** | App-Sandbox über `FileManager`, `Documents/Sammlungen/`, sichtbar unter „Auf diesem iPhone" in der Dateien-App, bleibt die **alleinige Quelle der Wahrheit** für Sammlungen/Tags/`collection.json`. **Keine** Photos-Library/`PHPhotoLibrary` als primäre Speicherung — auch nicht für Fotos. **Geplant, noch nicht umgesetzt (Nutzerentscheidung, 2026-07-27 — Statuskorrektur 2026-08-03):** ein optionaler Settings-Schalter „Zusätzlich in Fotomediathek sichern" (`PHAssetCreationRequest`-Fire-and-Forget-Export nach jeder Aufnahme) ist als Entscheidung dokumentiert ([§12](#12-bildschirm-4--globale-settings)), existiert aber noch nicht im Code — kein solcher Schalter in `SettingsStore`/`SettingsView`, kein `PHAssetCreationRequest`-Aufruf irgendwo in der App. Tatsächlich umgesetzt ist nur das **manuelle** „In Fotos speichern" im nativen Share Sheet (`ShareSheet.swift`, teilt dieselbe `NSPhotoLibraryAddUsageDescription`-Berechtigung, aber eine andere Funktion — kein automatischer Export). |
 | **Darstellungsmodus** | Fest **hell** — warme Sand-/Champagner-Palette, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund (Nutzerentscheidung vom 2026-07-27, siehe [§6](#6-style-guide)). Löst TrickCams festen Dunkelmodus ab. Kein Folgen des System-Hell-/Dunkelmodus, kein In-App-Override — diese Grundregel (fester Modus, keine Umschaltung) bleibt bestehen, nur die Polung dreht von dunkel auf hell. |
 | **Netzwerk** | Keine Cloud, kein iCloud/CloudKit-Sync, kein GPS. Vollständig offline. |
 | **Teilen** | Natives iOS Share Sheet (`UIActivityViewController`), für Fotos und Videos gleichermaßen. |
@@ -128,9 +128,11 @@ Unverändert aus TrickCam übernommen: `NSCameraUsageDescription`, `NSMicrophone
 Photos-Library-Lesezugriff (kein `NSPhotoLibraryUsageDescription`) — Fotoaufnahme über `AVCapturePhotoOutput`
 schreibt weiterhin primär in die eigene Sandbox, nicht in die System-Fotomediathek.
 
-**Neu:** `NSPhotoLibraryAddUsageDescription` (reine „Hinzufügen"-Berechtigung, kein Lesezugriff) — wird nur
-für den optionalen „Zusätzlich in Fotomediathek sichern"-Schalter benötigt ([§12](#12-bildschirm-4--globale-settings)),
-und auch dann erst beim ersten Einschalten des Schalters abgefragt, nicht beim App-Start.
+**Neu:** `NSPhotoLibraryAddUsageDescription` (reine „Hinzufügen"-Berechtigung, kein Lesezugriff) — aktuell
+umgesetzt für „In Fotos speichern" im Share Sheet der Galerie-Vorschau (Nutzerwunsch, 2026-07-31 — ohne diesen
+Schlüssel blendet iOS diese Option aus jedem Share Sheet der App aus). Der in [§12](#12-bildschirm-4--globale-settings)
+beschriebene automatische Export-Schalter würde dieselbe Berechtigung mitnutzen, ist aber noch nicht gebaut
+(siehe Statuskorrektur oben).
 
 ---
 
@@ -263,9 +265,8 @@ Sammlung-Galerie automatisch (Best-Effort, pro Aufnahme unabhängig) auf das neu
 > keine feste Erfolg/Fehler-Semantik mehr, die eine Farbzuordnung rechtfertigen würde. EveryCam wird **fest
 > hell** dargestellt (löst TrickCams festen Dunkelmodus ab, siehe [§3](#3-technische-rahmenbedingungen)) —
 > warme **Sand-/Champagner-Palette**, warm und freundlich, schwarze/nahezu schwarze Schrift auf dem helleren
-> Untergrund. Konkrete Hex-Werte siehe [§6.1](#61-token-architektur). App-Icon bleibt vorerst ein einfacher
-> Platzhalter in derselben Palette — echte Icon-Gestaltung ist ein eigener, späterer Durchgang, siehe
-> [§16](#16-noch-offen--annahmen).
+> Untergrund. Konkrete Hex-Werte siehe [§6.1](#61-token-architektur). App-Icon ist final (siehe
+> [§16](#16-noch-offen--annahmen) Punkt 3) — kein Platzhalter mehr.
 
 ### 6.1 Token-Architektur
 
@@ -311,9 +312,14 @@ Neues Prinzip, angelehnt an native System-Werkzeugleisten (Control Center) statt
   deutlich unverwechselbarerer Kontrast als der vorherige dezente Farbton-Unterschied.
 - **Ausnahme, bewusst nicht angepasst:** Der Zuordnungs-Panel-Button (`AssignmentToggleButton`, zeigt die
   EveryCam-Marke) bleibt ein eigenständiger, auffälliger Kreis — er soll gerade **nicht** in der Masse
-  untergehen, sondern als Marken-Element jederzeit gut sichtbar bleiben (Nutzerwunsch).
+  untergehen, sondern als Marken-Element jederzeit gut sichtbar bleiben (Nutzerwunsch). **Position/Größe
+  aktualisiert (Nutzerwunsch, 2026-08-02):** sitzt jetzt oben rechts statt oben mittig (der Platz wurde frei,
+  siehe Bildrate-/Auflösungs-Anzeige unten) und ist 9% kleiner.
 - Betrifft ausschließlich den Aufnahme-Bildschirm. Sammlungen-Übersicht und Einstellungen behalten ihre
   bisherige, bereits gruppierte Kapsel-Optik mit flacher Füllung.
+- **Bildrate-/Auflösungs-Anzeige entfernt (Nutzerwunsch, 2026-08-02):** saß zuvor oben rechts, spiegelbildlich
+  zur Blitz-Kapsel links — ersatzlos gestrichen. Auflösung/Bildrate bleiben weiterhin in den Settings sichtbar
+  und einstellbar ([§12](#12-bildschirm-4--globale-settings)).
 
 ---
 
@@ -322,6 +328,16 @@ Neues Prinzip, angelehnt an native System-Werkzeugleisten (Control Center) statt
 Grundlayout, native Kamerafunktionen (Blitz, Pinch-to-Zoom, Tap-to-Focus, Objektivauswahl mit
 Laufzeit-Discovery) werden **unverändert aus TrickCam übernommen** — siehe `../Claude Code TrickCam/spec.md`
 §7 für die technischen Details dieser Mechanismen, sie gelten hier identisch.
+
+**Zwei Bugfixes, auf physischem Gerät diagnostiziert (2026-08-02, zuerst in TrickCam gefixt, EveryCam hatte
+denselben Code geerbt):** Tap-to-Focus verfolgt den angetippten Punkt jetzt **kontinuierlich** weiter
+(`.continuousAutoFocus`/`.continuousAutoExposure` statt der bisherigen Einmal-Modi, die nach dem ersten Tap
+einfroren) — Tippen-und-Halten bleibt weiterhin die einzige echte Sperre. Zusätzlich wird ein automatischer,
+für den Nutzer überraschender Objektivwechsel während der Fokus-Nachführung unterbunden
+(`AVCaptureDevice.setPrimaryConstituentDeviceSwitchingBehavior(.restricted, ...)`) — vom Nutzer selbst über
+Zoom/Pinch/Objektivauswahl ausgelöste Wechsel bleiben uneingeschränkt möglich. Außerdem ist
+Videostabilisierung (`preferredVideoStabilizationMode = .auto`) jetzt aktiv — war zuvor nirgends gesetzt und
+nahm dadurch komplett unstabilisiert auf (Apples Default ist `.off`).
 
 ### 7.1 Neu: Foto-/Video-Umschalter
 
@@ -358,8 +374,19 @@ siehe `CLAUDE.md` §7. Bis zur Reaktivierung läuft jede Aufnahme faktisch im bi
 
 ### 7.3 Zustände ohne aktive Sammlung
 
-Unverändert aus TrickCam: ohne aktive Sammlung ist der Aufnahmeknopf deaktiviert, Hinweis „Zuerst Sammlung
-anlegen". Aufnahme ohne Sammlung ist nicht möglich.
+Existiert **noch gar keine Sammlung**, zeigt der Hinweis „Zuerst Sammlung erstellen und Tags hinzufügen"
+(Nutzerwunsch, 2026-07-30) — unterscheidet sich bewusst von „nur keine Sammlung ausgewählt" (Text „Zuerst
+Sammlung anlegen"), wenn bereits Sammlungen existieren, nur keine gerade aktiv ist. In beiden Fällen bleibt der
+Aufnahmeknopf deaktiviert, Aufnahme ohne aktive Sammlung ist nicht möglich (unverändert aus TrickCam).
+
+### 7.4 Selfie-Kamera-Umschaltung (Nutzerwunsch, 2026-07-31)
+
+Umschalt-Button (`camera.rotate.fill`) zwischen Rück- und Frontkamera, in **beiden** Aufnahme-Modi (Foto und
+Video) gleichermaßen verfügbar — echter Geräte-Wechsel (`AVCaptureDeviceInput` austauschen), kein Zoom-Sprung
+innerhalb eines virtuellen Mehrlinsen-Geräts wie bei der regulären Objektivauswahl. Beim Wechsel werden
+Dauerlicht-Blitz (an der Frontkamera nicht vorhanden) und die 0.5x/1x-Zoom-Sperre zurückgesetzt, Startzoom und
+Vorschau-Rotation für das neue Gerät neu aufgebaut. Feature-Detection statt Annahme (CLAUDE.md §3): der Button
+erscheint nur, wenn das Gerät tatsächlich eine Frontkamera hat. Während einer laufenden Aufnahme gesperrt.
 
 ---
 
@@ -497,7 +524,7 @@ Ergänzung:
 Keine weiteren Einstellungen — kein manueller Qualitäts-/Kompressionsregler, kein RAW-Schalter, konsistent
 mit dem bestehenden Grundsatz „keine manuellen Kamera-Detaileinstellungen" ([§15](#15-explizit-nicht-umzusetzen)).
 
-#### Neuer Abschnitt „Speicherort" (Nutzerentscheidung, 2026-07-27)
+#### Neuer Abschnitt „Speicherort" (Nutzerentscheidung, 2026-07-27 — **geplant, noch nicht umgesetzt**, siehe [§3](#3-technische-rahmenbedingungen))
 
 | Einstellung | Verhalten |
 |---|---|
@@ -522,6 +549,15 @@ Direkt unter Speicher/Version steht permanent ein unaufdringlicher Hinweistext: 
 ausschließlich lokal gespeichert, es gibt keine Cloud-Sicherung, beim Löschen der App gehen sie unwiderruflich
 verloren — mit Verweis auf die Export-Funktion ([§10](#10-bildschirm-2--sammlungen-übersicht)). Kein eigenes
 Popup an dieser Stelle, nur sichtbar, sobald Einstellungen geöffnet wird.
+
+#### Start-Splash: Überspringen-Button (Nutzerwunsch, 2026-08-03)
+
+`LaunchScreenView` zeigt einmalig beim Kaltstart einen stummen Marken-Splash (Video), unabhängig vom
+Kamera-Status. Falls das Gerät schneller startbereit ist als das Video durchläuft, kann der Nutzer über einen
+Überspringen-Button unten direkt weiter, statt die volle Videolänge abzuwarten — löst dasselbe Signal aus wie
+das natürliche Videoende. `RootView` blendet den Splash trotzdem erst aus, sobald **zusätzlich** auch die
+Kamera bereit ist (verhindert eine kurze leere Übergangsfläche), das Überspringen wirkt also nur auf den
+Video-Anteil, nicht auf die Kamera-Wartezeit.
 
 #### Neu: Datensicherheits-Hinweis beim App-Start (Nutzerwunsch, 2026-07-28)
 
@@ -608,7 +644,9 @@ Wie TrickCam, unverändert:
 - ❌ Manueller Hell-/Dunkel-Modus-Override in den Settings
 - ❌ `AVCaptureMultiCamSession` / echte gleichzeitige Zwei-Kamera-Aufnahme
 - ❌ Speicherung in der Photos-Library als **Primär**- oder Einzigablage — eine rein additive, opt-in
-  Zusatzkopie in die Kamerarolle ist seit 2026-07-27 erlaubt, siehe [§12](#12-bildschirm-4--globale-settings)
+  Zusatzkopie in die Kamerarolle ist seit 2026-07-27 als Entscheidung erlaubt, aber noch nicht gebaut, siehe
+  [§12](#12-bildschirm-4--globale-settings). Umgesetzt ist bislang nur das manuelle „In Fotos speichern" im
+  Share Sheet (kein automatischer Export).
 - ❌ Benutzerkonten, Login, Analytics, Crash-Reporting-SDKs
 
 **Neu gegenüber TrickCam:**
@@ -631,7 +669,7 @@ explizit bestätigt wurden. Vor der jeweiligen Umsetzungsphase kurz gegenprüfen
 | 2 | Tag-Abschnitte in der Galerie ([§11](#11-bildschirm-3--sammlung-galerie)) erscheinen in **Anlage-Reihenfolge** der Tags. | TrickCam hatte eine erzwungene Reihenfolge (Bail immer zuletzt), die mit dem Wegfall der Rollen keine Grundlage mehr hat. Alternativen: alphabetisch, oder nach Anzahl Aufnahmen. |
 | 3 | **Entschieden (2026-07-27):** EveryCam wird fest hell dargestellt, warme Sand-/Champagner-Palette, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund. Konkrete Hex-Werte siehe [§6.1](#61-token-architektur). Das App-Icon ist final (`EveryCam_Icon_HQ_render.png`, vom Nutzer geliefertes Artwork — Ring/Hexagon/Farbkugeln-Motiv), `TrickCam ICON v1 Final.icon`-Bundle bleibt technisch bestehen, nur das Bildmotiv wurde ersetzt; eine Umbenennung des Bundle-Ordners selbst ist rein kosmetisch und steht noch aus. | Nutzerentscheidung, löst TrickCams festen Dunkelmodus ab. |
 | 4 | **Entschieden (Phase 7, 2026-07-27):** Tag-Buttons im Zuordnungs-Panel scrollen ab einer Kappungshöhe (`AssignmentPanel.maxContentHeight`, ~3–4 Zeilen) intern, statt das Panel weiter wachsen zu lassen — kein Such-/Sortier-UI in v1. Verhindert, dass eine große Tag-Zahl den Aufnahmeknopf vom Bildschirm drückt. Visuelle Feinabstimmung der genauen Kappungshöhe steht noch aus (echtes Gerät). | Einfachste robuste Baseline; Suche/Sortierung wären für v1 Überengineering. |
-| 5 | Rechtstexte (Impressum/Terms/Handbuch) sind inhaltlich noch 1:1 TrickCam-Text und müssen für EveryCam neu geschrieben werden ([§12](#12-bildschirm-4--globale-settings)). | Bewusst als eigene, spätere Phase behandelt, nicht Teil der fachlichen Kernumsetzung. |
+| 5 | **Erledigt (Phase 6, abgeschlossen 2026-07-27):** Rechtstexte (Impressum/Terms/Handbuch) sind inhaltlich für EveryCam neu geschrieben, siehe [§12](#12-bildschirm-4--globale-settings). |  |
 
 ---
 
@@ -645,6 +683,9 @@ explizit bestätigt wurden. Vor der jeweiligen Umsetzungsphase kurz gegenprüfen
 - [ ] Tap auf einen Tag verschiebt die Aufnahme korrekt in dessen Ordner und schließt das Panel
 - [ ] Eine Sammlung ohne Tags erlaubt weiterhin Aufnahmen, die in `Unsorted/` warten
 - [ ] Blitz, Pinch-Zoom, Tap-to-Focus, Objektivauswahl funktionieren unverändert in beiden Aufnahme-Modi
+- [ ] Tap-to-Focus verfolgt den angetippten Punkt kontinuierlich, friert nicht nach dem ersten Tap ein; Tippen-und-Halten sperrt weiterhin
+- [ ] Front-/Rückkamera-Umschaltung funktioniert in beiden Modi, ist während laufender Aufnahme gesperrt
+- [ ] Videostabilisierung ist spürbar aktiv (Vergleich Handheld-Clip mit/ohne Bewegung)
 
 ### Organisation
 
@@ -652,12 +693,18 @@ explizit bestätigt wurden. Vor der jeweiligen Umsetzungsphase kurz gegenprüfen
 - [ ] `collection.json` ist nach jeder Aktion valide und konsistent mit dem Dateisystem
 - [ ] Tag-Namenskollision wird abgefangen (Fehlertext, kein Speichern möglich), ohne automatischen Namensvorschlag
 - [ ] Nachträglich hinzugefügter Tag erscheint sofort als Button, auch für bereits wartende `Unsorted`-Aufnahmen
+- [ ] Zugeordnete Single-Aufnahmen tragen den Dateinamen `<Tag>-<Sammlung-Ordnername>.ext`, nicht mehr die UUID
+- [ ] Bereits zugeordnete Aufnahmen mit altem UUID-Namen werden beim Öffnen der Galerie automatisch umbenannt
 
 ### Galerie & Teilen
 
 - [ ] Galerie zeigt „Nicht zugeordnet" plus je einen Abschnitt pro Tag mit mindestens einer Aufnahme
 - [ ] Foto- und Video-Thumbnails erscheinen korrekt gemischt, Foto-Thumbnails ohne Frame-Extraktion
-- [ ] Teilen funktioniert für Fotos und Videos über das native Share Sheet
+- [ ] Teilen funktioniert für Fotos und Videos über das native Share Sheet, öffnet sich sofort auch bei bereits offener Vollbild-Vorschau
+- [ ] „In Fotos speichern" erscheint im Share Sheet
+- [ ] Favorit-Umschalter in der Vollbild-Vorschau funktioniert, Favorit-Abzeichen erscheint auch im Thumbnail-Raster
+- [ ] „Nur Favoriten exportieren" exportiert ausschließlich favorisierte Aufnahmen, zeigt einen Hinweis bei leerer Auswahl
+- [ ] „Ordner in Dateien-App öffnen" springt direkt zum Sammlung-Ordner
 
 ### Robustheit (unverändert aus TrickCam, gilt weiterhin)
 
