@@ -9,11 +9,17 @@ enum Typography {
     static let overlayLabel = Font.system(size: 15.75, weight: .semibold)
     // Bugfix (Nutzerfeedback, iPhone 15 Pro Max, iOS 26.5.2, 2026-08-03):
     // "Foto"/"Video" und "Sammlungen" brachen auf diesem Gerät in der
-    // Aufnahme-Reihe zweizeilig um ("Phot"/"o"), obwohl die Schrift laut
-    // Kommentar oben fix bleiben soll — die Zeile hat dort schlicht weniger
-    // Luft als angenommen. 1pt kleiner als Sicherheitsmarge, zusätzlich
-    // `.lineLimit(1)` an jeder betroffenen Stelle, damit ein Wort im
-    // Zweifel eher clippt als in eine zweite Zeile umbricht.
+    // Aufnahme-Reihe zweizeilig um ("Phot"/"o") — die Zeile hat dort
+    // schlicht weniger Luft als auf anderen Geräten (Ursache nicht
+    // abschließend geklärt, vermutlich Display-Zoom „Vergrößert“ auf einem
+    // Pro-Max-Gerät, das trotz größerer physischer Anzeige eine kleinere
+    // Punktbreite rendert als Standard). 1pt kleiner als erste Sicherheitsmarge.
+    // **Nachbesserung:** `.lineLimit(1)` allein ersetzte das Umbruch- nur durch
+    // ein genauso inakzeptables Abschneiden ("Pho…"/"Vi…", Nutzerfeedback,
+    // zweiter Screenshot desselben Geräts). Jede betroffene Stelle bekommt
+    // zusätzlich `.minimumScaleFactor(0.7)` — der Text schrumpft dynamisch auf
+    // die tatsächlich verfügbare Breite, statt zu umbrechen oder abzuschneiden,
+    // unabhängig davon, wie viel Platz die Zeile auf einem konkreten Gerät hat.
     static let buttonLabel = Font.system(size: 15, weight: .semibold)
 
     static let title = Font.system(.title2, weight: .semibold)
