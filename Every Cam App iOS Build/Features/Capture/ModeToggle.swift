@@ -34,6 +34,7 @@ struct ModeToggle: View {
         } label: {
             Text(label)
                 .font(Typography.buttonLabel)
+                .lineLimit(1)
                 .foregroundStyle(isActive ? Theme.textPrimary : Theme.textSecondary)
                 .padding(.horizontal, Layout.spacingM)
                 .frame(minHeight: Layout.minTapTarget)

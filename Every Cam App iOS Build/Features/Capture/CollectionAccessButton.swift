@@ -13,6 +13,7 @@ struct CollectionAccessButton: View {
         Button(action: action) {
             Text("Sammlungen")
                 .font(Typography.buttonLabel)
+                .lineLimit(1)
                 .foregroundStyle(Theme.textPrimary)
                 .padding(.horizontal, Layout.spacingM)
                 .frame(minHeight: Layout.minTapTarget)

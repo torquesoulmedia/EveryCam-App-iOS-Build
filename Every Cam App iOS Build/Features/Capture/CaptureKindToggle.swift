@@ -38,6 +38,7 @@ struct CaptureKindToggle: View {
         } label: {
             Text(label)
                 .font(Typography.buttonLabel)
+                .lineLimit(1)
                 .foregroundStyle(isActive ? Theme.backgroundPrimary : Theme.textPrimary)
                 .padding(.horizontal, Layout.spacingM)
                 .frame(minHeight: Layout.minTapTarget)
