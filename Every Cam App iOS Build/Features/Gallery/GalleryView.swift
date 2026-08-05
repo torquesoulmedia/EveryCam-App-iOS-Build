@@ -106,6 +106,13 @@ struct GalleryView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
+            // Fotos-Export (Nutzerwunsch) — kein System-UI wie beim
+            // Dateisystem-Export, daher eine eigene Erfolgsmeldung.
+            .alert("Exportiert", isPresented: Binding(get: { viewModel.isShowingPhotosExportSuccess }, set: { viewModel.isShowingPhotosExportSuccess = $0 })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.photosExportSuccessMessage ?? "")
+            }
             .sheet(isPresented: $isShowingTagManagement, onDismiss: {
                 Task { await viewModel.load() }
             }) {
@@ -206,6 +213,21 @@ struct GalleryView: View {
                         exportURLs = [sessionFolder]
                     }
                 }
+            }
+            // Direkter Fotos-Export (Nutzerwunsch, 2026-08-03) — Alternative
+            // zum Dateisystem-Export oben: statt eines System-Dokumenten-
+            // Pickers landen die Aufnahmen direkt in einem gleichnamigen
+            // Album der Fotos-App (PhotoLibraryExporter).
+            ToolbarItem(placement: .secondaryAction) {
+                Button("Sammlung in Fotos exportieren") {
+                    Task { await viewModel.exportCollectionToPhotos() }
+                }
+            }
+            ToolbarItem(placement: .secondaryAction) {
+                Button("Favoriten in Fotos exportieren") {
+                    Task { await viewModel.exportFavoritesToPhotos() }
+                }
+                .disabled(!viewModel.hasFavorites)
             }
             // "In Dateien-App öffnen" (Nutzerwunsch) — springt direkt zum
             // Sammlung-Ordner in der Dateien-App, statt dort erst manuell

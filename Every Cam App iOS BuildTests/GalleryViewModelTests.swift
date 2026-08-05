@@ -272,4 +272,44 @@ struct GalleryViewModelTests {
         #expect(Set(tagSection?.items.map(\.captureId) ?? []) == [clipAlreadyThere, clipToMove])
         #expect(!viewModel.isSelectionMode)
     }
+
+    // MARK: - Fotos-Export (Nutzerwunsch, 2026-08-03)
+
+    /// Treibt den deaktivierten Zustand von "Favoriten in Fotos exportieren"
+    /// im "⋯"-Menü — muss korrekt umschlagen, sobald mindestens eine Aufnahme
+    /// favorisiert ist, unabhängig von PhotoLibraryExporter selbst (der
+    /// eigentliche PHPhotoLibrary-Schreibvorgang ist nur manuell auf echter
+    /// Hardware testbar, CLAUDE.md §9.2).
+    @Test func hasFavoritesReflectsFavoriteState() async throws {
+        let (store, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let session = try await store.createCollection(name: "Contest Bowl")
+        let clipId = try await addUnsortedClip(store: store, sessionId: session.id)
+
+        let viewModel = GalleryViewModel(sessionId: session.id, sessionStore: store, settingsStore: SettingsStore())
+        await viewModel.load()
+        #expect(!viewModel.hasFavorites)
+
+        _ = try await store.toggleFavorite(captureId: clipId, collectionId: session.id)
+        await viewModel.load()
+        #expect(viewModel.hasFavorites)
+    }
+
+    /// exportCollectionToPhotos() auf einer Sammlung ganz ohne Aufnahmen darf
+    /// nicht mit einem leeren Aufruf an PhotoLibraryExporter durchlaufen,
+    /// sondern muss den dedizierten Fehler zeigen (EveryCamError.noCapturesToExport).
+    @Test func exportCollectionToPhotosWithoutCapturesShowsError() async throws {
+        let (store, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let session = try await store.createCollection(name: "Contest Bowl")
+        let viewModel = GalleryViewModel(sessionId: session.id, sessionStore: store, settingsStore: SettingsStore())
+        await viewModel.load()
+
+        await viewModel.exportCollectionToPhotos()
+
+        #expect(viewModel.isShowingError)
+        #expect(!viewModel.isShowingPhotosExportSuccess)
+    }
 }

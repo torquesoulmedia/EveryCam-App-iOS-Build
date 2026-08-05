@@ -72,12 +72,16 @@ Neue Services/Erweiterungen:
   Output-Swap-Mechanismus, den es für den ProRes-Hybrid bereits gibt (`updateVideoCodec`-artiges Muster).
 - `ThumbnailService` erweitert um einen Foto-Zweig (direktes Downsampling der Bilddatei statt
   `AVAssetImageGenerator`-Frame-Extraktion).
-- **Neu (Nutzerentscheidung, 2026-07-27):** `PhotoLibraryExporter` (neuer Service unter `Services/Media/`) —
-  schreibt optional, wenn der Settings-Schalter „Zusätzlich in Fotomediathek sichern" aktiv ist, nach
-  Abschluss jeder Aufnahme eine unveränderte Kopie per `PHAssetCreationRequest` in die System-Kamerarolle.
-  Rein additiv, fire-and-forget, `async`, blockiert nie die Zuordnungs-Transaktion — läuft parallel dazu, nicht
-  davor. Kein Lesezugriff auf die Fotomediathek, kein Einfluss auf `PathBuilder`/`collection.json`, siehe
-  `SPEC.md` §3/§12.
+- **`PhotoLibraryExporter`** (`Services/Media/`, Nutzerentscheidung 2026-07-27, **gebaut 2026-08-03**) —
+  einzige Stelle im Code mit `PHPhotoLibrary`-Zugriff, analog zur Alleinstellung von `FileStore` für
+  `FileManager`. Scope `.addOnly`, nie Lese- oder Löschzugriff. Aktuell genutzt für den manuellen,
+  album-basierten Export aus der Galerie ("Sammlung in Fotos exportieren" / "Favoriten in Fotos exportieren",
+  `SPEC.md` §11.1) — legt lazy ein Album pro Sammlung an (Titel = Sammlung-Ordnername), wiederverwendet ein
+  bestehendes Album statt es zu duplizieren. Derselbe Service ist bewusst so geschnitten, dass ihn der in
+  `SPEC.md` §12/§4 Phase 8 weiterhin geplante, noch nicht gebaute automatische Einzel-Aufnahme-Export
+  (Settings-Schalter „Zusätzlich in Fotomediathek sichern", fire-and-forget nach jeder Aufnahme) später
+  mitnutzen kann, statt einen zweiten `PHPhotoLibrary`-Zugriffspunkt zu benötigen. Kein Einfluss auf
+  `PathBuilder`/`collection.json` in beiden Fällen.
 
 ---
 
@@ -151,7 +155,7 @@ sind daher **Migrationsschritte**, keine Neubauten.
 | 5 | **Neues Design System** | Farbpalette (mit Nutzer abzustimmen), App-Icon, ggf. neuer Splash-Screen | Kein TrickCam-Branding/-Farbschema mehr im Code oder in der laufenden App |
 | 6 | **Rechtstexte neu schreiben** | Handbuch/Terms/Impressum inhaltlich für EveryCam anpassen (aktuell 1:1 TrickCam-Text) | Keine TrickCam-spezifischen Inhalte (Bail/Make-Erklärung etc.) mehr sichtbar |
 | 7 | **Politur & Edge Cases** | Tag-Namenskollision, Sammlung-ohne-Tags-Verhalten, Viele-Tags-UI, erneute Geräte-Verifikation für Foto **und** Video | Alle Akzeptanzkriterien aus `SPEC.md` §17 abgehakt |
-| 8 | **Kamerarolle-Export (optional)** | `PhotoLibraryExporter`, Settings-Schalter „Zusätzlich in Fotomediathek sichern", `NSPhotoLibraryAddUsageDescription`. Rein additiv, siehe §4/§6 dieser Datei und `SPEC.md` §12. | Schalter an → jede neue Aufnahme landet zusätzlich unverändert in der Kamerarolle; Schalter aus (Standard) → Verhalten unverändert zu Phase 1–7 |
+| 8 | **Kamerarolle-Export (optional)** | `PhotoLibraryExporter`, Settings-Schalter „Zusätzlich in Fotomediathek sichern", `NSPhotoLibraryAddUsageDescription`. Rein additiv, siehe §4/§6 dieser Datei und `SPEC.md` §12. **Teilweise vorgezogen (Nutzerwunsch, 2026-08-03):** `PhotoLibraryExporter` existiert bereits — gebaut für den manuellen Album-Export aus der Galerie ([§4](#4-architektur) unten, `SPEC.md` §11.1), nicht für diesen Schalter. Offen bleibt nur noch der Schalter selbst (automatischer Export nach jeder Aufnahme, ohne Album-Gruppierung) — er würde denselben Service mitnutzen. | Schalter an → jede neue Aufnahme landet zusätzlich unverändert in der Kamerarolle; Schalter aus (Standard) → Verhalten unverändert zu Phase 1–7 |
 
 **Phase 6 abgeschlossen (2026-07-27):** `HandbuchContent.swift`/`HandbuchIconLegend.swift` vollständig neu geschrieben
 (Tags/Sammlungen/Foto+Video statt Bail/Make/Session/Athlet/nur-Video; Single/Dual entsprechend §7.2 nicht mehr
@@ -610,4 +614,4 @@ Phase, die eine davon berührt, kurz gegenprüfen statt stillschweigend darauf a
 | Farbe-Asset-Katalog für die neue Palette (fest hell, Sand-/Champagner, schwarze Schrift) | offen, Phase 5 |
 | Neues App-Icon | offen, Phase 5 — aktuell noch `TrickCam ICON v1 Final.icon` |
 | Build & Test auf physischem iPhone | nach jeder Phase, zwingend nach Phase 3 (Foto) |
-| `NSPhotoLibraryAddUsageDescription` in Info.plist ergänzen | offen, Phase 8 |
+| `NSPhotoLibraryAddUsageDescription` in Info.plist ergänzen | ✅ erledigt (2026-07-31, für „In Fotos speichern"; Text am 2026-08-03 für den zusätzlichen Album-Export verallgemeinert) |

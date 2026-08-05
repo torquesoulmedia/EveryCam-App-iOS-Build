@@ -50,6 +50,7 @@ final class GalleryViewModel {
     private let settingsStore: SettingsStore
     private let thumbnailService: ThumbnailService
     private let pathBuilder: PathBuilder
+    private let photoLibraryExporter: PhotoLibraryExporter
 
     private(set) var session: MediaCollection?
     private(set) var sessionFolder: URL?
@@ -64,12 +65,20 @@ final class GalleryViewModel {
     var errorMessage: String?
     var isShowingError = false
 
-    init(sessionId: UUID, sessionStore: MediaCollectionStore, settingsStore: SettingsStore, pathBuilder: PathBuilder = .standard, thumbnailService: ThumbnailService = ThumbnailService()) {
+    // Fotos-Export (Nutzerwunsch, 2026-08-03) — kein System-UI wie beim
+    // Dateisystem-Export (UIDocumentPickerViewController bestätigt sich
+    // selbst), daher eine eigene, knappe Erfolgsmeldung, damit unklar
+    // bleibt, ob der Export überhaupt etwas getan hat.
+    var photosExportSuccessMessage: String?
+    var isShowingPhotosExportSuccess = false
+
+    init(sessionId: UUID, sessionStore: MediaCollectionStore, settingsStore: SettingsStore, pathBuilder: PathBuilder = .standard, thumbnailService: ThumbnailService = ThumbnailService(), photoLibraryExporter: PhotoLibraryExporter = PhotoLibraryExporter()) {
         self.sessionId = sessionId
         self.sessionStore = sessionStore
         self.settingsStore = settingsStore
         self.pathBuilder = pathBuilder
         self.thumbnailService = thumbnailService
+        self.photoLibraryExporter = photoLibraryExporter
     }
 
     func load() async {
@@ -232,6 +241,67 @@ final class GalleryViewModel {
         } catch {
             present(error)
         }
+    }
+
+    // MARK: - Fotos-Export (Nutzerwunsch, 2026-08-03)
+
+    // Treibt den deaktivierten Zustand von "Favoriten in Fotos exportieren"
+    // im "⋯"-Menü — bleibt aus, solange keine Aufnahme favorisiert ist,
+    // statt erst beim Tap mit einem Fehlertext zu reagieren.
+    var hasFavorites: Bool {
+        session?.captures.contains { $0.isFavorite == true } ?? false
+    }
+
+    /// Exportiert die gesamte Sammlung (alle Aufnahmen, Original + Crop
+    /// falls vorhanden) in ein gleichnamiges Album der Fotos-App — analog zu
+    /// CollectionListViewModel.exportCollection(_:), nur mit
+    /// PhotoLibraryExporter statt CollectionExportPicker als Ziel.
+    func exportCollectionToPhotos() async {
+        guard let session, let sessionFolder else { return }
+        await exportToPhotos(fileURLs(for: session.captures, in: sessionFolder), emptyError: .noCapturesToExport)
+    }
+
+    /// Wie exportCollectionToPhotos(), aber nur die favorisierten Aufnahmen —
+    /// dieselbe Filterung wie CollectionListViewModel.favoriteFileURLs(in:).
+    func exportFavoritesToPhotos() async {
+        guard let session, let sessionFolder else { return }
+        let favorites = session.captures.filter { $0.isFavorite == true }
+        await exportToPhotos(fileURLs(for: favorites, in: sessionFolder), emptyError: .noFavoritesToExport)
+    }
+
+    private func exportToPhotos(_ urls: [URL], emptyError: EveryCamError) async {
+        guard !urls.isEmpty else {
+            present(emptyError)
+            return
+        }
+        // Albumtitel = Sammlung-Ordnername (Nutzerwunsch) — bereits
+        // dateisystemsicher und mit eigenem Kollisions-Suffix, identisch zum
+        // Dateisystem-Export, damit gleichnamige Sammlungen an
+        // unterschiedlichen Tagen nicht in ein Album verschmelzen.
+        guard let albumTitle = sessionFolder?.lastPathComponent else { return }
+        do {
+            try await photoLibraryExporter.exportFiles(urls, albumTitle: albumTitle)
+            let locale = settingsStore.effectiveLocale
+            photosExportSuccessMessage = LocalizedStringResolver.string("In der Fotos-App gespeichert.", locale: locale)
+            isShowingPhotosExportSuccess = true
+        } catch {
+            present(error)
+        }
+    }
+
+    /// Absolute Datei-URLs (Original + ggf. Crop) für die übergebenen
+    /// Captures — dieselbe Auflösung wie CollectionListViewModel.
+    /// favoriteFileURLs(in:), hier ohne erneuten Store-Zugriff, da session/
+    /// sessionFolder bereits geladen vorliegen.
+    private func fileURLs(for captures: [Capture], in folder: URL) -> [URL] {
+        var urls: [URL] = []
+        for capture in captures {
+            urls.append(folder.appendingPathComponent(capture.files.primary))
+            if let cropped = capture.files.cropped169 ?? capture.files.cropped916 {
+                urls.append(folder.appendingPathComponent(cropped))
+            }
+        }
+        return urls
     }
 
     private func present(_ error: Error) {

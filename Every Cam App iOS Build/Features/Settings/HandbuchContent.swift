@@ -540,7 +540,10 @@ enum HandbuchContent {
                 "**Mehrfachauswahl:** mehrere Aufnahmen gleichzeitig markieren, dann im „⋯“-Menü gemeinsam verschieben oder löschen.",
                 "**Teilen:** über den Teilen-Button bei der geöffneten Aufnahme oder im Mehrfachauswahl-Modus — öffnet das native iOS-Share-Sheet (WhatsApp, Mail, AirDrop, …).",
                 "**Plus-Symbol:** weitere Tags zur Sammlung hinzufügen.",
-                "**„Als aktive Sammlung festlegen“** im „⋯“-Menü — praktisch, wenn beim Sichten klar wird, dass hier weiter aufgenommen werden soll."
+                "**„Als aktive Sammlung festlegen“** im „⋯“-Menü — praktisch, wenn beim Sichten klar wird, dass hier weiter aufgenommen werden soll.",
+                "**Sammlung exportieren:** im „⋯“-Menü — kopiert den kompletten Sammlung-Ordner über den nativen Dokumenten-Picker an einen selbst gewählten Ort (Dateien, iCloud Drive, Drittanbieter-Speicher).",
+                "**Sammlung in Fotos exportieren / Favoriten in Fotos exportieren:** im „⋯“-Menü — kopiert die Aufnahmen stattdessen direkt in ein gleichnamiges Album der Fotos-App. „Favoriten in Fotos exportieren“ bleibt deaktiviert, solange keine Aufnahme als Favorit markiert ist.",
+                "**Ordner in Dateien-App öffnen:** im „⋯“-Menü — springt direkt zum Sammlung-Ordner in der Dateien-App."
             ], en: [
                 "**Sections:** \"Unassigned\" (if any) → one section per tag, in the order the tags were created.",
                 "**Thumbnails:** one preview image per capture, photos and videos mixed in the same grid.",
@@ -550,7 +553,10 @@ enum HandbuchContent {
                 "**Multi-select:** mark several captures at once, then move or delete them together via the \"⋯\" menu.",
                 "**Sharing:** via the share button on an open capture, or from multi-select mode — opens the native iOS share sheet (WhatsApp, Mail, AirDrop, …).",
                 "**Plus icon:** add more tags to the collection.",
-                "**\"Set as active collection\"** in the \"⋯\" menu — useful when reviewing captures makes it clear that this is where recording should continue."
+                "**\"Set as active collection\"** in the \"⋯\" menu — useful when reviewing captures makes it clear that this is where recording should continue.",
+                "**Export collection:** in the \"⋯\" menu — copies the entire collection folder via the native document picker to a location you choose (Files, iCloud Drive, third-party storage).",
+                "**Export collection to Photos / Export favorites to Photos:** in the \"⋯\" menu — copies the captures directly into a same-named album in the Photos app instead. \"Export favorites to Photos\" stays disabled until at least one capture is marked as a favorite.",
+                "**Open folder in Files app:** in the \"⋯\" menu — jumps straight to the collection folder in the Files app."
             ], es: [
                 "**Secciones:** «Sin asignar» (si las hay) → una sección por cada tag, en el orden en que se crearon los tags.",
                 "**Miniaturas:** una imagen de vista previa por captura, fotos y videos mezclados en la misma cuadrícula.",
@@ -560,7 +566,10 @@ enum HandbuchContent {
                 "**Selección múltiple:** marca varias capturas a la vez y luego muévelas o elimínalas juntas desde el menú «⋯».",
                 "**Compartir:** mediante el botón de compartir en una captura abierta, o desde el modo de selección múltiple — abre la hoja de compartir nativa de iOS (WhatsApp, Mail, AirDrop, …).",
                 "**Icono de más:** añadir más tags a la colección.",
-                "**«Establecer como colección activa»** en el menú «⋯» — útil cuando, al revisar las capturas, queda claro que aquí se debe seguir grabando."
+                "**«Establecer como colección activa»** en el menú «⋯» — útil cuando, al revisar las capturas, queda claro que aquí se debe seguir grabando.",
+                "**Exportar colección:** en el menú «⋯» — copia toda la carpeta de la colección mediante el selector de documentos nativo a la ubicación que elija (Archivos, iCloud Drive, almacenamiento de terceros).",
+                "**Exportar colección a Fotos / Exportar favoritos a Fotos:** en el menú «⋯» — copia las capturas directamente en un álbum con el mismo nombre en la app Fotos. «Exportar favoritos a Fotos» permanece desactivado hasta que al menos una captura esté marcada como favorita.",
+                "**Abrir carpeta en la app Archivos:** en el menú «⋯» — salta directamente a la carpeta de la colección en la app Archivos."
             ], pt: [
                 "**Seções:** \"Não atribuído\" (se houver) → uma seção por tag, na ordem em que os tags foram criados.",
                 "**Miniaturas:** uma imagem de prévia por captura, fotos e vídeos misturados na mesma grade.",
@@ -570,7 +579,10 @@ enum HandbuchContent {
                 "**Seleção múltipla:** marque várias capturas ao mesmo tempo e depois mova ou exclua-as juntas pelo menu \"⋯\".",
                 "**Compartilhar:** pelo botão de compartilhar na captura aberta, ou no modo de seleção múltipla — abre a folha de compartilhamento nativa do iOS (WhatsApp, Mail, AirDrop, …).",
                 "**Ícone de mais:** adicionar mais tags à coleção.",
-                "**\"Definir como coleção ativa\"** no menu \"⋯\" — útil quando, ao revisar as capturas, fica claro que é aqui que a gravação deve continuar."
+                "**\"Definir como coleção ativa\"** no menu \"⋯\" — útil quando, ao revisar as capturas, fica claro que é aqui que a gravação deve continuar.",
+                "**Exportar coleção:** no menu \"⋯\" — copia toda a pasta da coleção pelo seletor de documentos nativo para um local à sua escolha (Arquivos, iCloud Drive, armazenamento de terceiros).",
+                "**Exportar coleção para Fotos / Exportar favoritos para Fotos:** no menu \"⋯\" — copia as capturas diretamente para um álbum de mesmo nome no app Fotos. \"Exportar favoritos para Fotos\" permanece desativado até que pelo menos uma captura seja marcada como favorita.",
+                "**Abrir pasta no app Arquivos:** no menu \"⋯\" — vai direto para a pasta da coleção no app Arquivos."
             ], fr: [
                 "**Sections :** « Non attribué » (le cas échéant) → une section par tag, dans l'ordre de création des tags.",
                 "**Miniatures :** une image d'aperçu par prise de vue, photos et vidéos mélangées dans la même grille.",
@@ -580,7 +592,10 @@ enum HandbuchContent {
                 "**Sélection multiple :** marquer plusieurs prises de vue à la fois, puis les déplacer ou les supprimer ensemble via le menu « ⋯ ».",
                 "**Partager :** via le bouton de partage sur une prise de vue ouverte, ou depuis le mode de sélection multiple — ouvre la feuille de partage native d'iOS (WhatsApp, Mail, AirDrop, …).",
                 "**Icône plus :** ajouter d'autres tags à la collection.",
-                "**« Définir comme collection active »** dans le menu « ⋯ » — pratique lorsqu'en visionnant on se rend compte qu'il faut continuer à filmer ici."
+                "**« Définir comme collection active »** dans le menu « ⋯ » — pratique lorsqu'en visionnant on se rend compte qu'il faut continuer à filmer ici.",
+                "**Exporter la collection :** dans le menu « ⋯ » — copie l'intégralité du dossier de la collection via le sélecteur de documents natif vers un emplacement de votre choix (Fichiers, iCloud Drive, stockage tiers).",
+                "**Exporter la collection vers Photos / Exporter les favoris vers Photos :** dans le menu « ⋯ » — copie les prises de vue directement dans un album du même nom dans l'app Photos. « Exporter les favoris vers Photos » reste désactivé tant qu'aucune prise de vue n'est marquée comme favorite.",
+                "**Ouvrir le dossier dans l'app Fichiers :** dans le menu « ⋯ » — accède directement au dossier de la collection dans l'app Fichiers."
             ], it: [
                 "**Sezioni:** \"Non assegnato\" (se presente) → una sezione per ogni tag, nell'ordine in cui i tag sono stati creati.",
                 "**Miniature:** un'immagine di anteprima per ogni scatto, foto e video mescolati nella stessa griglia.",
@@ -590,7 +605,10 @@ enum HandbuchContent {
                 "**Selezione multipla:** contrassegnare più scatti contemporaneamente, quindi spostarli o eliminarli insieme tramite il menu \"⋯\".",
                 "**Condivisione:** tramite il pulsante di condivisione su uno scatto aperto, oppure dalla modalità di selezione multipla — apre il foglio di condivisione nativo di iOS (WhatsApp, Mail, AirDrop, …).",
                 "**Icona più:** aggiungere altri tag alla raccolta.",
-                "**\"Imposta come raccolta attiva\"** nel menu \"⋯\" — utile quando, rivedendo gli scatti, risulta chiaro che è qui che si deve continuare a registrare."
+                "**\"Imposta come raccolta attiva\"** nel menu \"⋯\" — utile quando, rivedendo gli scatti, risulta chiaro che è qui che si deve continuare a registrare.",
+                "**Esporta raccolta:** nel menu \"⋯\" — copia l'intera cartella della raccolta tramite il selettore di documenti nativo in un percorso a scelta (File, iCloud Drive, spazio di archiviazione di terze parti).",
+                "**Esporta raccolta in Foto / Esporta preferiti in Foto:** nel menu \"⋯\" — copia gli scatti direttamente in un album con lo stesso nome nell'app Foto. \"Esporta preferiti in Foto\" resta disattivato finché nessuno scatto è contrassegnato come preferito.",
+                "**Apri cartella nell'app File:** nel menu \"⋯\" — porta direttamente alla cartella della raccolta nell'app File."
             ], nl: [
                 "**Secties:** \"Niet toegewezen\" (indien aanwezig) → één sectie per tag, in de volgorde waarin de tags zijn aangemaakt.",
                 "**Miniaturen:** één voorbeeldafbeelding per opname, foto's en video's gemengd in hetzelfde raster.",
@@ -600,7 +618,10 @@ enum HandbuchContent {
                 "**Meervoudige selectie:** meerdere opnames tegelijk markeren en ze vervolgens samen verplaatsen of verwijderen via het \"⋯\"-menu.",
                 "**Delen:** via de deelknop bij een geopende opname, of vanuit de meervoudige-selectiemodus — opent het native iOS-deelvenster (WhatsApp, Mail, AirDrop, …).",
                 "**Plusicoon:** meer tags aan de collectie toevoegen.",
-                "**\"Instellen als actieve collectie\"** in het \"⋯\"-menu — handig wanneer tijdens het bekijken duidelijk wordt dat hier verder moet worden opgenomen."
+                "**\"Instellen als actieve collectie\"** in het \"⋯\"-menu — handig wanneer tijdens het bekijken duidelijk wordt dat hier verder moet worden opgenomen.",
+                "**Collectie exporteren:** in het \"⋯\"-menu — kopieert de volledige collectiemap via de native documentkiezer naar een zelfgekozen locatie (Bestanden, iCloud Drive, opslag van derden).",
+                "**Collectie naar Foto's exporteren / Favorieten naar Foto's exporteren:** in het \"⋯\"-menu — kopieert de opnames in plaats daarvan rechtstreeks naar een gelijknamig album in de Foto's-app. \"Favorieten naar Foto's exporteren\" blijft uitgeschakeld zolang geen enkele opname als favoriet is gemarkeerd.",
+                "**Map openen in Bestanden-app:** in het \"⋯\"-menu — springt direct naar de collectiemap in de Bestanden-app."
             ], pl: [
                 "**Sekcje:** „Nieprzypisane” (jeśli występuje) → po jednej sekcji na tag, w kolejności tworzenia tagów.",
                 "**Miniatury:** jeden podgląd na nagranie, zdjęcia i filmy wymieszane w tej samej siatce.",
@@ -610,7 +631,10 @@ enum HandbuchContent {
                 "**Wielokrotny wybór:** zaznacz kilka nagrań naraz, a następnie przenieś lub usuń je razem za pomocą menu „⋯”.",
                 "**Udostępnianie:** za pomocą przycisku udostępniania przy otwartym nagraniu lub w trybie wielokrotnego wyboru — otwiera natywny arkusz udostępniania iOS (WhatsApp, Mail, AirDrop…).",
                 "**Ikona plusa:** dodawanie kolejnych tagów do kolekcji.",
-                "**„Ustaw jako aktywną kolekcję”** w menu „⋯” — przydatne, gdy podczas przeglądania staje się jasne, że tutaj należy kontynuować nagrywanie."
+                "**„Ustaw jako aktywną kolekcję”** w menu „⋯” — przydatne, gdy podczas przeglądania staje się jasne, że tutaj należy kontynuować nagrywanie.",
+                "**Eksportuj kolekcję:** w menu „⋯” — kopiuje cały folder kolekcji przez natywny selektor dokumentów do wybranej lokalizacji (Pliki, iCloud Drive, pamięć innej firmy).",
+                "**Eksportuj kolekcję do Zdjęć / Eksportuj ulubione do Zdjęć:** w menu „⋯” — zamiast tego kopiuje nagrania bezpośrednio do albumu o tej samej nazwie w aplikacji Zdjęcia. „Eksportuj ulubione do Zdjęć” pozostaje wyłączone, dopóki żadne nagranie nie zostanie oznaczone jako ulubione.",
+                "**Otwórz folder w aplikacji Pliki:** w menu „⋯” — przechodzi bezpośrednio do folderu kolekcji w aplikacji Pliki."
             ])
         ]),
 

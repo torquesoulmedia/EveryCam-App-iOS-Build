@@ -1,6 +1,6 @@
 # EveryCam — Funktionsspezifikation (v1)
 
-> **Status:** In aktiver Umsetzung, Phasen 1–9 gebaut · **Version:** 0.2 · **Stand:** 2026-08-03
+> **Status:** In aktiver Umsetzung, Phasen 1–9 gebaut · **Version:** 0.3 · **Stand:** 2026-08-05
 > **Zielplattform:** iOS 17+, iPhone 14 und neuer · **Stack:** Swift / SwiftUI / AVFoundation
 >
 > Dieses Dokument ist die **einzige Quelle der Wahrheit** für den Funktionsumfang von EveryCam.
@@ -114,7 +114,7 @@ Kamera-Detaileinstellungen. Siehe [§15](#15-explizit-nicht-umzusetzen).
 | **Deployment Target** | iOS 17.0 |
 | **Geräte** | iPhone 14 und neuer |
 | **Geräte-Kompatibilität** | **Feature-Detection statt Whitelist**, unverändert aus TrickCam: Objektive/Zoomstufen zur Laufzeit über `AVCaptureDevice.DiscoverySession`. Feste Zoom-Sprungmarken (0.5x/1x/2x/5x/10x, `LensDiscovery.swift`) bleiben als dokumentierte Ausnahme bestehen, gekoppelt an den echten, laufzeitermittelten Zoombereich. |
-| **Speicher** | App-Sandbox über `FileManager`, `Documents/Sammlungen/`, sichtbar unter „Auf diesem iPhone" in der Dateien-App, bleibt die **alleinige Quelle der Wahrheit** für Sammlungen/Tags/`collection.json`. **Keine** Photos-Library/`PHPhotoLibrary` als primäre Speicherung — auch nicht für Fotos. **Geplant, noch nicht umgesetzt (Nutzerentscheidung, 2026-07-27 — Statuskorrektur 2026-08-03):** ein optionaler Settings-Schalter „Zusätzlich in Fotomediathek sichern" (`PHAssetCreationRequest`-Fire-and-Forget-Export nach jeder Aufnahme) ist als Entscheidung dokumentiert ([§12](#12-bildschirm-4--globale-settings)), existiert aber noch nicht im Code — kein solcher Schalter in `SettingsStore`/`SettingsView`, kein `PHAssetCreationRequest`-Aufruf irgendwo in der App. Tatsächlich umgesetzt ist nur das **manuelle** „In Fotos speichern" im nativen Share Sheet (`ShareSheet.swift`, teilt dieselbe `NSPhotoLibraryAddUsageDescription`-Berechtigung, aber eine andere Funktion — kein automatischer Export). |
+| **Speicher** | App-Sandbox über `FileManager`, `Documents/Sammlungen/`, sichtbar unter „Auf diesem iPhone" in der Dateien-App, bleibt die **alleinige Quelle der Wahrheit** für Sammlungen/Tags/`collection.json`. **Keine** Photos-Library/`PHPhotoLibrary` als primäre Speicherung — auch nicht für Fotos. **Geplant, noch nicht umgesetzt (Nutzerentscheidung, 2026-07-27 — Statuskorrektur 2026-08-03):** ein optionaler Settings-Schalter „Zusätzlich in Fotomediathek sichern" (fire-and-forget-Export nach jeder Aufnahme) ist als Entscheidung dokumentiert ([§12](#12-bildschirm-4--globale-settings)), existiert aber noch nicht im Code — kein solcher Schalter in `SettingsStore`/`SettingsView`. **Teilweise umgesetzt (Nutzerwunsch, 2026-08-03):** `PhotoLibraryExporter` (`Services/Media/`) existiert jetzt für den manuellen, album-basierten Export aus der Galerie ([§11.1](#111-direkter-fotos-export)) — derselbe Service, den der noch offene automatische Schalter später mitnutzen würde, aber eben nur für diesen manuellen Anwendungsfall aufgerufen. Tatsächlich umgesetzt sind also: das **manuelle** „In Fotos speichern" im nativen Share Sheet (`ShareSheet.swift`) sowie der **manuelle** Album-Export aus der Galerie — beide teilen sich dieselbe `NSPhotoLibraryAddUsageDescription`-Berechtigung. Kein automatischer Export nach jeder einzelnen Aufnahme. |
 | **Darstellungsmodus** | Fest **hell** — warme Sand-/Champagner-Palette, schwarze/nahezu schwarze Schrift auf dem helleren Untergrund (Nutzerentscheidung vom 2026-07-27, siehe [§6](#6-style-guide)). Löst TrickCams festen Dunkelmodus ab. Kein Folgen des System-Hell-/Dunkelmodus, kein In-App-Override — diese Grundregel (fester Modus, keine Umschaltung) bleibt bestehen, nur die Polung dreht von dunkel auf hell. |
 | **Netzwerk** | Keine Cloud, kein iCloud/CloudKit-Sync, kein GPS. Vollständig offline. |
 | **Teilen** | Natives iOS Share Sheet (`UIActivityViewController`), für Fotos und Videos gleichermaßen. |
@@ -128,10 +128,13 @@ Unverändert aus TrickCam übernommen: `NSCameraUsageDescription`, `NSMicrophone
 Photos-Library-Lesezugriff (kein `NSPhotoLibraryUsageDescription`) — Fotoaufnahme über `AVCapturePhotoOutput`
 schreibt weiterhin primär in die eigene Sandbox, nicht in die System-Fotomediathek.
 
-**Neu:** `NSPhotoLibraryAddUsageDescription` (reine „Hinzufügen"-Berechtigung, kein Lesezugriff) — aktuell
+**Neu:** `NSPhotoLibraryAddUsageDescription` (reine „Hinzufügen"-Berechtigung, kein Lesezugriff) — ursprünglich
 umgesetzt für „In Fotos speichern" im Share Sheet der Galerie-Vorschau (Nutzerwunsch, 2026-07-31 — ohne diesen
-Schlüssel blendet iOS diese Option aus jedem Share Sheet der App aus). Der in [§12](#12-bildschirm-4--globale-settings)
-beschriebene automatische Export-Schalter würde dieselbe Berechtigung mitnutzen, ist aber noch nicht gebaut
+Schlüssel blendet iOS diese Option aus jedem Share Sheet der App aus). **Erweitert (Nutzerwunsch, 2026-08-03):**
+dieselbe Berechtigung deckt jetzt zusätzlich den direkten Album-Export aus der Galerie ab (`PhotoLibraryExporter`,
+[§11.1](#111-direkter-fotos-export)) — der Beschreibungstext wurde entsprechend verallgemeinert, da iOS ihn jetzt
+für zwei verschiedene Auslöser anzeigt. Der in [§12](#12-bildschirm-4--globale-settings) beschriebene automatische
+Export-Schalter würde dieselbe Berechtigung und denselben Service mitnutzen, ist aber weiterhin noch nicht gebaut
 (siehe Statuskorrektur oben).
 
 ---
@@ -507,6 +510,23 @@ Entspricht TrickCams Session-Galerie, mit folgenden Anpassungen:
 | **Dual-Modus-Anzeige** | Entfällt in v1 vollständig aus der Galerie-Darstellung, da der Modus nicht aktiv nutzbar ist (Code/Datenmodell-Unterstützung bleibt für die spätere Reaktivierung erhalten). |
 | **Export (Nutzerwunsch, 2026-07-28)** | Zusätzlicher Menüpunkt „Sammlung exportieren" im „⋯"-Menü — exportiert die gesamte, gerade geöffnete Sammlung über denselben `UIDocumentPickerViewController`-Weg wie in der Sammlungen-Übersicht ([§10](#10-bildschirm-2--sammlungen-übersicht)), ohne zurück navigieren zu müssen. |
 | **Ordner in Dateien-App öffnen (Nutzerwunsch, 2026-08-03)** | Weiterer Menüpunkt im „⋯"-Menü, direkt neben „Sammlung exportieren" — öffnet den Sammlung-Ordner direkt in der Dateien-App (`shareddocuments://`-URL statt eines eigenen In-App-Browsers), spart das manuelle Navigieren über „Auf meinem iPhone" → „EveryCam". |
+| **Direkter Fotos-Export (Nutzerwunsch, 2026-08-03)** | Zwei weitere Menüpunkte im „⋯"-Menü: „Sammlung in Fotos exportieren" und „Favoriten in Fotos exportieren" — Alternative zum Dateisystem-Export oben, die statt des System-Dokumenten-Pickers direkt ein Album der Fotos-App befüllt. Details siehe [§11.1](#111-direkter-fotos-export). |
+
+### 11.1 Direkter Fotos-Export
+
+Zusätzlich zum Dateisystem-Export (kopiert an einen vom Nutzer gewählten Ort über den System-Dokumenten-Picker,
+siehe oben) exportieren diese beiden Menüpunkte direkt in die geräteeigene Fotos-App:
+
+| Element | Verhalten |
+|---|---|
+| **„Sammlung in Fotos exportieren"** | Kopiert **alle** Aufnahmen der Sammlung (Original + Crop, falls vorhanden — Dual-Konzept bleibt bestehen, siehe [§7.2](#72-singledual-in-v1-nicht-sichtbar)) in ein Album der Fotos-App. |
+| **„Favoriten in Fotos exportieren"** | Wie oben, aber nur die als Favorit markierten Aufnahmen ([§11](#11-bildschirm-3--sammlung-galerie) „Favorit"). Bleibt deaktiviert, solange die Sammlung keinen einzigen Favoriten enthält — kein Antippen mit anschließendem Fehlertext nötig. |
+| **Ziel-Album** | Ein Album pro Sammlung, Titel = Sammlung-Ordnername (`<Datum>_<sanitisierter Name>`), identisch zum Ordnernamen im Dateisystem — verhindert, dass gleichnamige Sammlungen an unterschiedlichen Tagen im selben Album verschmelzen. Wird **lazy** angelegt (erst beim ersten tatsächlichen Export-Klick, nicht schon bei Sammlung-Anlage). Existiert das Album bereits (z. B. bei erneutem Export), wird es wiederverwendet, nicht dupliziert. Beide Menüpunkte schreiben ins selbe Album — kein separates Favoriten-Album. |
+| **Berechtigung** | `NSPhotoLibraryAddUsageDescription`, Scope `.addOnly` — dieselbe Berechtigung, die bereits für „In Fotos speichern" im Share Sheet existiert (siehe [§3](#3-technische-rahmenbedingungen)). Nie Lese- oder Löschzugriff auf die Fotomediathek. |
+| **Service** | `PhotoLibraryExporter` (`Services/Media/`) — einzige Stelle im Code mit `PHPhotoLibrary`-Zugriff, analog zur Alleinstellung von `FileStore` für `FileManager` (CLAUDE.md §4.3). Dieselbe Stelle, die perspektivisch auch den in [§12](#12-bildschirm-4--globale-settings) beschriebenen, noch nicht gebauten automatischen Einzel-Aufnahme-Export bedienen würde — kein zweiter PHPhotoLibrary-Zugriffspunkt. |
+| **Fehlerfälle** | Keine Aufnahmen zum Exportieren (leere Sammlung), kein Fotos-Zugriff (Berechtigung verweigert/eingeschränkt), Export fehlgeschlagen — jeweils als `EveryCamError` mit deutschem Nutzertext, kein Absturz. |
+| **Rückmeldung** | Da kein System-UI wie beim Dokumenten-Picker den Erfolg selbst anzeigt, bestätigt ein kurzer Hinweis „In der Fotos-App gespeichert." den erfolgreichen Export. |
+| **Abgrenzung zu §12** | Rein additiv wie der Dateisystem-Export — die App-Sandbox bleibt unangetastet und einzige Quelle für Sammlungen/Tags/`collection.json`. Kein Widerspruch zu SPEC.md §15 „Fotomediathek nicht als Primärablage" — das Verbot betrifft nur eine primäre/alleinige Ablage, nicht einen manuell ausgelösten Zusatz-Export. |
 
 ---
 
@@ -705,6 +725,9 @@ explizit bestätigt wurden. Vor der jeweiligen Umsetzungsphase kurz gegenprüfen
 - [ ] Favorit-Umschalter in der Vollbild-Vorschau funktioniert, Favorit-Abzeichen erscheint auch im Thumbnail-Raster
 - [ ] „Nur Favoriten exportieren" exportiert ausschließlich favorisierte Aufnahmen, zeigt einen Hinweis bei leerer Auswahl
 - [ ] „Ordner in Dateien-App öffnen" springt direkt zum Sammlung-Ordner
+- [ ] „Sammlung in Fotos exportieren" legt bei Bedarf ein Album mit dem Sammlung-Ordnernamen an und befüllt es mit allen Aufnahmen (Original + Crop, falls vorhanden)
+- [ ] „Favoriten in Fotos exportieren" ist deaktiviert, solange keine Aufnahme favorisiert ist, und schreibt sonst nur die Favoriten ins selbe Album
+- [ ] Erneuter Fotos-Export derselben Sammlung erzeugt kein zweites Album, sondern ergänzt das vorhandene
 
 ### Robustheit (unverändert aus TrickCam, gilt weiterhin)
 
