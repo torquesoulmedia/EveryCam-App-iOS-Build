@@ -348,6 +348,19 @@ actor MediaCollectionStore {
         return collection.captures[index]
     }
 
+    /// Merkt sich die Album-ID des zuletzt für den Fotos-Export genutzten
+    /// PHAssetCollection (Nutzerwunsch, 2026-08-05, TrickCam-Pro-Lernprozess)
+    /// — verhindert, dass PhotoLibraryExporter bei jedem weiteren Export
+    /// bibliotheksweit nach dem Titel suchen muss (siehe dortige Kommentare).
+    func setPhotosAlbumLocalIdentifier(_ localIdentifier: String, forCollectionId collectionId: UUID) async throws {
+        guard let folder = try await folderURL(forCollectionId: collectionId) else {
+            throw EveryCamError.collectionNotFound
+        }
+        var collection = try await read(from: folder)
+        collection.photosAlbumLocalIdentifier = localIdentifier
+        try await write(collection, to: folder)
+    }
+
     /// Löscht eine Capture endgültig: beide Mediendateien (bei Dual auch den
     /// Crop, falls vorhanden), beide Thumbnails, danach der Eintrag aus
     /// collection.json.

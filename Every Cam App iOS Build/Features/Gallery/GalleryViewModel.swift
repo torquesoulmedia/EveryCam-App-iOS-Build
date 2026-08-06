@@ -280,7 +280,18 @@ final class GalleryViewModel {
         // unterschiedlichen Tagen nicht in ein Album verschmelzen.
         guard let albumTitle = sessionFolder?.lastPathComponent else { return }
         do {
-            try await photoLibraryExporter.exportFiles(urls, albumTitle: albumTitle)
+            let albumLocalIdentifier = try await photoLibraryExporter.exportFiles(
+                urls, albumTitle: albumTitle, knownAlbumLocalIdentifier: session?.photosAlbumLocalIdentifier
+            )
+            // Best-effort (Nutzerwunsch, 2026-08-05): der eigentliche Export
+            // ist an dieser Stelle bereits erfolgreich abgeschlossen —
+            // schlägt nur das Merken der Album-ID fehl, verliert das
+            // schlimmstenfalls die Wiederverwendung beim nächsten Export
+            // (neues statt bestehendes Album), keine Daten gehen verloren.
+            if albumLocalIdentifier != session?.photosAlbumLocalIdentifier {
+                try? await sessionStore.setPhotosAlbumLocalIdentifier(albumLocalIdentifier, forCollectionId: sessionId)
+                session?.photosAlbumLocalIdentifier = albumLocalIdentifier
+            }
             let locale = settingsStore.effectiveLocale
             photosExportSuccessMessage = LocalizedStringResolver.string("In der Fotos-App gespeichert.", locale: locale)
             isShowingPhotosExportSuccess = true

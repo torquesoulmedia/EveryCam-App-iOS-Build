@@ -76,12 +76,24 @@ Neue Services/Erweiterungen:
   einzige Stelle im Code mit `PHPhotoLibrary`-Zugriff, analog zur Alleinstellung von `FileStore` für
   `FileManager`. Scope `.addOnly`, nie Lese- oder Löschzugriff. Aktuell genutzt für den manuellen,
   album-basierten Export aus der Galerie ("Sammlung in Fotos exportieren" / "Favoriten in Fotos exportieren",
-  `SPEC.md` §11.1) — legt lazy ein Album pro Sammlung an (Titel = Sammlung-Ordnername), wiederverwendet ein
-  bestehendes Album statt es zu duplizieren. Derselbe Service ist bewusst so geschnitten, dass ihn der in
-  `SPEC.md` §12/§4 Phase 8 weiterhin geplante, noch nicht gebaute automatische Einzel-Aufnahme-Export
-  (Settings-Schalter „Zusätzlich in Fotomediathek sichern", fire-and-forget nach jeder Aufnahme) später
-  mitnutzen kann, statt einen zweiten `PHPhotoLibrary`-Zugriffspunkt zu benötigen. Kein Einfluss auf
-  `PathBuilder`/`collection.json` in beiden Fällen.
+  `SPEC.md` §11.1) — legt lazy ein Album pro Sammlung an (Titel = Sammlung-Ordnername). Derselbe Service ist
+  bewusst so geschnitten, dass ihn der in `SPEC.md` §12/§4 Phase 8 weiterhin geplante, noch nicht gebaute
+  automatische Einzel-Aufnahme-Export (Settings-Schalter „Zusätzlich in Fotomediathek sichern", fire-and-forget
+  nach jeder Aufnahme) später mitnutzen kann, statt einen zweiten `PHPhotoLibrary`-Zugriffspunkt zu benötigen.
+  Kein Einfluss auf `PathBuilder` in beiden Fällen.
+  **Bugfix (2026-08-05, TrickCam-Pro-Lernprozess, App-Store-Connect-Fehler 90683):** ursprünglich suchte der
+  Service ein bestehendes Album bibliotheksweit per Titel-Prädikat
+  (`fetchAssetCollections(with:subtype:options:)`). Zwei Probleme: (1) diese Fetch-API allein verlangt bereits
+  Apples automatische Binary-Prüfung nach dem allgemeinen `NSPhotoLibraryUsageDescription`-Schlüssel,
+  unabhängig vom angefragten `.addOnly`-Scope — sonst schlägt der Upload fehl. (2) unter `.addOnly` hätte die
+  titelbasierte Suche auf einem echten Gerät vermutlich nie funktioniert und bei jedem Export ein neues Album
+  angelegt statt das bestehende wiederzuverwenden. Fix: `MediaCollection.photosAlbumLocalIdentifier`
+  (`SPEC.md` §4.1/§4.2) merkt sich die `PHAssetCollection.localIdentifier` des einmal angelegten Albums, über
+  `MediaCollectionStore.setPhotosAlbumLocalIdentifier`; künftige Exporte derselben Sammlung lösen gezielt
+  danach auf (`fetchAssetCollections(withLocalIdentifiers:)`) statt bibliotheksweit zu suchen. Legt nur dann
+  ein neues Album an, wenn die gemerkte ID nicht mehr auflösbar ist. `NSPhotoLibraryUsageDescription` bleibt
+  trotzdem im Info.plist deklariert (nie für einen echten Dialog genutzt) — auch die ID-basierte Fetch-Variante
+  löst dieselbe statische Prüfung aus.
 
 ---
 

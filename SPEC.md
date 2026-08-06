@@ -1,6 +1,6 @@
 # EveryCam — Funktionsspezifikation (v1)
 
-> **Status:** In aktiver Umsetzung, Phasen 1–9 gebaut · **Version:** 0.3 · **Stand:** 2026-08-05
+> **Status:** In aktiver Umsetzung, Phasen 1–9 gebaut · **Version:** 0.4 · **Stand:** 2026-08-05
 > **Zielplattform:** iOS 17+, iPhone 14 und neuer · **Stack:** Swift / SwiftUI / AVFoundation
 >
 > Dieses Dokument ist die **einzige Quelle der Wahrheit** für den Funktionsumfang von EveryCam.
@@ -137,6 +137,12 @@ für zwei verschiedene Auslöser anzeigt. Der in [§12](#12-bildschirm-4--global
 Export-Schalter würde dieselbe Berechtigung und denselben Service mitnutzen, ist aber weiterhin noch nicht gebaut
 (siehe Statuskorrektur oben).
 
+**Zusätzlich neu (Bugfix, 2026-08-05):** `NSPhotoLibraryUsageDescription` (der allgemeine, nicht auf
+„Hinzufügen" beschränkte Schlüssel) ist ebenfalls deklariert, obwohl der Code weiterhin ausschließlich
+`.addOnly` anfragt und dieser Text nie in einem echten Berechtigungsdialog erscheint — ohne ihn lehnt Apples
+automatische Binary-Prüfung den App-Store-Connect-Upload mit Fehler 90683 ab, sobald der Code
+`PHAssetCollection.fetchAssetCollections(...)` verwendet (siehe [§11.1](#111-direkter-fotos-export)).
+
 ---
 
 ## 4. Datenmodell
@@ -157,6 +163,7 @@ TrickCam übernommen.
     { "id": "uuid", "name": "Kuchen" },
     { "id": "uuid", "name": "Beste Szenen" }
   ],
+  "photosAlbumLocalIdentifier": "string | null (Nutzerwunsch, 2026-08-05, siehe §11.1)",
   "captures": [
     {
       "captureId": "uuid",
@@ -193,6 +200,7 @@ bestimmten Tag — jeder Tag in `tags` ist gleichwertig.
 | `date` | `YYYY-MM-DD`, lokales Datum bei Sammlung-Anlage, danach unveränderlich. |
 | `recordedAt` | ISO-8601 UTC mit `Z`. |
 | `isFavorite` | Fehlt der Schlüssel oder ist er `null`/`false`, gilt die Aufnahme als nicht favorisiert — kein separates Migrations-Feld nötig, bereits bestehende `collection.json`-Dateien ohne diesen Schlüssel dekodieren unverändert (Nutzerwunsch, 2026-07-31). Rein lokal, wirkt sich nicht auf Dateipfade aus. |
+| `photosAlbumLocalIdentifier` | `null`, solange die Sammlung noch nie in Fotos exportiert wurde. Wird beim ersten Fotos-Export gesetzt (`PHAssetCollection.localIdentifier` des angelegten Albums, siehe [§11.1](#111-direkter-fotos-export)) und bei jedem weiteren Export dieser Sammlung gezielt danach aufgelöst — **niemals** bibliotheksweite Suche nach dem Albumtitel. Fehlt der Schlüssel, dekodieren bestehende `collection.json`-Dateien unverändert weiter (wie `isFavorite`). Rein lokal, wirkt sich nicht auf Dateipfade aus. |
 
 ### 4.3 Tags zur Laufzeit hinzufügen
 
@@ -521,12 +529,18 @@ siehe oben) exportieren diese beiden Menüpunkte direkt in die geräteeigene Fot
 |---|---|
 | **„Sammlung in Fotos exportieren"** | Kopiert **alle** Aufnahmen der Sammlung (Original + Crop, falls vorhanden — Dual-Konzept bleibt bestehen, siehe [§7.2](#72-singledual-in-v1-nicht-sichtbar)) in ein Album der Fotos-App. |
 | **„Favoriten in Fotos exportieren"** | Wie oben, aber nur die als Favorit markierten Aufnahmen ([§11](#11-bildschirm-3--sammlung-galerie) „Favorit"). Bleibt deaktiviert, solange die Sammlung keinen einzigen Favoriten enthält — kein Antippen mit anschließendem Fehlertext nötig. |
-| **Ziel-Album** | Ein Album pro Sammlung, Titel = Sammlung-Ordnername (`<Datum>_<sanitisierter Name>`), identisch zum Ordnernamen im Dateisystem — verhindert, dass gleichnamige Sammlungen an unterschiedlichen Tagen im selben Album verschmelzen. Wird **lazy** angelegt (erst beim ersten tatsächlichen Export-Klick, nicht schon bei Sammlung-Anlage). Existiert das Album bereits (z. B. bei erneutem Export), wird es wiederverwendet, nicht dupliziert. Beide Menüpunkte schreiben ins selbe Album — kein separates Favoriten-Album. |
-| **Berechtigung** | `NSPhotoLibraryAddUsageDescription`, Scope `.addOnly` — dieselbe Berechtigung, die bereits für „In Fotos speichern" im Share Sheet existiert (siehe [§3](#3-technische-rahmenbedingungen)). Nie Lese- oder Löschzugriff auf die Fotomediathek. |
+| **Ziel-Album** | Ein Album pro Sammlung, Titel = Sammlung-Ordnername (`<Datum>_<sanitisierter Name>`), identisch zum Ordnernamen im Dateisystem — verhindert, dass gleichnamige Sammlungen an unterschiedlichen Tagen im selben Album verschmelzen. Wird **lazy** angelegt (erst beim ersten tatsächlichen Export-Klick, nicht schon bei Sammlung-Anlage). Existiert das Album bereits (erneuter Export), wird es wiederverwendet, nicht dupliziert. Beide Menüpunkte schreiben ins selbe Album — kein separates Favoriten-Album. |
+| **Album-Wiederauffinden (Bugfix, 2026-08-05)** | Die App sucht **niemals** bibliotheksweit nach dem Albumtitel — stattdessen merkt sich `collection.json` die `PHAssetCollection.localIdentifier` des einmal angelegten Albums (`photosAlbumLocalIdentifier`, [§4.1](#41-collectionjson--schema)/[§4.2](#42-feld-invarianten)) und löst künftige Exporte gezielt danach auf. Grund: eine titelbasierte Suche (`fetchAssetCollections(with:subtype:options:)`) hätte unter dem `.addOnly`-Scope auf einem echten Gerät vermutlich nie funktioniert und bei jedem Export ein neues Album angelegt statt das bestehende wiederzuverwenden (in TrickCam Pro so aufgetreten, siehe unten). Ist die gemerkte ID nicht mehr auflösbar (z. B. Album vom Nutzer gelöscht), wird ein neues Album angelegt und dessen ID neu gemerkt. |
+| **Berechtigung** | `NSPhotoLibraryAddUsageDescription`, Scope `.addOnly` — dieselbe Berechtigung, die bereits für „In Fotos speichern" im Share Sheet existiert (siehe [§3](#3-technische-rahmenbedingungen)). Nie Lese- oder Löschzugriff auf die Fotomediathek. **Zusätzlich (Bugfix, 2026-08-05):** `NSPhotoLibraryUsageDescription` ist im Info.plist deklariert, wird aber nie für einen echten Berechtigungsdialog verwendet — Apples automatische Binary-Prüfung beim App-Store-Connect-Upload verlangt diesen allgemeinen Schlüssel bereits durch die bloße Verwendung von `PHAssetCollection.fetchAssetCollections(...)` im Code (auch der ID-basierten Variante), unabhängig vom tatsächlich zur Laufzeit angefragten `.addOnly`-Scope. Ohne diesen Schlüssel schlägt der Upload mit Fehler 90683 „Missing purpose string" fehl. |
 | **Service** | `PhotoLibraryExporter` (`Services/Media/`) — einzige Stelle im Code mit `PHPhotoLibrary`-Zugriff, analog zur Alleinstellung von `FileStore` für `FileManager` (CLAUDE.md §4.3). Dieselbe Stelle, die perspektivisch auch den in [§12](#12-bildschirm-4--globale-settings) beschriebenen, noch nicht gebauten automatischen Einzel-Aufnahme-Export bedienen würde — kein zweiter PHPhotoLibrary-Zugriffspunkt. |
 | **Fehlerfälle** | Keine Aufnahmen zum Exportieren (leere Sammlung), kein Fotos-Zugriff (Berechtigung verweigert/eingeschränkt), Export fehlgeschlagen — jeweils als `EveryCamError` mit deutschem Nutzertext, kein Absturz. |
 | **Rückmeldung** | Da kein System-UI wie beim Dokumenten-Picker den Erfolg selbst anzeigt, bestätigt ein kurzer Hinweis „In der Fotos-App gespeichert." den erfolgreichen Export. |
 | **Abgrenzung zu §12** | Rein additiv wie der Dateisystem-Export — die App-Sandbox bleibt unangetastet und einzige Quelle für Sammlungen/Tags/`collection.json`. Kein Widerspruch zu SPEC.md §15 „Fotomediathek nicht als Primärablage" — das Verbot betrifft nur eine primäre/alleinige Ablage, nicht einen manuell ausgelösten Zusatz-Export. |
+
+**Herkunft des Bugfixes:** In TrickCam Pro (Schwesterprojekt, gleicher Autor) trat beim App-Store-Connect-Upload
+Fehler 90683 auf, verursacht durch exakt dieselbe titelbasierte `fetchAssetCollections`-Suche. Analyse und Fix
+1:1 auf EveryCam übertragen, bevor der Bug hier live auf einem echten Gerät oder beim eigenen
+App-Store-Connect-Upload auffallen konnte (Nutzerwunsch, 2026-08-05).
 
 ---
 

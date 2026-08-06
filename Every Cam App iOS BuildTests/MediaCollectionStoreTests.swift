@@ -551,6 +551,43 @@ struct MediaCollectionStoreTests {
         #expect(capture.isFavorite == nil)
     }
 
+    // MARK: - Fotos-Album-Export (Nutzerwunsch, 2026-08-05, TrickCam-Pro-Lernprozess)
+
+    /// Grundlage des Bugfixes: PhotoLibraryExporter darf nie bibliotheksweit
+    /// nach dem Album-Titel suchen (siehe dortige Kommentare), sondern muss
+    /// die einmal angelegte Album-ID persistiert bekommen und wiederfinden.
+    @Test func setPhotosAlbumLocalIdentifierPersistsAndIsReadable() async throws {
+        let (store, _, cleanupRoot) = makeStore()
+        defer { try? FileManager.default.removeItem(at: cleanupRoot) }
+
+        let collection = try await store.createCollection(name: "Contest Bowl")
+        #expect(collection.photosAlbumLocalIdentifier == nil)
+
+        try await store.setPhotosAlbumLocalIdentifier("ABC/L0=", forCollectionId: collection.id)
+
+        let fetched = try await store.collection(withId: collection.id)
+        #expect(fetched.photosAlbumLocalIdentifier == "ABC/L0=")
+    }
+
+    /// Bestehende collection.json-Dateien von vor dieser Ergänzung haben den
+    /// Schlüssel gar nicht — muss wie isFavorite als nil statt als
+    /// Decoding-Fehler behandelt werden.
+    @Test func collectionWithoutPhotosAlbumKeyDecodesAsNil() throws {
+        let json = """
+        {
+          "collectionId": "\(UUID().uuidString)",
+          "name": "Contest Bowl",
+          "date": "2026-07-27",
+          "tags": [],
+          "captures": []
+        }
+        """
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let collection = try decoder.decode(MediaCollection.self, from: Data(json.utf8))
+        #expect(collection.photosAlbumLocalIdentifier == nil)
+    }
+
     @Test func toggleFavoriteOnUnknownCaptureThrows() async throws {
         let (store, _, cleanupRoot) = makeStore()
         defer { try? FileManager.default.removeItem(at: cleanupRoot) }
